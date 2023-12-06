@@ -15,6 +15,8 @@ namespace ExpandedAiTasks
     public class AiTaskPursueAndEngageEntity : AiTaskBaseExpandedTargetable
     {
         protected Vec3d targetPos;
+        protected Vec3d lastKnownPos;
+        protected Vec3d lastKnownMotion;
         protected Vec3d withdrawPos = new Vec3d();
 
         Entity guardTargetAttackedByEntity = null;
@@ -41,12 +43,15 @@ namespace ExpandedAiTasks
 
         protected bool alarmHerd = false;
         protected bool packHunting = false; //Each individual herd member's maxTargetHealth value will equal maxTargetHealth * number of herd members.
+        protected bool pursueLastKnownPosition = true;
+        protected float noLOSTimeoutMs = 5000.0f;
 
         //State Vars
         protected bool stopNow = false;
 
         protected float currentFollowTime = 0;
         protected float currentWithdrawTime = 0;
+        protected float lastTimeSawTarget = 0;
         protected float withdrawTargetMoveDistBeforeEncroaching = 0.0f;
 
         protected long finishedMs;
@@ -113,8 +118,12 @@ namespace ExpandedAiTasks
             
             alarmHerd = taskConfig["alarmHerd"].AsBool(false);
             packHunting = taskConfig["packHunting"].AsBool(false);
+            pursueLastKnownPosition = taskConfig["pursueLastKnownPosition"].AsBool(true);
+            noLOSTimeoutMs = taskConfig["noLOSTimeout"].AsFloat(5000.0f);
 
             retaliateAttacks = taskConfig["retaliateAttacks"].AsBool(true);
+
+
 
             Debug.Assert(pursueRange > engageRange, "pursueRange must be a greater value to engageRange.");
 
@@ -159,6 +168,10 @@ namespace ExpandedAiTasks
 
             float range = pursueRange;
             targetEntity = null;
+            targetPos = null;
+            lastKnownPos = null;
+            lastKnownMotion = null;
+            lastTimeSawTarget = 0;
 
             lastSearchTotalMs = entity.World.ElapsedMilliseconds;
 
@@ -197,6 +210,9 @@ namespace ExpandedAiTasks
                 TryAlarmHerd();
                 
                 targetPos = targetEntity.ServerPos.XYZ;
+                lastKnownPos = targetEntity.ServerPos.XYZ;
+                lastKnownMotion = targetEntity.ServerPos.Motion;
+                lastTimeSawTarget = entity.World.ElapsedMilliseconds;
                 withdrawPos = targetPos.Clone();
                 withdrawTargetMoveDistBeforeEncroaching = Math.Max(1.0f, withdrawDist / 4);
 
@@ -246,7 +262,7 @@ namespace ExpandedAiTasks
             if (!IsTargetableEntity(ent, range, ignoreEntityCode))
                 return false;
 
-            return hasLOSContactWithTarget(ent, range, range);
+            return IsAwareOfTarget(ent, range, range);
         }
 
         public float MinDistanceToTarget()
@@ -305,6 +321,9 @@ namespace ExpandedAiTasks
             if (targetEntity == null)
                 return false;
 
+            if (!targetEntity.Alive)
+                return false;
+
             currentFollowTime += dt;
             lastPathUpdateSeconds += dt;
 
@@ -317,19 +336,38 @@ namespace ExpandedAiTasks
             //When we are engaging (close range follow) we need to recompute more often so we can say on our target.
             float minRecomputeNavDistance = internalMovementState == eInternalMovementState.Engaging ? 1 * 1 : 3 * 3;
             bool activelyMoving = targetPos.SquareDistanceTo(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z) >= minRecomputeNavDistance;
+            bool canSeeTarget = true;
+
+            if (pursueLastKnownPosition)
+                canSeeTarget = IsAwareOfTarget(targetEntity, pursueRange, pursueRange);
 
             if ( lastPathUpdateSeconds >= 0.75f ||
                 activelyMoving || internalMovementState != lastMovementState ||
                 targetEntity != targetLastUpdate)
             {
                 if (activelyMoving)
+                {
                     targetPos.Set(targetEntity.ServerPos.X + targetEntity.ServerPos.Motion.X * 10, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z + targetEntity.ServerPos.Motion.Z * 10);
+
+                    if ( canSeeTarget )
+                        lastKnownPos.Set(targetEntity.ServerPos.X + targetEntity.ServerPos.Motion.X * 10, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z + targetEntity.ServerPos.Motion.Z * 10);
+
+                }
                 else
+                {
                     targetPos.Set(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
+
+                    if ( canSeeTarget )
+                        lastKnownPos.Set(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
+                }
+                    
 
                 bool giveUpWhenNoPath = withdrawIfNoPath;
 
-                hasPath = pathTraverser.NavigateTo(targetPos, GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, 2000, true);
+                Vec3d pathToPos = pursueLastKnownPosition ? lastKnownPos : targetPos;
+                hasPath = pathTraverser.NavigateTo(pathToPos, GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, 2000, true);
+                
+                
                 lastPathUpdateSeconds = 0;
 
                 if (hasPath)
@@ -343,16 +381,41 @@ namespace ExpandedAiTasks
             
             }
 
-            //Update our tareget this update.
+            //Update our target this update.
             targetLastUpdate = targetEntity;
 
             if ( hasPath || !withdrawIfNoPath )
             {
                 currentWithdrawTime = 0.0f;
                 reachedWithdrawPosition = false;
-                pathTraverser.CurrentTarget.X = targetEntity.ServerPos.X;
-                pathTraverser.CurrentTarget.Y = targetEntity.ServerPos.Y;
-                pathTraverser.CurrentTarget.Z = targetEntity.ServerPos.Z;
+
+                //If we have LOS to our target
+                if ( pursueLastKnownPosition && canSeeTarget)
+                {
+                    lastKnownPos.Set(targetEntity.ServerPos.X + targetEntity.ServerPos.Motion.X * 10, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z + targetEntity.ServerPos.Motion.Z * 10);
+                    lastKnownMotion = targetEntity.ServerPos.Motion;
+                    lastTimeSawTarget = entity.World.ElapsedMilliseconds;
+                    pathTraverser.CurrentTarget.X = targetEntity.ServerPos.X;
+                    pathTraverser.CurrentTarget.Y = targetEntity.ServerPos.Y;
+                    pathTraverser.CurrentTarget.Z = targetEntity.ServerPos.Z;
+                }
+                //If we can't see our target.
+                if (pursueLastKnownPosition && !canSeeTarget)
+                {
+                    lastKnownPos.Set(targetEntity.ServerPos.X + lastKnownMotion.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z + lastKnownMotion.Z);
+                    pathTraverser.CurrentTarget.X = lastKnownPos.X;
+                    pathTraverser.CurrentTarget.Y = lastKnownPos.Y;
+                    pathTraverser.CurrentTarget.Z = lastKnownPos.Z;
+                }
+                //If we magically always know where our target is.
+                else if ( !pursueLastKnownPosition)
+                {
+                    lastTimeSawTarget = entity.World.ElapsedMilliseconds;
+                    pathTraverser.CurrentTarget.X = targetEntity.ServerPos.X;
+                    pathTraverser.CurrentTarget.Y = targetEntity.ServerPos.Y;
+                    pathTraverser.CurrentTarget.Z = targetEntity.ServerPos.Z;
+                }
+                
             }
             else if ( withdrawIfNoPath )
             {
@@ -473,10 +536,10 @@ namespace ExpandedAiTasks
             float range = pursueRange;
 
             return
+                (lastTimeSawTarget + noLOSTimeoutMs >= entity.World.ElapsedMilliseconds || !pursueLastKnownPosition) &&
                 currentFollowTime < maxFollowTime &&
                 currentWithdrawTime < withdrawEndTime &&
                 distance < range * range &&
-                //(distance > minDist || (targetEntity is EntityAgent ea && ea.ServerControls.TriesToMove) &&
                 targetEntity.Alive &&
                 !inCreativeMode &&
                 !stopNow
@@ -516,6 +579,9 @@ namespace ExpandedAiTasks
                     {
                         targetEntity = newTarget;
                         targetPos = targetEntity.ServerPos.XYZ;
+                        lastKnownPos = targetEntity.ServerPos.XYZ;
+                        lastKnownMotion = targetEntity.ServerPos.Motion;
+                        lastTimeSawTarget = entity.World.ElapsedMilliseconds;
                         return true;
                     }
                 }
@@ -546,6 +612,9 @@ namespace ExpandedAiTasks
                     guardTargetAttackedByEntity = (Entity)data;
                     targetEntity = guardTargetAttackedByEntity;
                     targetPos = targetEntity.ServerPos.XYZ;
+                    lastKnownPos = targetEntity.ServerPos.XYZ;
+                    lastKnownMotion = targetEntity.ServerPos.Motion;
+                    lastTimeSawTarget = entity.World.ElapsedMilliseconds;
                     return true;
                 }
             }

@@ -15,6 +15,8 @@ namespace ExpandedAiTasks
 {
     public class AiTaskShootProjectileAtEntity : AiTaskBaseExpandedTargetable
     {
+        const float FRIENDLY_FIRE_DETECTION_ANGLE = 5.0f;
+
         int durationMs;
         int releaseAtMs;
 
@@ -139,13 +141,13 @@ namespace ExpandedAiTasks
                 attackedByEntity = null;
             }
 
-            if (retaliateAttacks && attackedByEntity != null && attackedByEntity.Alive && IsTargetableEntity(attackedByEntity, 15, true) && hasLOSContactWithTarget(attackedByEntity, range, vertRange))
+            if (retaliateAttacks && attackedByEntity != null && attackedByEntity.Alive && IsTargetableEntity(attackedByEntity, 15, true) && IsAwareOfTarget(attackedByEntity, range, vertRange))
             {
                 targetEntity = attackedByEntity;
             }
             else if (guardTargetAttackedByEntity != null && guardTargetAttackedByEntity.Alive)
             {
-                if (hasLOSContactWithTarget(guardTargetAttackedByEntity, range, vertRange))
+                if (IsAwareOfTarget(guardTargetAttackedByEntity, range, vertRange))
                     targetEntity = guardTargetAttackedByEntity;
             }
             else
@@ -155,7 +157,7 @@ namespace ExpandedAiTasks
 
             if (targetEntity == null || !targetEntity.Alive)
             {
-                targetEntity = partitionUtil.GetNearestEntity(entity.ServerPos.XYZ, range, (e) => IsTargetableEntity(e, range) && hasLOSContactWithTarget(e, range, vertRange));
+                targetEntity = partitionUtil.GetNearestEntity(entity.ServerPos.XYZ, range, (e) => IsTargetableEntity(e, range) && IsAwareOfTarget(e, range, vertRange));
             }
 
             //Reset our zeroing accuracy. (May need changes to play nice with LKP)
@@ -204,7 +206,7 @@ namespace ExpandedAiTasks
             didShoot = false;
             stopNow = false;
 
-            if ( fireOnLastKnownPosition && hasLOSContactWithTarget(targetEntity, maxDist, maxVertDist))
+            if ( fireOnLastKnownPosition && IsAwareOfTarget(targetEntity, maxDist, maxVertDist))
             {
                 targetLKP = targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0);
                 lastTimeSeenTarget = entity.World.ElapsedMilliseconds;
@@ -236,7 +238,7 @@ namespace ExpandedAiTasks
             if (targetEntity == null)
                 return false;
 
-            if ( fireOnLastKnownPosition && hasLOSContactWithTarget(targetEntity, maxDist, maxVertDist))
+            if ( fireOnLastKnownPosition && IsAwareOfTarget(targetEntity, maxDist, maxVertDist))
             {
                 targetLKP = targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0);
                 lastTimeSeenTarget = entity.World.ElapsedMilliseconds;
@@ -495,6 +497,9 @@ namespace ExpandedAiTasks
 
             foreach(Entity herdMember in herdMembers)
             {
+                if (herdMember == entity)
+                    continue;
+
                 if (!herdMember.Alive)
                     continue;
 
@@ -505,10 +510,10 @@ namespace ExpandedAiTasks
                 double distToFriend = firePos.SquareDistanceTo( herdMember.ServerPos.XYZ );
 
                 //If we are really bunched up, don't fire;
-                if (distToFriend <= 1.5 * 1.5)
+                if (distToFriend <= 2 * 2)
                     return true;
 
-                double friendlyFireDot = Math.Cos(22 * (Math.PI / 180));
+                double friendlyFireDot = Math.Cos(FRIENDLY_FIRE_DETECTION_ANGLE * (Math.PI / 180));
                 //If our ally is in our field of fire.
                 if (dot >= friendlyFireDot)
                 {

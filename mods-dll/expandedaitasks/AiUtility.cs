@@ -339,7 +339,7 @@ namespace ExpandedAiTasks
             return false;
         }
 
-        public static bool CanAnyPlayerSeePos( Vec3d pos, float autoPassRange, IWorldAccessor world )
+        public static bool CanAnyPlayerSeePos( Vec3d pos, float autoPassRange, IWorldAccessor world, Entity[] ignoreEnts = null )
         {
             IPlayer[] playersOnline = world.AllOnlinePlayers;
             foreach (IPlayer player in playersOnline)
@@ -348,7 +348,7 @@ namespace ExpandedAiTasks
 
                 if (IsPlayerWithinRangeOfPos(playerEnt, pos, autoPassRange))
                 {
-                    if (CanEntSeePos(playerEnt, pos, 160))
+                    if (CanEntSeePos(playerEnt, pos, 160, ignoreEnts))
                         return true;
                 }
             }
@@ -356,17 +356,24 @@ namespace ExpandedAiTasks
             return false;
         }
 
-        public static bool CanAnyPlayerSeeMe( Entity ent, float autoPassRange )
+        public static bool CanAnyPlayerSeeMe( Entity ent, float autoPassRange, Entity[] ignoreEnts = null)
         {
             Vec3d myEyePos = ent.ServerPos.XYZ.Add(0, ent.LocalEyePos.Y, 0);
-            return CanAnyPlayerSeePos( myEyePos, autoPassRange, ent.World);
+            return CanAnyPlayerSeePos( myEyePos, autoPassRange, ent.World, ignoreEnts);
         }
 
-        private static BlockSelection blockSel = new BlockSelection();
-        private static EntitySelection entitySel = new EntitySelection();
+        private static BlockSelection blockSel = null;
+        private static EntitySelection entitySel = null;
+        private static Entity losTraceSourceEnt = null;
+        private static Entity[] ignoreEnts = null;
 
-        public static bool CanEntSeePos( Entity ent, Vec3d pos, float fov)
+        public static bool CanEntSeePos( Entity ent, Vec3d pos, float fov, Entity[] entsToIgnore = null)
         {
+            blockSel = null;
+            entitySel = null;
+            losTraceSourceEnt = ent;
+            ignoreEnts = entsToIgnore;
+
             Vec3d entEyePos = ent.ServerPos.XYZ.Add(0, ent.LocalEyePos.Y, 0);
             Vec3d entViewForward = GetEntityForwardViewVector(ent, pos);
 
@@ -378,13 +385,32 @@ namespace ExpandedAiTasks
 
             if (dot > maxViewDot)
             {
-                ent.World.RayTraceForSelection(entEyePos, pos, ref blockSel, ref entitySel);
+                ent.World.RayTraceForSelection(entEyePos, pos, ref blockSel, ref entitySel, CanEntSeePos_BlockFilter, CanEntSeePos_EntityFilter);
 
-                if (blockSel == null)
+                if (blockSel == null && entitySel == null)
                     return true;
             }
 
             return false;
+        }
+
+        private static bool CanEntSeePos_BlockFilter(BlockPos pos, Block block)
+        {
+            return true;
+        }
+
+        private static bool CanEntSeePos_EntityFilter(Entity ent)
+        {
+            if (ent == losTraceSourceEnt)
+                return false;
+
+            if ( ignoreEnts != null )
+            {
+                if (ignoreEnts.Contains(ent))
+                    return false;
+            }
+
+            return true;
         }
 
         public static Vec3d GetCenterMass( Entity ent)

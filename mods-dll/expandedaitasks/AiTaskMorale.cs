@@ -161,7 +161,7 @@ namespace ExpandedAiTasks
 
             targetEntity = partitionUtil.GetNearestEntity(ownPos, moraleRange, (e) => IsValidMoraleTarget(e, moraleRange, canRoutFromAnyEnemy));
 
-            if (targetEntity != null)
+            if (targetEntity != null && targetEntity.Alive)
             {
                 //Take the target's injury ratio into account.
                 double targetInjuryRatio = AiUtility.CalculateInjuryRatio(targetEntity);
@@ -181,6 +181,39 @@ namespace ExpandedAiTasks
             return false;
         }
 
+        private bool IsTargetableItem(Entity ent)
+        {
+            //If this entity is an item, we should only count it as a target if we are afraid of it.
+            if ( ent is EntityItem )
+            {
+                ItemStack itemStack = ((EntityItem)ent).Itemstack;
+                string path = "";
+                if (itemStack.Item != null)
+                    path = itemStack.Item.Code.Path;
+                else if (itemStack.Block != null)
+                    path = itemStack.Block.Code.Path;
+                
+                if ( path != "" )
+                {
+                    //Try to match exact entity codes.
+                    if (itemStackSourcesOfFearWeightsByCodeExact.ContainsKey(path))
+                    {
+                        return true;
+                    }
+
+                    //Try to match partials entity codes.
+                    foreach (var codePartial in itemStackSourcesOfFearWeightsByCodePartial)
+                    {
+                        if (path.StartsWithFast(codePartial.Key))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
 
         private bool IsValidMoraleTarget(Entity ent, float range, bool ignoreEntityCode = false)
         {
@@ -192,7 +225,7 @@ namespace ExpandedAiTasks
                 if (entitySourcesOfFearWeightsByCodeExact.Count > 0 || entitySourcesOfFearWeightsByCodePartial.Count > 0 || ent.Code.Path == "player")
                     entitySourceOfFearTotalWeight += GetEntitySourceOfFearWeight(ent);
 
-                if (!IsTargetableEntity(ent, range, ignoreEntityCode))
+                if (!IsTargetableEntity(ent, range, ignoreEntityCode) && IsAwareOfTarget(ent, range, range))
                     return false;
 
                 //Don't be scared of our friends.
@@ -206,9 +239,17 @@ namespace ExpandedAiTasks
                 {
                     EntityItem item = ent as EntityItem;
                     if ( itemStackSourcesOfFearWeightsByCodeExact.Count > 0 || itemStackSourcesOfFearWeightsByCodePartial.Count > 0 )
-                        itemStackSourceOfFearTotalWeight += item.Itemstack != null ? GetItemStackSourceOfFearWeight(item.Itemstack) : 0;      
+                        itemStackSourceOfFearTotalWeight += item.Itemstack != null ? GetItemStackSourceOfFearWeight(item.Itemstack) : 0;
+
+                    //Don't target items of they don't scare us.
+                    if (!IsTargetableItem(ent))
+                        return false;
                 }
             }
+
+            //Currently, projectiles cannot scare us.
+            if (ent is EntityProjectile)
+                return false;
 
             return true;
 

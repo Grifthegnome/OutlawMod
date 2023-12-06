@@ -17,6 +17,8 @@ namespace ExpandedAiTasks
             if ( api.Side == EnumAppSide.Server )
             {
                 RegisterAiTasksOnServer();
+                IlluminationManager.Init(api as ICoreServerAPI);
+                api.Event.OnEntityDespawn += IlluminationManager.OnDespawn;
             }
 
             RegisterAiTasksShared();

@@ -131,6 +131,7 @@
 
 						animation: "Run",
 						animationSpeed: 1,
+						hasNightVision: true,
 					},
 					{
 						code: "morale",
@@ -154,6 +155,7 @@
 
 						animation: "Run",
 						animationSpeed: 1,
+						hasNightVision: true,
 					},
 					{
 						code: "melee",
@@ -169,7 +171,8 @@
 						damagePlayerAtMs: 500,
 						animation: "Attack",
 						animationSpeed: 2.5,
-						sound: "creature/wolf/attack"
+						sound: "creature/wolf/attack",
+						hasNightVision: true,
 					},
 					{
 						code: "engageentity",
@@ -193,7 +196,8 @@
 						animationSpeed: 2.2,
 						alarmHerd: true,
 						sound: "creature/wolf/growl",
-						whenInEmotionState: "aggressiveondamage"
+						whenInEmotionState: "aggressiveondamage",
+						hasNightVision: true,
 					},
 					//Don't hunt things when we can eat dead stuff nearby.
 					{
@@ -214,8 +218,8 @@
 						eatEveryting: true,
         				allowCannibalism: true,
 
-						whenNotInEmotionState: "saturated"
-
+						whenNotInEmotionState: "saturated",
+						hasNightVision: true,
 					},
 					{
 						code: "engageentity",
@@ -239,7 +243,8 @@
 						animationSpeed: 2.2,
 						alarmHerd: true,
 						sound: "creature/wolf/growl",
-						whenNotInEmotionState: "saturated"
+						whenNotInEmotionState: "saturated",
+						hasNightVision: true,
 					},
 					{
 						code: "stayclosetoherd",
@@ -253,7 +258,8 @@
 						allowHerdConsolidation: true,
 						consolidationRange: 40,
 						consolidationEntityCodes: ["hound-feral"],
-						animation: "Run"
+						animation: "Run",
+						hasNightVision: true,
 					},
 					{
 						code: "idle",

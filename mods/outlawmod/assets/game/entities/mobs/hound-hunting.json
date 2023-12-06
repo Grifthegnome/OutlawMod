@@ -136,6 +136,7 @@
 
 						animation: "Run",
 						animationSpeed: 1,
+						hasNightVision: true,
 					},
 					{
 						code: "guard",
@@ -153,7 +154,8 @@
             			aggroProximity: 6,
 
 						animation: "Run",
-						animationSpeed: 1.5
+						animationSpeed: 1.5,
+						hasNightVision: true,
 					},
 					{
 						code: "melee",
@@ -169,7 +171,8 @@
 						damagePlayerAtMs: 500,
 						animation: "Attack",
 						animationSpeed: 2.5,
-						sound: "creature/wolf/attack"
+						sound: "creature/wolf/attack",
+						hasNightVision: true,
 					},
 					{
 						code: "engageentity",
@@ -193,6 +196,7 @@
 						animationSpeed: 2.2,
 						alarmHerd: true,
 						sound: "creature/wolf/growl",
+						hasNightVision: true,
 					},
 					{
 						code: "stayclosetoherd",
@@ -207,7 +211,8 @@
 						consolidationRange: 40,
 						consolidationEntityCodes: ["poacher-*", "hound-hunting"],
 						animation: "Run",
-						animationSpeed: 1.5
+						animationSpeed: 1.5,
+						hasNightVision: true,
 					},
 					{
 						code: "idle",
