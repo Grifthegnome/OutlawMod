@@ -264,7 +264,7 @@ namespace ExpandedAiTasks
             curTurnRadPerSec = minTurnAnglePerSec + (float)entity.World.Rand.NextDouble() * (maxTurnAnglePerSec - minTurnAnglePerSec);
             curTurnRadPerSec *= GameMath.DEG2RAD * 50 * 0.02f;
 
-            if (!pathTraverser.NavigateTo(GetTargetPosWithPathOffset().Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, searchDepth, true))
+            if (!pathTraverser.NavigateTo( GetTargetPosWithPathOffset().Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, searchDepth ) )
                 FindNextPathSearchOffsetForPos(targetPos);
 
             currentEatingTime = 0.0f;
@@ -353,7 +353,7 @@ namespace ExpandedAiTasks
                     bool giveUpWhenNoPath = true;
                     int searchDepth = 3500;
 
-                    if (!pathTraverser.NavigateTo(GetTargetPosWithPathOffset().Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, searchDepth, true))
+                    if (!pathTraverser.NavigateTo(GetTargetPosWithPathOffset().Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, searchDepth ) )
                     {
                         if ( allPathsFailed )
                         {

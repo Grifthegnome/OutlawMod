@@ -35,9 +35,9 @@
     <Reference Include="0Harmony">
       <HintPath>D:\Users\User\AppData\Roaming\Vintagestory\Lib\0Harmony.dll</HintPath>
     </Reference>
-    <Reference Include="expandedaitasks, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="expandedaitasks, Version=1.0.8167.34016, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\expandedaitasks.dll</HintPath>
+      <HintPath>..\expandedaitasksloader\expandedaitasks.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net">
       <HintPath>D:\Users\User\AppData\Roaming\Vintagestory\Lib\protobuf-net.dll</HintPath>

@@ -34,7 +34,7 @@ namespace ExpandedAiTasks
             partitionUtil = sapi.ModLoader.GetModSystem<EntityPartitioning>();
         }
 
-        public static void OnDespawn( Entity ent, EntityDespawnReason reason)
+        public static void OnDespawn( Entity ent, EntityDespawnData despawnData )
         {
             if (illuminationData.ContainsKey( ent.EntityId ) )
                 illuminationData.Remove( ent.EntityId);
@@ -125,7 +125,7 @@ namespace ExpandedAiTasks
             return brightestDynamicLightLevel > ambientLightLevel;
         }
 
-        private static void GetBrightestDynamicLightLevel(Entity ent, float range)
+        private static bool GetBrightestDynamicLightLevel(Entity ent, float range)
         {
             //if we've already found a light source that is bright enough to ruin our stealth, skip all others.
             //if (brightestDynamicLightLevel > MAX_LIGHT_LEVEL)
@@ -143,7 +143,7 @@ namespace ExpandedAiTasks
                     }
                 }
 
-                return;
+                return true;
             }
 
             //If the player is holding a glowing object, see if it is brighter than the ambient environment.
@@ -175,6 +175,8 @@ namespace ExpandedAiTasks
                     }
                 }
             }
+
+            return true;
         }
     }
 }

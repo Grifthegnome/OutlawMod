@@ -290,11 +290,11 @@ namespace ExpandedAiTasks
 
             float moveSpeed = GetMovementSpeedForState(internalMovementState);
 
-            hasPath = pathTraverser.NavigateTo(targetPos.Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, searchDepth, true);
+            hasPath = pathTraverser.NavigateTo(targetPos.Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, searchDepth );
             if (!hasPath)
             {
                 UpdateWithdrawPos();
-                bool witdrawOk = pathTraverser.NavigateTo(withdrawPos.Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, searchDepth, true);
+                bool witdrawOk = pathTraverser.NavigateTo(withdrawPos.Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, searchDepth );
 
                 stopNow = !witdrawOk;
             }
@@ -365,7 +365,7 @@ namespace ExpandedAiTasks
                 bool giveUpWhenNoPath = withdrawIfNoPath;
 
                 Vec3d pathToPos = pursueLastKnownPosition ? lastKnownPos : targetPos;
-                hasPath = pathTraverser.NavigateTo(pathToPos, GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, 2000, true);
+                hasPath = pathTraverser.NavigateTo(pathToPos, GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, 2000 );
                 
                 
                 lastPathUpdateSeconds = 0;
@@ -809,10 +809,10 @@ namespace ExpandedAiTasks
             return target;
         }
 
-        private void BucketTargetBasedOnCombatState( Entity ent, float range )
+        private bool BucketTargetBasedOnCombatState( Entity ent, float range )
         {
             if (!IsEntityTargetableByPack(ent, range))
-                return;
+                return true;
 
             //Don't Chase Ai that are already routing.
             if (AiUtility.IsRoutingFromBattle(ent))
@@ -823,6 +823,8 @@ namespace ExpandedAiTasks
             {
                 potentialTargets.Add(ent);
             }
+
+            return true;
         }
 
         private void TryAlarmHerd()

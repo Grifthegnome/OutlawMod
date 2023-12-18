@@ -17,7 +17,7 @@ using ExpandedAiTasks;
 namespace OutlawMod
 {
     ////////////////////////////////////////////////////////////////
-    /// PATCHING HARVESTABLE BEHAVIOR FOR CAUSE OF DEATH EVICENCE///
+    /// PATCHING HARVESTABLE BEHAVIOR FOR CAUSE OF DEATH EVIDENCE///
     ////////////////////////////////////////////////////////////////
 
     [HarmonyPatch(typeof(EntityBehaviorHarvestable))]
@@ -28,7 +28,8 @@ namespace OutlawMod
         {
             if (original != null)
             {
-                foreach (var patched in harmony.GetPatchedMethods())
+
+                foreach (var patched in harmony.GetPatchedMethods() )
                 {
                     if (patched.Name == original.Name)
                         return false;

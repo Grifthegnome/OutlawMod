@@ -214,7 +214,7 @@ namespace ExpandedAiTasks
 
             float size = herdLeaderEntity.SelectionBox.XSize;
 
-            pathTraverser.NavigateTo(herdLeaderEntity.ServerPos.XYZ, moveSpeed, size + 0.2f, OnGoalReached, OnStuck, false, 3000, true);
+            pathTraverser.NavigateTo(herdLeaderEntity.ServerPos.XYZ, moveSpeed, size + 0.2f, OnGoalReached, OnStuck, false, 3000 );
 
             targetOffset.Set(entity.World.Rand.NextDouble() * 2 - 1, 0, entity.World.Rand.NextDouble() * 2 - 1);
 

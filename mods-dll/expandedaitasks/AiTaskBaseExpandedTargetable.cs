@@ -139,16 +139,17 @@ namespace ExpandedAiTasks
             brightestDynamicLightLevel = ambientLightLevel;
             
             EntityPartitioning partitionUtil = entity.Api.ModLoader.GetModSystem<EntityPartitioning>();
-            partitionUtil.WalkEntityPartitions(targetEntity.ServerPos.XYZ, MAX_DYNAMIC_LIGHT_SEARCH_DIST, (ent) => GetBrightestDynamicLightLevel(ent, MAX_DYNAMIC_LIGHT_SEARCH_DIST));
+            partitionUtil.WalkEntityPartitions(targetEntity.ServerPos.XYZ, MAX_DYNAMIC_LIGHT_SEARCH_DIST, (ent) => GetBrightestDynamicLightLevel( ent, MAX_DYNAMIC_LIGHT_SEARCH_DIST ) );
 
             return brightestDynamicLightLevel > ambientLightLevel;
         }
 
-        protected void GetBrightestDynamicLightLevel(Entity ent, float range)
+        //TO DO: I'm not sure why as of 1.18 these delegates need to return a bool, but we made the function return bool to get the code working again. Keep an eye out for bugs.
+        protected bool GetBrightestDynamicLightLevel( Entity ent, float range )
         {
             //if we've already found a light source that is bright enough to ruin our stealth, skip all others.
             if (brightestDynamicLightLevel > MAX_LIGHT_LEVEL)
-                return;
+                return true;
 
             if ( ent is EntityItem )
             {
@@ -162,7 +163,7 @@ namespace ExpandedAiTasks
                     }    
                 }
 
-                return;
+                return true;
             }
 
             //If the player is holding a glowing object, see if it is brighter than the ambient environment.
@@ -194,6 +195,8 @@ namespace ExpandedAiTasks
                     }
                 }
             }
+
+            return true;
         }
 
         public override bool ShouldExecute()
