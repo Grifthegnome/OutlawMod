@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VSModLauncher", "VSModLauncher.csproj", "{203DFBF1-3599-43FD-8487-E1C79C2B788F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VSModLauncher", "VSModLauncher.csproj", "{203DFBF1-3599-43FD-8487-E1C79C2B788F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{fbddd71f-ae07-4e29-be3a-6ec7d9f60dab} = {fbddd71f-ae07-4e29-be3a-6ec7d9f60dab}
 		{68DE08ED-4609-49F1-8239-AF8EBF7F83D5} = {68DE08ED-4609-49F1-8239-AF8EBF7F83D5}
@@ -11,15 +11,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VSModLauncher", "VSModLaunc
 		{F4A19D9E-F292-4499-B59B-2489491DF4A5} = {F4A19D9E-F292-4499-B59B-2489491DF4A5}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "expandedaitasksloader", "mods-dll\expandedaitasksloader\expandedaitasksloader.csproj", "{fbddd71f-ae07-4e29-be3a-6ec7d9f60dab}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "expandedaitasksloader", "mods-dll\expandedaitasksloader\expandedaitasksloader.csproj", "{fbddd71f-ae07-4e29-be3a-6ec7d9f60dab}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "expandedaitasks", "mods-dll\expandedaitasks\expandedaitasks.csproj", "{68DE08ED-4609-49F1-8239-AF8EBF7F83D5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "expandedaitasks", "mods-dll\expandedaitasks\expandedaitasks.csproj", "{68DE08ED-4609-49F1-8239-AF8EBF7F83D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "drifteroverhaul", "mods\drifteroverhaul\drifteroverhaul.csproj", "{D8D9A59D-F4AA-4BB6-9478-C2466411C5E9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "drifteroverhaul", "mods\drifteroverhaul\drifteroverhaul.csproj", "{D8D9A59D-F4AA-4BB6-9478-C2466411C5E9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "testmod", "mods\testmod\testmod.csproj", "{00347A21-4DE3-46DB-B8D1-753EB2529171}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "testmod", "mods\testmod\testmod.csproj", "{00347A21-4DE3-46DB-B8D1-753EB2529171}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "outlawmod", "mods\outlawmod\outlawmod.csproj", "{F4A19D9E-F292-4499-B59B-2489491DF4A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "outlawmod", "mods\outlawmod\outlawmod.csproj", "{F4A19D9E-F292-4499-B59B-2489491DF4A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
