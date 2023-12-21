@@ -35,7 +35,7 @@
 			},
 			{
 				type: "item",
-				code: "game:axe-copper",
+				code: "game:axe-felling-copper",
 				quantity: { avg: 0.05, var: 0.0 }
 			}
 	],

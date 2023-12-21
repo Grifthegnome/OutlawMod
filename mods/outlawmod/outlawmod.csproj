@@ -5,11 +5,11 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>$(ProjectDir)\bin</OutputPath>
+    <OutputPath>..\..\</OutputPath>
     <IntermediateOutputPath>..\..\obj\Debug\outlawmod\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>$(ProjectDir)\bin</OutputPath>
+    <OutputPath>..\..\</OutputPath>
     <IntermediateOutputPath>..\..\obj\Release\outlawmod\</IntermediateOutputPath>
   </PropertyGroup>
   <ItemGroup>
@@ -51,7 +51,9 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <BaseOutputPath></BaseOutputPath>
   </PropertyGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy &quot;$(OutputPath)outlawmod.dll&quot; &quot;$(SolutionDir)mods\outlawmod&quot;&#xD;&#xA;    " />
+  </Target>
 </Project>

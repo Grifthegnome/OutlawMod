@@ -6,19 +6,17 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v7.0": {
-      "expandedaitasks/1.0.0": {
+      "outlawmod/1.0.0": {
         "dependencies": {
           "Microsoft.CSharp": "4.7.0",
           "Newtonsoft.Json": "13.0.3",
           "System.Data.DataSetExtensions": "4.5.0",
           "0Harmony": "2.3.0.0",
-          "VintagestoryAPI": "1.0.0.0",
-          "VSCreativeMod": "1.0.0.0",
-          "VSEssentials": "1.0.0.0",
-          "VSSurvivalMod": "1.0.0.0"
+          "expandedaitasks": "0.0.0.0",
+          "protobuf-net": "2.4.0.0"
         },
         "runtime": {
-          "expandedaitasks.dll": {}
+          "outlawmod.dll": {}
         }
       },
       "Microsoft.CSharp/4.7.0": {},
@@ -39,42 +37,74 @@
           }
         }
       },
-      "VintagestoryAPI/1.0.0.0": {
+      "expandedaitasks/0.0.0.0": {
         "runtime": {
-          "VintagestoryAPI.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.7.0.0"
+          "expandedaitasks.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
           }
         }
       },
-      "VSCreativeMod/1.0.0.0": {
+      "protobuf-net/2.4.0.0": {
         "runtime": {
-          "VSCreativeMod.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.18.15.0"
+          "protobuf-net.dll": {
+            "assemblyVersion": "2.4.0.0",
+            "fileVersion": "2.4.7.18"
           }
         }
       },
-      "VSEssentials/1.0.0.0": {
+      "MonoMod.Utils/25.0.0.0": {
         "runtime": {
-          "VSEssentials.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.18.15.0"
+          "MonoMod.Utils.dll": {
+            "assemblyVersion": "25.0.0.0",
+            "fileVersion": "25.0.0.0"
           }
         }
       },
-      "VSSurvivalMod/1.0.0.0": {
+      "Mono.Cecil/0.11.4.0": {
         "runtime": {
-          "VSSurvivalMod.dll": {
+          "Mono.Cecil.dll": {
+            "assemblyVersion": "0.11.4.0",
+            "fileVersion": "0.11.4.0"
+          }
+        }
+      },
+      "MonoMod.Core/1.0.0.0": {
+        "runtime": {
+          "MonoMod.Core.dll": {
             "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.18.15.0"
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "MonoMod.ILHelpers/1.0.0.0": {
+        "runtime": {
+          "MonoMod.ILHelpers.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "MonoMod.Backports/1.0.0.0": {
+        "runtime": {
+          "MonoMod.Backports.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "MonoMod.Iced/1.17.0.0": {
+        "runtime": {
+          "MonoMod.Iced.dll": {
+            "assemblyVersion": "1.17.0.0",
+            "fileVersion": "1.17.0.0"
           }
         }
       }
     }
   },
   "libraries": {
-    "expandedaitasks/1.0.0": {
+    "outlawmod/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -105,22 +135,42 @@
       "serviceable": false,
       "sha512": ""
     },
-    "VintagestoryAPI/1.0.0.0": {
+    "expandedaitasks/0.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "VSCreativeMod/1.0.0.0": {
+    "protobuf-net/2.4.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "VSEssentials/1.0.0.0": {
+    "MonoMod.Utils/25.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "VSSurvivalMod/1.0.0.0": {
+    "Mono.Cecil/0.11.4.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "MonoMod.Core/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "MonoMod.ILHelpers/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "MonoMod.Backports/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "MonoMod.Iced/1.17.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""

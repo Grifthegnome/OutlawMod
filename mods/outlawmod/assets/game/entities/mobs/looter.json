@@ -40,7 +40,7 @@
 			},
 			{
 				type: "item",
-				code: "game:woodenclub-scrap",
+				code: "game:club-generic-wood",
 				quantity: { avg: 0.10, var: 0.0 }
 			}
 			

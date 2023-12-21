@@ -35,7 +35,7 @@
 			},
 			{
 				type: "item",
-				code: "game:spear-copper",
+				code: "game:spear-generic-copper",
 				quantity: { avg: 0.05, var: 0.0 }
 			}
 	],

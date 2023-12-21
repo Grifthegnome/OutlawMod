@@ -72,7 +72,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
-    <PostBuildEvent>copy "$(MSBuildProjectDirectory)\mods" "C:\Users\grifb\AppData\Roaming\VintagestoryData\Mods"</PostBuildEvent>
     <AssemblyTitle>AssemblyInfo</AssemblyTitle>
     <Product>AssemblyInfo</Product>
     <Copyright>Copyright ©  2018</Copyright>

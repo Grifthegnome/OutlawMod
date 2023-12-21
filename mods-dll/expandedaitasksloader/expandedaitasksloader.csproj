@@ -5,11 +5,11 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\..\mods\expandedaitasksloader\</OutputPath>
+    <OutputPath>..\..\</OutputPath>
     <IntermediateOutputPath>..\..\obj\Debug\expandedaitasksloader\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>..\..\mods\</OutputPath>
+    <OutputPath>..\..\</OutputPath>
     <IntermediateOutputPath>..\..\obj\Release\expandedaitasksloader\</IntermediateOutputPath>
   </PropertyGroup>
   <ItemGroup>
@@ -24,19 +24,15 @@
     </Reference>
     <Reference Include="VintagestoryAPI">
       <HintPath>..\..\..\..\..\..\AppData\Roaming\Vintagestory\VintagestoryAPI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VSSurvivalMod">
-      <HintPath>..\..\..\..\..\..\AppData\Roaming\Vintagestory\Mods\VSSurvivalMod.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VSEssentials">
-      <HintPath>..\..\..\..\..\..\AppData\Roaming\Vintagestory\Mods\VSEssentials.dll</HintPath>
-      <Private>False</Private>
     </Reference>
     <Reference Include="VSCreativeMod">
       <HintPath>..\..\..\..\..\..\AppData\Roaming\Vintagestory\Mods\VSCreativeMod.dll</HintPath>
-      <Private>False</Private>
+    </Reference>
+    <Reference Include="VSEssentials">
+      <HintPath>..\..\..\..\..\..\AppData\Roaming\Vintagestory\Mods\VSEssentials.dll</HintPath>
+    </Reference>
+    <Reference Include="VSSurvivalMod">
+      <HintPath>..\..\..\..\..\..\AppData\Roaming\Vintagestory\Mods\VSSurvivalMod.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -51,6 +47,9 @@
   <PropertyGroup>
     <AssemblyTitle>expandedaitasksloader</AssemblyTitle>
     <AssemblyVersion>1.0.%2a</AssemblyVersion>
-    <BaseOutputPath>C:\Users\grifb\source\repos\Grifthegnome\OutlawMod\mods\expandedaitasksloader</BaseOutputPath>
+    <BaseOutputPath></BaseOutputPath>
   </PropertyGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy &quot;$(OutputPath)expandedaitasksloader.dll&quot; &quot;$(SolutionDir)mods\expandedaitasksloader&quot;" />
+  </Target>
 </Project>
