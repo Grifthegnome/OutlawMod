@@ -29,7 +29,7 @@ namespace ExpandedAiTasks
         bool aggroOnProximity = false;
         float aggroProximity = 5f;
 
-        EntityPartitioning partitionUtil;
+        //EntityPartitioning partitionUtil;
 
         protected bool stuck = false;
         protected bool stopNow = false;
@@ -114,7 +114,7 @@ namespace ExpandedAiTasks
             //If someone has attacked our guard entity, tell our targeting behaviors to target the enemy and early out.
             if (attacker == null || !attacker.Alive)
             {
-                attacker = partitionUtil.GetNearestEntity(guardedEntity.ServerPos.XYZ, detectionDistance, (e) => IsThreateningGuardedTarget(e, detectionDistance));
+                attacker = partitionUtil.GetNearestInteractableEntity(guardedEntity.ServerPos.XYZ, detectionDistance, (e) => IsThreateningGuardedTarget(e, detectionDistance));
                 attackerStartTargetMs = entity.World.ElapsedMilliseconds;
             }
 
@@ -246,7 +246,7 @@ namespace ExpandedAiTasks
             if (nextTargetCheckTime <= targetUpdateTime)
             {
                 //If someone has attacked our guard entity, tell our targeting behaviors to target the enemy and early out.
-                Entity attacker = partitionUtil.GetNearestEntity(guardedEntity.ServerPos.XYZ, maxDistance, (e) => IsThreateningGuardedTarget(e, detectionDistance));
+                Entity attacker = partitionUtil.GetNearestInteractableEntity(guardedEntity.ServerPos.XYZ, maxDistance, (e) => IsThreateningGuardedTarget(e, detectionDistance));
                 if (attacker != null)
                 {
                     TrySendGuardedEntityAttackedNotfications(attacker);

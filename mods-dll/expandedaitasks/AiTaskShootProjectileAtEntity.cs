@@ -54,7 +54,7 @@ namespace ExpandedAiTasks
         Vec3d targetLKP = null;
         double lastTimeSeenTarget = 0;
 
-        EntityPartitioning partitionUtil;
+        //EntityPartitioning partitionUtil;
 
         float accum = 0;
         bool didShoot;
@@ -157,7 +157,7 @@ namespace ExpandedAiTasks
 
             if (targetEntity == null || !targetEntity.Alive)
             {
-                targetEntity = partitionUtil.GetNearestEntity(entity.ServerPos.XYZ, range, (e) => IsTargetableEntity(e, range) && IsAwareOfTarget(e, range, vertRange));
+                targetEntity = partitionUtil.GetNearestInteractableEntity(entity.ServerPos.XYZ, range, (e) => IsTargetableEntity(e, range) && IsAwareOfTarget(e, range, vertRange));
             }
 
             //Reset our zeroing accuracy. (May need changes to play nice with LKP)
@@ -378,23 +378,25 @@ namespace ExpandedAiTasks
 
                 EntityProperties itemType = entity.World.GetEntityType(new AssetLocation(projectileItem));
                 EntityProperties dummyType = entity.World.GetEntityType(new AssetLocation(dummyProjectile));
-                Entity projectile = entity.World.ClassRegistry.CreateEntity(dummyType);
-                ((EntityProjectile)projectile).FiredBy = entity;
-                ((EntityProjectile)projectile).Damage = projectileDamage;
-                ((EntityProjectile)projectile).ProjectileStack = new ItemStack(entity.World.GetItem(new AssetLocation(projectileItem)));
+                EntityProjectile projectile = entity.World.ClassRegistry.CreateEntity(dummyType) as EntityProjectile;
+                projectile.FiredBy = entity;
+                projectile.Damage = projectileDamage;
+                projectile.ProjectileStack = new ItemStack(entity.World.GetItem(new AssetLocation(projectileItem)));
 
                 if ( durability == 0 )
-                    ((EntityProjectile)projectile).ProjectileStack.Attributes.SetInt("durability", durability);
+                    projectile.ProjectileStack.Attributes.SetInt("durability", durability);
                 
-                ((EntityProjectile)projectile).DropOnImpactChance = projectileBreakOnImpactChance;
-                ((EntityProjectile)projectile).Weight = 0.0f;
+                projectile.DropOnImpactChance = projectileBreakOnImpactChance;
+                projectile.Weight = 0.0f;
 
                 projectile.ServerPos.SetPos(firePos);
                 projectile.ServerPos.Motion.Set(velocity);
 
+                //Set Client Pos from Server Pos
                 projectile.Pos.SetFrom(entity.ServerPos);
+
                 projectile.World = entity.World;
-                ((EntityProjectile)projectile).SetRotation();
+                projectile.SetRotation();
 
                 entity.World.SpawnEntity(projectile);
             }

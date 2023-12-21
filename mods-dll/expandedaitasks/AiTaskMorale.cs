@@ -57,7 +57,7 @@ namespace ExpandedAiTasks
 
         float stepHeight;
 
-        EntityPartitioning partitionUtil;
+        //EntityPartitioning partitionUtil;
 
         Vec3d tmpVec = new Vec3d();
         Vec3d collTmpVec = new Vec3d();
@@ -159,7 +159,7 @@ namespace ExpandedAiTasks
             itemStackSourceOfFearTotalWeight = 0;
             poiSourceOfFearTotalWeight = 0;
 
-            targetEntity = partitionUtil.GetNearestEntity(ownPos, moraleRange, (e) => IsValidMoraleTarget(e, moraleRange, canRoutFromAnyEnemy));
+            targetEntity = partitionUtil.GetNearestInteractableEntity(ownPos, moraleRange, (e) => IsValidMoraleTarget(e, moraleRange, canRoutFromAnyEnemy));
 
             if (targetEntity != null && targetEntity.Alive)
             {

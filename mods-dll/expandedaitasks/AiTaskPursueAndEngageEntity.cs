@@ -58,7 +58,7 @@ namespace ExpandedAiTasks
 
         protected long lastSearchTotalMs;
 
-        protected EntityPartitioning partitionUtil;
+        //protected EntityPartitioning partitionUtil;
         protected float extraTargetDistance = 0f;
 
         protected bool lowTempMode;
@@ -365,7 +365,7 @@ namespace ExpandedAiTasks
                 bool giveUpWhenNoPath = withdrawIfNoPath;
 
                 Vec3d pathToPos = pursueLastKnownPosition ? lastKnownPos : targetPos;
-                hasPath = pathTraverser.NavigateTo(pathToPos, GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, 2000 );
+                hasPath = pathTraverser.NavigateTo_Async(pathToPos, GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck, null, 2000 );
                 
                 
                 lastPathUpdateSeconds = 0;

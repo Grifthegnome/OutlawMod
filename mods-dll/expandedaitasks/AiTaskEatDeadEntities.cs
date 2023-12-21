@@ -37,7 +37,7 @@ namespace ExpandedAiTasks
 
         protected long lastSearchTotalMs;
 
-        protected EntityPartitioning partitionUtil;
+        //protected EntityPartitioning partitionUtil;
 
         protected int searchWaitMs = 4000;
 
@@ -142,7 +142,7 @@ namespace ExpandedAiTasks
 
             //Aquire a dead target if we don't have one.
             if (targetEntity == null || targetEntity.Alive)
-                targetEntity = partitionUtil.GetNearestEntity(entity.ServerPos.XYZ, range, (e) => IsEntityTargetableForEating(e, range, eatEveryting));
+                targetEntity = partitionUtil.GetNearestInteractableEntity(entity.ServerPos.XYZ, range, (e) => IsEntityTargetableForEating(e, range, eatEveryting));
 
             if (targetEntity != null)
             {
@@ -240,7 +240,7 @@ namespace ExpandedAiTasks
             stopNow = false;
             internalTaskState = eInternalTaskState.Moving;
 
-            bool giveUpWhenNoPath = true;
+            //bool giveUpWhenNoPath = true;
             int searchDepth = 5000;
 
             if (targetEntity == null || attackedByEntity != null)
@@ -264,8 +264,8 @@ namespace ExpandedAiTasks
             curTurnRadPerSec = minTurnAnglePerSec + (float)entity.World.Rand.NextDouble() * (maxTurnAnglePerSec - minTurnAnglePerSec);
             curTurnRadPerSec *= GameMath.DEG2RAD * 50 * 0.02f;
 
-            if (!pathTraverser.NavigateTo( GetTargetPosWithPathOffset().Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, searchDepth ) )
-                FindNextPathSearchOffsetForPos(targetPos);
+            if ( !pathTraverser.WalkTowards(GetTargetPosWithPathOffset().Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck) )    
+            FindNextPathSearchOffsetForPos(targetPos);
 
             currentEatingTime = 0.0f;
             nextEatAnimTime = 0.0f;
@@ -350,10 +350,7 @@ namespace ExpandedAiTasks
                 //Make sure our path is still valid.
                 if (lastPathUpdateSeconds >= nextCheckPathTime)
                 {
-                    bool giveUpWhenNoPath = true;
-                    int searchDepth = 3500;
-
-                    if (!pathTraverser.NavigateTo(GetTargetPosWithPathOffset().Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, searchDepth ) )
+                    if( !pathTraverser.WalkTowards(GetTargetPosWithPathOffset().Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck ))
                     {
                         if ( allPathsFailed )
                         {
@@ -460,7 +457,7 @@ namespace ExpandedAiTasks
                 if (moveAnimation != null)
                     entity.AnimManager.StartAnimation(new AnimationMetaData() { Animation = moveAnimation, Code = moveAnimation }.Init());
 
-                pathTraverser.Retarget();
+                //pathTraverser.Retarget();
             }
         }
 

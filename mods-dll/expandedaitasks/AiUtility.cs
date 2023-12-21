@@ -53,17 +53,25 @@ namespace ExpandedAiTasks
 
         public static void SetLastAttacker( Entity ent, DamageSource damageSource)
         {
-            if (damageSource.SourceEntity is EntityPlayer)
+
+            Entity attacker = damageSource.SourceEntity;
+
+            if (attacker is EntityProjectile && damageSource.CauseEntity != null)
             {
-                ent.Attributes.SetString("lastPlayerAttackerUid", (damageSource.SourceEntity as EntityPlayer).PlayerUID);
+                attacker = damageSource.CauseEntity;
+            }
+
+            if (attacker is EntityPlayer)
+            {
+                ent.Attributes.SetString("lastPlayerAttackerUid", (attacker as EntityPlayer).PlayerUID);
                 ent.Attributes.SetDouble("lastTimeAttackedMs", ent.World.ElapsedMilliseconds);
 
                 if (ent.Attributes.HasAttribute("lastEntAttackerEntityId"))
                     ent.Attributes.RemoveAttribute("lastEntAttackerEntityId");
             }
-            else if (damageSource.SourceEntity != null)
+            else if (attacker != null)
             {
-                ent.Attributes.SetLong("lastEntAttackerEntityId", damageSource.SourceEntity.EntityId);
+                ent.Attributes.SetLong("lastEntAttackerEntityId", attacker.EntityId);
                 ent.Attributes.SetDouble("lastTimeAttackedMs", ent.World.ElapsedMilliseconds);
 
                 if (ent.Attributes.HasAttribute("lastPlayerAttackerUid"))
