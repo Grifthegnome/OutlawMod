@@ -10,6 +10,7 @@ using Vintagestory.API.Config;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
+using Vintagestory.API.Client;
 
 namespace ExpandedAiTasks
 {
@@ -248,6 +249,7 @@ namespace ExpandedAiTasks
                 return false;
 
             //to do: Make this work with lkp. Right now it rotates to face the current target position.
+            //I think we have done the above, confirm and remove comment if true.
 
             Vec3f targetVec = new Vec3f();
 
@@ -310,16 +312,9 @@ namespace ExpandedAiTasks
                 if ( yawCoinToss > 0.5f )
                     yawDir = -1.0f;
 
-                Vec3d shotStartPosition = entity.ServerPos.XYZ.Add(0, entity.LocalEyePos.Y, 0);
+                //Bug Potential: if the BehindCopy is not set far enought from the shooter, the arrow will collide with the shooter and result in weird behaviors.
+                Vec3d shotStartPosition = entity.SidedPos.BehindCopy(0.5).XYZ.Add(0, entity.LocalEyePos.Y, 0);
                 Vec3d shotTargetPos = fireOnLastKnownPosition ? targetLKP : targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0);
-
-                //Do the work needed to lead our target
-                Vec3d shotToTargetNorm = ( shotTargetPos - shotStartPosition ).Normalize();
-                Vec3d targetMotionNorm = targetEntity.ServerPos.Motion.Clone().Normalize();
-                double dot = shotToTargetNorm.Dot(targetMotionNorm);
-
-                if (dot < 0)
-                    dot *= -1;
 
                 if (leadTarget)
                     shotTargetPos = CalculateInterceptLocation(shotStartPosition, entity.ServerPos.Motion, maxVelocity * 2, shotTargetPos, targetEntity.ServerPos.Motion);
@@ -349,13 +344,10 @@ namespace ExpandedAiTasks
                 Vec3d shotDriftDirection = new Vec3d(0.0f, rndPitch, rndYaw);
                 Vec3d shotTargetPosWithDrift = shotTargetPos.Add( shotDriftDirection.X, shotDriftDirection.Y, shotDriftDirection.Z );
 
-                double distf = Math.Pow(shotStartPosition.SquareDistanceTo(shotTargetPosWithDrift), 0.1);
-
                 Vec3d velocity = (shotTargetPosWithDrift - shotStartPosition).Normalize() * maxVelocity;
-                Vec3d firePos = entity.SidedPos.BehindCopy(0.21).XYZ.Add(0, entity.LocalEyePos.Y, 0);
 
                 //If we care about shooting friendlies and we are going to shoot a friendly, early out.
-                if (stopIfPredictFriendlyFire && WillFriendlyFire(firePos.Clone(), shotTargetPosWithDrift.Clone()))
+                if (stopIfPredictFriendlyFire && WillFriendlyFire(shotStartPosition.Clone(), shotTargetPosWithDrift.Clone()))
                     return false;
 
                 float projectileDamage = GetProjectileDamageAfterFalloff( distToTargetSqr );
@@ -376,8 +368,7 @@ namespace ExpandedAiTasks
                 //This dummy projectile sets its shape and materials to match the assets of a real projectile item that the ai is "fireing." The dummy projectile uses the real projectile item type for its item stack, so that the player picks up the real projectile,
                 //and not the dummy when it lands in the world.
 
-                EntityProperties itemType = entity.World.GetEntityType(new AssetLocation(projectileItem));
-                EntityProperties dummyType = entity.World.GetEntityType(new AssetLocation(dummyProjectile));
+                EntityProperties dummyType  = entity.World.GetEntityType(new AssetLocation(dummyProjectile));
                 EntityProjectile projectile = entity.World.ClassRegistry.CreateEntity(dummyType) as EntityProjectile;
                 projectile.FiredBy = entity;
                 projectile.Damage = projectileDamage;
@@ -387,18 +378,17 @@ namespace ExpandedAiTasks
                     projectile.ProjectileStack.Attributes.SetInt("durability", durability);
                 
                 projectile.DropOnImpactChance = projectileBreakOnImpactChance;
-                projectile.Weight = 0.0f;
+                //projectile.Weight = 0.0f;
 
-                projectile.ServerPos.SetPos(firePos);
+                projectile.ServerPos.SetPos(shotStartPosition);
                 projectile.ServerPos.Motion.Set(velocity);
-
-                //Set Client Pos from Server Pos
-                projectile.Pos.SetFrom(entity.ServerPos);
+                projectile.Pos.SetFrom(projectile.ServerPos);
 
                 projectile.World = entity.World;
                 projectile.SetRotation();
 
                 entity.World.SpawnEntity(projectile);
+
             }
 
             return accum < durationMs / 1000f && !stopNow;
@@ -435,7 +425,7 @@ namespace ExpandedAiTasks
             Vec3d targetRelativeVelocity
         )
         {
-            //double velocitySquared = targetRelativeVelocity.sqrMagnitude;
+
             double velocitySquared = targetRelativeVelocity.LengthSq();
             if (velocitySquared < 0.001f)
                 return 0f;
@@ -505,22 +495,23 @@ namespace ExpandedAiTasks
                 if (!herdMember.Alive)
                     continue;
 
-                Vec3d shooterToHerdMember = ( herdMember.ServerPos.XYZ.Add(0, herdMember.LocalEyePos.Y, 0) - firePos);
+                Vec3d shooterHerdMemberEyePos = herdMember.ServerPos.XYZ.Add(0, herdMember.LocalEyePos.Y, 0);
+                Vec3d shooterToHerdMember = (shooterHerdMemberEyePos - firePos);
                 shooterToHerdMember = shooterToHerdMember.Normalize();
                 double dot = shooterToHerdMember.Dot(shooterToTarget);
 
-                double distToFriend = firePos.SquareDistanceTo( herdMember.ServerPos.XYZ );
+                double distToFriendSqr = firePos.SquareDistanceTo( shooterHerdMemberEyePos );
 
                 //If we are really bunched up, don't fire;
-                if (distToFriend <= 2 * 2)
-                    return true;
+                //if (distToFriendSqr <= 2 * 2)
+                //   return true;
 
                 double friendlyFireDot = Math.Cos(FRIENDLY_FIRE_DETECTION_ANGLE * (Math.PI / 180));
                 //If our ally is in our field of fire.
                 if (dot >= friendlyFireDot)
                 {
                     double distToTargetSqr = firePos.SquareDistanceTo(shotTargetPos);
-                    double distToFriendSqr = firePos.SquareDistanceTo(herdMember.ServerPos.XYZ);
+                    //double distToFriendSqr = firePos.SquareDistanceTo(herdMember.ServerPos.XYZ);
 
                     //If our friend seems to be between us and our target, don't fire.
                     if ( distToTargetSqr > distToFriendSqr)

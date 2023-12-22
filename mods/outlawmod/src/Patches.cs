@@ -57,7 +57,7 @@ namespace OutlawMod
                     infotext.AppendLine(Lang.Get("Looks crushed. Won't be able to harvest as much from this carcass."));
                 }
 
-                string deathByEntityLangCode = __instance.entity.WatchedAttributes.GetString("deathByEntity");
+                string deathByEntityLangCode = __instance.entity.WatchedAttributes.GetString("deathByEntityLangCode");
 
                 if (deathByEntityLangCode != null && !__instance.entity.WatchedAttributes.HasAttribute("deathByPlayer"))
                 {
@@ -178,29 +178,4 @@ namespace OutlawMod
             }
         }
     }
-
-    //////////////////////////////////////////////////////////////////////////////////////
-    ///PATCHING TO ADD A UNIVERAL SET LOCATION FOR LAST ENTITY TO ATTACK ON ENTITY AGENT//
-    //////////////////////////////////////////////////////////////////////////////////////
-    /*
-    [HarmonyPatch(typeof(EntityAgent))]
-    public class ReceiveDamageOverride
-    {
-        [HarmonyPrepare]
-        static bool Prepare(MethodBase original, Harmony harmony)
-        {
-            return true;
-        }
-
-        [HarmonyPatch("ReceiveDamage")]
-        [HarmonyPostfix]
-        static void OverrideReceiveDamage(EntityAgent __instance, DamageSource damageSource, float damage)
-        {
-            if (__instance.Alive)
-            {
-                AiUtility.SetLastAttacker(__instance, damageSource);
-            }
-        }
-    }
-    */
 }

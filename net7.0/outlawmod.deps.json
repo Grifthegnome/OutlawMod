@@ -13,7 +13,11 @@
           "System.Data.DataSetExtensions": "4.5.0",
           "0Harmony": "2.3.0.0",
           "expandedaitasks": "0.0.0.0",
-          "protobuf-net": "2.4.0.0"
+          "protobuf-net": "2.4.0.0",
+          "VintagestoryAPI": "1.0.0.0",
+          "VSCreativeMod": "1.0.0.0",
+          "VSEssentials": "1.0.0.0",
+          "VSSurvivalMod": "1.0.0.0"
         },
         "runtime": {
           "outlawmod.dll": {}
@@ -53,6 +57,38 @@
           }
         }
       },
+      "VintagestoryAPI/1.0.0.0": {
+        "runtime": {
+          "VintagestoryAPI.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.7.0.0"
+          }
+        }
+      },
+      "VSCreativeMod/1.0.0.0": {
+        "runtime": {
+          "VSCreativeMod.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.18.15.0"
+          }
+        }
+      },
+      "VSEssentials/1.0.0.0": {
+        "runtime": {
+          "VSEssentials.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.18.15.0"
+          }
+        }
+      },
+      "VSSurvivalMod/1.0.0.0": {
+        "runtime": {
+          "VSSurvivalMod.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.18.15.0"
+          }
+        }
+      },
       "MonoMod.Utils/25.0.0.0": {
         "runtime": {
           "MonoMod.Utils.dll": {
@@ -77,6 +113,14 @@
           }
         }
       },
+      "System.ServiceModel.Primitives/4.5.0.3": {
+        "runtime": {
+          "System.ServiceModel.Primitives.dll": {
+            "assemblyVersion": "4.5.0.3",
+            "fileVersion": "4.6.26720.1"
+          }
+        }
+      },
       "MonoMod.ILHelpers/1.0.0.0": {
         "runtime": {
           "MonoMod.ILHelpers.dll": {
@@ -98,6 +142,14 @@
           "MonoMod.Iced.dll": {
             "assemblyVersion": "1.17.0.0",
             "fileVersion": "1.17.0.0"
+          }
+        }
+      },
+      "System.Private.ServiceModel/4.5.0.3": {
+        "runtime": {
+          "System.Private.ServiceModel.dll": {
+            "assemblyVersion": "4.5.0.3",
+            "fileVersion": "4.6.26720.1"
           }
         }
       }
@@ -145,6 +197,26 @@
       "serviceable": false,
       "sha512": ""
     },
+    "VintagestoryAPI/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "VSCreativeMod/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "VSEssentials/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "VSSurvivalMod/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
     "MonoMod.Utils/25.0.0.0": {
       "type": "reference",
       "serviceable": false,
@@ -160,6 +232,11 @@
       "serviceable": false,
       "sha512": ""
     },
+    "System.ServiceModel.Primitives/4.5.0.3": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
     "MonoMod.ILHelpers/1.0.0.0": {
       "type": "reference",
       "serviceable": false,
@@ -171,6 +248,11 @@
       "sha512": ""
     },
     "MonoMod.Iced/1.17.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "System.Private.ServiceModel/4.5.0.3": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""

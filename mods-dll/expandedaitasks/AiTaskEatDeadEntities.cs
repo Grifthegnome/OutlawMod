@@ -241,7 +241,7 @@ namespace ExpandedAiTasks
             internalTaskState = eInternalTaskState.Moving;
 
             //bool giveUpWhenNoPath = true;
-            int searchDepth = 5000;
+            //int searchDepth = 5000;
 
             if (targetEntity == null || attackedByEntity != null)
             {
