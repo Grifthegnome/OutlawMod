@@ -15,8 +15,6 @@ namespace ExpandedAiTasks
     {
         private const float HERD_SEARCH_RANGE_DEFAULT = 60f;
 
-        protected bool hasNightVision = false;
-
         protected List<Entity> herdMembers = new List<Entity>();
 
     public AiTaskBaseExpandedTargetable(EntityAgent entity) : base(entity)
@@ -26,8 +24,6 @@ namespace ExpandedAiTasks
         public override void LoadConfig(JsonObject taskConfig, JsonObject aiConfig)
         {
             base.LoadConfig(taskConfig, aiConfig);
-
-            hasNightVision = taskConfig["hasNightVision"].AsBool(false);
         }
 
 
