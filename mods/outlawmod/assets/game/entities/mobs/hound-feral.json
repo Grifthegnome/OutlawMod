@@ -5,6 +5,7 @@
 	deadHitboxSize: { x: 1, y: 0.75 },
 	eyeHeight: 0.9,
 	drops: [],
+	attributes:{ hasNightVision: true },
 	client: {
 		renderer: "Shape",
 		shape: { base: "entity/land/hound" },
@@ -131,7 +132,6 @@
 
 						animation: "Run",
 						animationSpeed: 1,
-						hasNightVision: true,
 					},
 					{
 						code: "morale",
@@ -155,7 +155,6 @@
 
 						animation: "Run",
 						animationSpeed: 1,
-						hasNightVision: true,
 					},
 					{
 						code: "melee",
@@ -172,7 +171,6 @@
 						animation: "Attack",
 						animationSpeed: 2.5,
 						sound: "creature/wolf/attack",
-						hasNightVision: true,
 					},
 					{
 						code: "engageentity",
@@ -197,7 +195,6 @@
 						alarmHerd: true,
 						sound: "creature/wolf/growl",
 						whenInEmotionState: "aggressiveondamage",
-						hasNightVision: true,
 					},
 					//Don't hunt things when we can eat dead stuff nearby.
 					{
@@ -219,7 +216,6 @@
         				allowCannibalism: true,
 
 						whenNotInEmotionState: "saturated",
-						hasNightVision: true,
 					},
 					{
 						code: "engageentity",
@@ -244,7 +240,6 @@
 						alarmHerd: true,
 						sound: "creature/wolf/growl",
 						whenNotInEmotionState: "saturated",
-						hasNightVision: true,
 					},
 					{
 						code: "stayclosetoherd",
@@ -259,7 +254,6 @@
 						consolidationRange: 40,
 						consolidationEntityCodes: ["hound-feral"],
 						animation: "Run",
-						hasNightVision: true,
 					},
 					{
 						code: "idle",

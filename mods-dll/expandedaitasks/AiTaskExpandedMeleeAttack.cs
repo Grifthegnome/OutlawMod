@@ -84,13 +84,13 @@ namespace ExpandedAiTasks
                 attackedByEntity = null;
             }
 
-            if (retaliateAttacks && attackedByEntity != null && attackedByEntity.Alive && IsTargetableEntity(attackedByEntity, 15, true) && IsAwareOfTarget(attackedByEntity, minDist, minVerDist))
+            if (retaliateAttacks && attackedByEntity != null && attackedByEntity.Alive && IsTargetableEntity(attackedByEntity, 15, true) && AiUtility.IsAwareOfTarget(entity, attackedByEntity, minDist, minVerDist))
             {
                 targetEntity = attackedByEntity;
             }
             else if (guardTargetAttackedByEntity != null && guardTargetAttackedByEntity.Alive)
             {
-                if (IsTargetableEntity(guardTargetAttackedByEntity, 15, false) && IsAwareOfTarget(guardTargetAttackedByEntity, minDist, minVerDist))
+                if (IsTargetableEntity(guardTargetAttackedByEntity, 15, false) && AiUtility.IsAwareOfTarget(entity, guardTargetAttackedByEntity, minDist, minVerDist))
                     targetEntity = guardTargetAttackedByEntity;
             }
             else
@@ -102,7 +102,7 @@ namespace ExpandedAiTasks
             {
                 targetEntity = entity.World.GetNearestEntity(pos, minDist, minVerDist, (e) =>
                 {
-                    return IsTargetableEntity(e, 15) && IsAwareOfTarget(e, minDist, minVerDist);
+                    return IsTargetableEntity(e, 15) && AiUtility.IsAwareOfTarget(entity, e, minDist, minVerDist);
                 });
             }
 
@@ -151,7 +151,7 @@ namespace ExpandedAiTasks
 
             if (!damageInflicted && correctYaw)
             {
-                if (!IsAwareOfTarget(targetEntity, minDist, minVerDist)) 
+                if (!AiUtility.IsAwareOfTarget(entity, targetEntity, minDist, minVerDist)) 
                     return false;
 
                 bool alive = targetEntity.Alive;

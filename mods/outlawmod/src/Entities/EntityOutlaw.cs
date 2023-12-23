@@ -7,6 +7,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using Vintagestory.API.Datastructures;
 using Vintagestory.GameContent;
+using ExpandedAiTasks;
 
 namespace OutlawMod
 {
@@ -168,6 +169,25 @@ namespace OutlawMod
 
             }
             
+        }
+
+        public override bool ShouldReceiveDamage(DamageSource damageSource, float damage)
+        {
+            
+            Entity attacker = damageSource.SourceEntity;
+            if (attacker is EntityProjectile && damageSource.CauseEntity != null)
+            {
+                attacker = damageSource.CauseEntity;
+            }
+
+            if ( attacker is EntityAgent )
+            {
+                //We are not allowed to do friendly fire damage to herd members.
+                if (AiUtility.AreMembersOfSameHerd(attacker, this))
+                    return false;
+            }
+                
+            return true;
         }
 
         public override void PlayEntitySound(string type, IPlayer dualCallByPlayer = null, bool randomizePitch = true, float range = 24)

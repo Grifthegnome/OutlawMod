@@ -44,7 +44,7 @@ namespace ExpandedAiTasks
         protected bool alarmHerd = false;
         protected bool packHunting = false; //Each individual herd member's maxTargetHealth value will equal maxTargetHealth * number of herd members.
         protected bool pursueLastKnownPosition = true;
-        protected float noLOSTimeoutMs = 5000.0f;
+        protected float noLOSTimeoutMs = 15000.0f;
 
         //State Vars
         protected bool stopNow = false;
@@ -119,7 +119,7 @@ namespace ExpandedAiTasks
             alarmHerd = taskConfig["alarmHerd"].AsBool(false);
             packHunting = taskConfig["packHunting"].AsBool(false);
             pursueLastKnownPosition = taskConfig["pursueLastKnownPosition"].AsBool(true);
-            noLOSTimeoutMs = taskConfig["noLOSTimeout"].AsFloat(5000.0f);
+            noLOSTimeoutMs = taskConfig["noLOSTimeout"].AsFloat(15000.0f);
 
             retaliateAttacks = taskConfig["retaliateAttacks"].AsBool(true);
 
@@ -262,7 +262,7 @@ namespace ExpandedAiTasks
             if (!IsTargetableEntity(ent, range, ignoreEntityCode))
                 return false;
 
-            return IsAwareOfTarget(ent, range, range);
+            return AiUtility.IsAwareOfTarget(entity, ent, range, range);
         }
 
         public float MinDistanceToTarget()
@@ -339,7 +339,7 @@ namespace ExpandedAiTasks
             bool canSeeTarget = true;
 
             if (pursueLastKnownPosition)
-                canSeeTarget = IsAwareOfTarget(targetEntity, pursueRange, pursueRange);
+                canSeeTarget = AiUtility.IsAwareOfTarget(entity,targetEntity, pursueRange, pursueRange);
 
             if ( lastPathUpdateSeconds >= 0.75f ||
                 activelyMoving || internalMovementState != lastMovementState ||
@@ -532,7 +532,6 @@ namespace ExpandedAiTasks
 
             bool inCreativeMode = (targetEntity as EntityPlayer)?.Player?.WorldData.CurrentGameMode == EnumGameMode.Creative;
 
-            //float minDist = MinDistanceToTarget();
             float range = pursueRange;
 
             return

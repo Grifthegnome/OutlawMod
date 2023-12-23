@@ -10,6 +10,7 @@ namespace OutlawMod
         public static float startingSpawnSafeZoneLifetimeInDays = 45f;
         public static bool claimedLandBlocksOutlawSpawns = true;
         public static bool outlawsUseClassicVintageStoryVoices = false;
+        public static float sneakAttackDamageMult = 3.0f;
         public static bool devMode = false;
     }
 }

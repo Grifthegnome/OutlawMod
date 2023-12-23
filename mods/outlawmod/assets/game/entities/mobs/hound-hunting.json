@@ -5,6 +5,7 @@
 	deadHitboxSize: { x: 1, y: 0.75 },
 	eyeHeight: 0.9,
 	drops: [],
+	attributes:{ hasNightVision: true },
 	client: {
 		renderer: "Shape",
 		shape: { base: "entity/land/hound-hunting" },
@@ -136,7 +137,6 @@
 
 						animation: "Run",
 						animationSpeed: 1,
-						hasNightVision: true,
 					},
 					{
 						code: "guard",
@@ -155,7 +155,6 @@
 
 						animation: "Run",
 						animationSpeed: 1.5,
-						hasNightVision: true,
 					},
 					{
 						code: "melee",
@@ -172,7 +171,6 @@
 						animation: "Attack",
 						animationSpeed: 2.5,
 						sound: "creature/wolf/attack",
-						hasNightVision: true,
 					},
 					{
 						code: "engageentity",
@@ -196,7 +194,6 @@
 						animationSpeed: 2.2,
 						alarmHerd: true,
 						sound: "creature/wolf/growl",
-						hasNightVision: true,
 					},
 					{
 						code: "stayclosetoherd",
@@ -212,7 +209,6 @@
 						consolidationEntityCodes: ["poacher-*", "hound-hunting"],
 						animation: "Run",
 						animationSpeed: 1.5,
-						hasNightVision: true,
 					},
 					{
 						code: "idle",

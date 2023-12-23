@@ -2,6 +2,9 @@
 using System.Reflection;
 using System.Diagnostics;
 using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
+using Vintagestory.GameContent;
+
 
 namespace ExpandedAiTasks
 {
@@ -34,7 +37,7 @@ namespace ExpandedAiTasks
         static bool Prepare(MethodBase original, Harmony harmony)
         {
             return true;
-        }
+        }      
 
         [HarmonyPatch("ReceiveDamage")]
         [HarmonyPostfix]

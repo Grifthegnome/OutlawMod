@@ -53,6 +53,9 @@ namespace OutlawMod
         public bool OutlawsUseClassicVintageStoryVoices = false;
 
         [ProtoMember(13)]
+        public float SneakAttackDamageMult = 3f;
+
+        [ProtoMember(14)]
         public bool DevMode = false;
     }
 
@@ -203,6 +206,9 @@ namespace OutlawMod
 
             //Classic Voice Setting
             OMGlobalConstants.outlawsUseClassicVintageStoryVoices   = config.OutlawsUseClassicVintageStoryVoices;
+
+            //Sneak Attacks
+            OMGlobalConstants.sneakAttackDamageMult                 = config.SneakAttackDamageMult;
 
             //Devmode
             OMGlobalConstants.devMode = config.DevMode;

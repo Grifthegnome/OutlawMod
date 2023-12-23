@@ -142,13 +142,13 @@ namespace ExpandedAiTasks
                 attackedByEntity = null;
             }
 
-            if (retaliateAttacks && attackedByEntity != null && attackedByEntity.Alive && IsTargetableEntity(attackedByEntity, 15, true) && IsAwareOfTarget(attackedByEntity, range, vertRange))
+            if (retaliateAttacks && attackedByEntity != null && attackedByEntity.Alive && IsTargetableEntity(attackedByEntity, range, true) && AiUtility.IsAwareOfTarget(entity, attackedByEntity, range, vertRange))
             {
                 targetEntity = attackedByEntity;
             }
             else if (guardTargetAttackedByEntity != null && guardTargetAttackedByEntity.Alive)
             {
-                if (IsAwareOfTarget(guardTargetAttackedByEntity, range, vertRange))
+                if (AiUtility.IsAwareOfTarget(entity, guardTargetAttackedByEntity, range, vertRange))
                     targetEntity = guardTargetAttackedByEntity;
             }
             else
@@ -158,7 +158,7 @@ namespace ExpandedAiTasks
 
             if (targetEntity == null || !targetEntity.Alive)
             {
-                targetEntity = partitionUtil.GetNearestInteractableEntity(entity.ServerPos.XYZ, range, (e) => IsTargetableEntity(e, range) && IsAwareOfTarget(e, range, vertRange));
+                targetEntity = partitionUtil.GetNearestInteractableEntity(entity.ServerPos.XYZ, range, (e) => IsTargetableEntity(e, range) && AiUtility.IsAwareOfTarget(entity, e, range, vertRange));
             }
 
             //Reset our zeroing accuracy. (May need changes to play nice with LKP)
@@ -207,7 +207,7 @@ namespace ExpandedAiTasks
             didShoot = false;
             stopNow = false;
 
-            if ( fireOnLastKnownPosition && IsAwareOfTarget(targetEntity, maxDist, maxVertDist))
+            if ( fireOnLastKnownPosition && AiUtility.IsAwareOfTarget(entity, targetEntity, maxDist, maxVertDist))
             {
                 targetLKP = targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0);
                 lastTimeSeenTarget = entity.World.ElapsedMilliseconds;
@@ -227,7 +227,7 @@ namespace ExpandedAiTasks
             curTurnRadPerSec = minTurnAnglePerSec + (float)entity.World.Rand.NextDouble() * (maxTurnAnglePerSec - minTurnAnglePerSec);
             curTurnRadPerSec *= GameMath.DEG2RAD * 50 * 0.02f;
 
-            entity.Notify("haltMovement", entity);
+        //    entity.Notify("haltMovement", entity);
             entity.PlayEntitySound("shootatentity", null, true);
         }
 
@@ -239,7 +239,7 @@ namespace ExpandedAiTasks
             if (targetEntity == null)
                 return false;
 
-            if ( fireOnLastKnownPosition && IsAwareOfTarget(targetEntity, maxDist, maxVertDist))
+            if ( fireOnLastKnownPosition && AiUtility.IsAwareOfTarget(entity, targetEntity, maxDist, maxVertDist))
             {
                 targetLKP = targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0);
                 lastTimeSeenTarget = entity.World.ElapsedMilliseconds;
@@ -313,7 +313,7 @@ namespace ExpandedAiTasks
                     yawDir = -1.0f;
 
                 //Bug Potential: if the BehindCopy is not set far enought from the shooter, the arrow will collide with the shooter and result in weird behaviors.
-                Vec3d shotStartPosition = entity.SidedPos.BehindCopy(0.5).XYZ.Add(0, entity.LocalEyePos.Y, 0);
+                Vec3d shotStartPosition = entity.SidedPos.BehindCopy(0.75).XYZ.Add(0, entity.LocalEyePos.Y, 0);
                 Vec3d shotTargetPos = fireOnLastKnownPosition ? targetLKP : targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0);
 
                 if (leadTarget)

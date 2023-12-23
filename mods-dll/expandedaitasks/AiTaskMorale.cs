@@ -161,7 +161,7 @@ namespace ExpandedAiTasks
 
             targetEntity = partitionUtil.GetNearestInteractableEntity(ownPos, moraleRange, (e) => IsValidMoraleTarget(e, moraleRange, canRoutFromAnyEnemy));
 
-            if (targetEntity != null && targetEntity.Alive)
+            if (targetEntity != null)
             {
                 //Take the target's injury ratio into account.
                 double targetInjuryRatio = AiUtility.CalculateInjuryRatio(targetEntity);
@@ -225,7 +225,11 @@ namespace ExpandedAiTasks
                 if (entitySourcesOfFearWeightsByCodeExact.Count > 0 || entitySourcesOfFearWeightsByCodePartial.Count > 0 || ent.Code.Path == "player")
                     entitySourceOfFearTotalWeight += GetEntitySourceOfFearWeight(ent);
 
-                if (!IsTargetableEntity(ent, range, ignoreEntityCode) && IsAwareOfTarget(ent, range, range))
+                //Dead things can contribute to morale but not be the cause of a route.
+                if (!ent.Alive)
+                    return false;
+
+                if (!IsTargetableEntity(ent, range, ignoreEntityCode) && AiUtility.IsAwareOfTarget(entity, ent, range, range))
                     return false;
 
                 //Don't be scared of our friends.
@@ -241,7 +245,7 @@ namespace ExpandedAiTasks
                     if ( itemStackSourcesOfFearWeightsByCodeExact.Count > 0 || itemStackSourcesOfFearWeightsByCodePartial.Count > 0 )
                         itemStackSourceOfFearTotalWeight += item.Itemstack != null ? GetItemStackSourceOfFearWeight(item.Itemstack) : 0;
 
-                    //Don't target items of they don't scare us.
+                    //Don't target items if they don't scare us.
                     if (!IsTargetableItem(ent))
                         return false;
                 }
@@ -391,6 +395,7 @@ namespace ExpandedAiTasks
             targetEntity = null;
 
             //Clear are whole target history, so we don't attempt to re-engage pre-rout targets.
+            //To Do: Right now, we are using morale to make archers withdraw to a safe-firing distance, we do not want them to reset their target in this case.
             entity.Notify("clearTargetHistory", entity);
         }
 
