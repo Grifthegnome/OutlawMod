@@ -47,6 +47,9 @@ namespace ExpandedAiTasks
             {
                 AiUtility.SetLastAttacker(__instance, damageSource);
             }
+
+            if ( AiUtility.GetLastAttacker( __instance) != null )
+                AiUtility.TryNotifyHerdMembersToAttack( __instance, AiUtility.GetLastAttacker(__instance), AiUtility.GetHerdAlertRangeForEntity(__instance), true );
         }
     }
 }

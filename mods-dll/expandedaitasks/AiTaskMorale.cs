@@ -229,7 +229,7 @@ namespace ExpandedAiTasks
                 if (!ent.Alive)
                     return false;
 
-                if (!IsTargetableEntity(ent, range, ignoreEntityCode) && AiUtility.IsAwareOfTarget(entity, ent, range, range))
+                if (!IsTargetableEntity(ent, range, ignoreEntityCode) || !AiUtility.IsAwareOfTarget(entity, ent, range, range))
                     return false;
 
                 //Don't be scared of our friends.

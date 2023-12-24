@@ -11,6 +11,7 @@ using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 using Vintagestory.API.Client;
+using System.Text;
 
 namespace ExpandedAiTasks
 {
@@ -526,7 +527,32 @@ namespace ExpandedAiTasks
         public override bool Notify(string key, object data)
         {
 
-            if (key == "entityAttackedGuardedEntity")
+            if (key == "attackEntity")
+            {
+                //If we don't have a target, assist our group.
+                if (targetEntity == null)
+                {
+                    //If we are in range of our ally, respond.
+                    EntityTargetPairing targetPairing = (EntityTargetPairing)data;
+                    Entity herdMember = targetPairing.entityTargeting;
+                    Entity newTarget = targetPairing.targetEntity;
+
+                    if (newTarget == null || !IsTargetableEntity(newTarget, maxDist, true) || !AiUtility.IsAwareOfTarget(entity, newTarget, maxDist, maxVertDist))
+                        return false;
+
+                    double distSqr = entity.ServerPos.XYZ.SquareDistanceTo(herdMember.ServerPos.XYZ);
+                    if (distSqr <= maxDist * maxDist)
+                    {
+                        targetEntity = newTarget;
+
+                        targetLKP          = targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0);
+                        lastTimeSeenTarget = entity.World.ElapsedMilliseconds;
+
+                        return true;
+                    }
+                }
+            }
+            else if (key == "entityAttackedGuardedEntity")
             {
                 //If a guard task tells us our guard target has been attacked, engage the target as if they attacked us.
                 if ((Entity)data != null && guardTargetAttackedByEntity != (Entity)data)

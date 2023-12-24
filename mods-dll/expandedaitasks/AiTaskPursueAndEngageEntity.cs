@@ -44,7 +44,7 @@ namespace ExpandedAiTasks
         protected bool alarmHerd = false;
         protected bool packHunting = false; //Each individual herd member's maxTargetHealth value will equal maxTargetHealth * number of herd members.
         protected bool pursueLastKnownPosition = true;
-        protected float noLOSTimeoutMs = 15000.0f;
+        protected float noLOSTimeoutMs = 3000.0f;
 
         //State Vars
         protected bool stopNow = false;
@@ -119,7 +119,7 @@ namespace ExpandedAiTasks
             alarmHerd = taskConfig["alarmHerd"].AsBool(false);
             packHunting = taskConfig["packHunting"].AsBool(false);
             pursueLastKnownPosition = taskConfig["pursueLastKnownPosition"].AsBool(true);
-            noLOSTimeoutMs = taskConfig["noLOSTimeout"].AsFloat(15000.0f);
+            noLOSTimeoutMs = taskConfig["noLOSTimeout"].AsFloat(3000.0f);
 
             retaliateAttacks = taskConfig["retaliateAttacks"].AsBool(true);
 
@@ -392,7 +392,7 @@ namespace ExpandedAiTasks
                 //If we have LOS to our target
                 if ( pursueLastKnownPosition && canSeeTarget)
                 {
-                    lastKnownPos.Set(targetEntity.ServerPos.X + targetEntity.ServerPos.Motion.X * 10, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z + targetEntity.ServerPos.Motion.Z * 10);
+                    lastKnownPos.Set(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
                     lastKnownMotion = targetEntity.ServerPos.Motion;
                     lastTimeSawTarget = entity.World.ElapsedMilliseconds;
                     pathTraverser.CurrentTarget.X = targetEntity.ServerPos.X;
@@ -402,7 +402,6 @@ namespace ExpandedAiTasks
                 //If we can't see our target.
                 if (pursueLastKnownPosition && !canSeeTarget)
                 {
-                    lastKnownPos.Set(targetEntity.ServerPos.X + lastKnownMotion.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z + lastKnownMotion.Z);
                     pathTraverser.CurrentTarget.X = lastKnownPos.X;
                     pathTraverser.CurrentTarget.Y = lastKnownPos.Y;
                     pathTraverser.CurrentTarget.Z = lastKnownPos.Z;
@@ -534,8 +533,17 @@ namespace ExpandedAiTasks
 
             float range = pursueRange;
 
+            //If we reach the location and can't seem to find the enemy, start moving the direction they went.
+            bool reachedLKP = false;
+            if (pursueLastKnownPosition && !canSeeTarget && entity.ServerPos.XYZ.SquareDistanceTo(lastKnownPos) < 1 * 1)
+            {
+                lastKnownPos += lastKnownMotion;
+                reachedLKP = true;
+            }
+                
+
             return
-                (lastTimeSawTarget + noLOSTimeoutMs >= entity.World.ElapsedMilliseconds || !pursueLastKnownPosition) &&
+                ( lastTimeSawTarget + noLOSTimeoutMs >= entity.World.ElapsedMilliseconds || !pursueLastKnownPosition || !reachedLKP) &&
                 currentFollowTime < maxFollowTime &&
                 currentWithdrawTime < withdrawEndTime &&
                 distance < range * range &&
@@ -563,7 +571,7 @@ namespace ExpandedAiTasks
 
         public override bool Notify(string key, object data)
         {
-            if (key == "pursueEntity")
+            if (key == "pursueEntity" || key == "attackEntity")
             {
                 //If we don't have a target, assist our group.
                 if (targetEntity == null )
@@ -572,6 +580,9 @@ namespace ExpandedAiTasks
                     EntityTargetPairing targetPairing = (EntityTargetPairing)data;
                     Entity herdMember = targetPairing.entityTargeting;
                     Entity newTarget = targetPairing.targetEntity;
+
+                    if (newTarget == null)
+                        return false;
 
                     double distSqr = entity.ServerPos.XYZ.SquareDistanceTo(herdMember.ServerPos.XYZ);
                     if ( distSqr <= pursueRange * pursueRange )
@@ -828,19 +839,7 @@ namespace ExpandedAiTasks
 
         private void TryAlarmHerd()
         {
-            if ((alarmHerd) && entity.HerdId > 0)
-            {
-
-                foreach ( EntityAgent herdMember in herdMembers)
-                {
-                    if (herdMember.EntityId != entity.EntityId && herdMember.Alive && herdMember.HerdId == entity.HerdId)
-                    {
-                        EntityTargetPairing targetPairing = new EntityTargetPairing( entity, targetEntity );
-                        herdMember.Notify("pursueEntity", targetPairing);
-                    }
-                        
-                }
-            }
+            AiUtility.TryNotifyHerdMembersToAttack(entity, targetEntity, AiUtility.GetHerdAlertRangeForEntity(entity), true);
         }
     }
 }

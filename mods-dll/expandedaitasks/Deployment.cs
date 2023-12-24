@@ -19,6 +19,9 @@ namespace ExpandedAiTasks
                 RegisterAiTasksOnServer();
                 IlluminationManager.Init(api as ICoreServerAPI);
                 api.Event.OnEntityDespawn += IlluminationManager.OnDespawn;
+
+                //Tell Entity Manager to Track Projectile Spawns.
+                api.Event.OnEntitySpawn += EntityManager.OnEntityProjectileSpawn;
             }
 
             RegisterAiTasksShared();
@@ -46,6 +49,9 @@ namespace ExpandedAiTasks
 
             if (!AiTaskRegistry.TaskTypes.ContainsKey("guard"))
                 AiTaskRegistry.Register<AiTaskGuard>("guard");
+
+            if (!AiTaskRegistry.TaskTypes.ContainsKey("reacttoprojectiles"))
+                AiTaskRegistry.Register<AiTaskReactToProjectiles>("reacttoprojectiles");
         }
 
         private static void RegisterAiTasksShared()
@@ -71,6 +77,9 @@ namespace ExpandedAiTasks
 
             if (!AiTaskRegistry.TaskTypes.ContainsKey("guard"))
                 AiTaskRegistry.Register("guard", typeof(AiTaskGuard));
+
+            if (!AiTaskRegistry.TaskTypes.ContainsKey("reacttoprojectiles"))
+                AiTaskRegistry.Register("reacttoprojectiles", typeof(AiTaskReactToProjectiles));
         }
     }
 }

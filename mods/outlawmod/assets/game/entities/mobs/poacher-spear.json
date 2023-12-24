@@ -161,6 +161,11 @@
 				code: "taskai",
 				aitasks: [
 					{
+						code: "reacttoprojectiles",
+						entityCodes: ["player"],
+						priority: 5.1,
+					},
+					{
 						code: "morale",
 						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-feral" ],
 						priority: 5.0,

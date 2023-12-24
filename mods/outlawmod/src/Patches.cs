@@ -217,7 +217,16 @@ namespace OutlawMod
             if (attacker is EntityPlayer && !AiUtility.IsInCombat(__instance.entity) && __instance.entity.World.ElapsedMilliseconds - AiUtility.GetLastTimeEntityInCombatMs(__instance.entity) > 10000.0f && damageSource.Type != EnumDamageType.Heal)
             {
                 if ( !AiUtility.IsAwareOfTarget( __instance.entity, attacker, 60, 60 ) )
-                    damage *= OMGlobalConstants.sneakAttackDamageMult;
+                {
+                    if ( AiUtility.AttackWasFromProjectile(damageSource) )
+                    {
+                        damage *= OMGlobalConstants.sneakAttackDamageMultRanged;
+                    }
+                    else
+                    {
+                        damage *= OMGlobalConstants.sneakAttackDamageMultMelee;
+                    }
+                }
             }
         }
 

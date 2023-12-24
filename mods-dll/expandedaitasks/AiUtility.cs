@@ -52,14 +52,14 @@ namespace ExpandedAiTasks
 
         //To Do: Consider adding smell. (See if there is a concept of wind direction.)
 
-        private const double AI_HEARING_RANGE = 5;
+        private const double AI_HEARING_RANGE = 7.5;
 
         private const double MAX_LIGHT_LEVEL = 22;//12;
         private const double MIN_LIGHT_LEVEL = 4;
         private const double MAX_LIGHT_LEVEL_DETECTION_DIST = 60;
         private const double MIN_LIGHT_LEVEL_DETECTION_DIST = 2;
 
-        private const float MAX_DYNAMIC_LIGHT_SEARCH_DIST = 12.0f;
+        private const float HERD_ALERT_RANGE = 30;
 
         //To Do: Consider narrowing AI FOV at night.
         private const float AI_VISION_FOV = 120;
@@ -139,6 +139,11 @@ namespace ExpandedAiTasks
             return lastAttackedMs;
         }
 
+        public static bool AttackWasFromProjectile( DamageSource damageSource )
+        {
+            return damageSource.SourceEntity is EntityProjectile;
+        }
+
         public static void UpdateLastTimeEntityInCombatMs( Entity ent )
         {
             ent.Attributes.SetDouble("lastTimeInCombatMs", ent.World.ElapsedMilliseconds);
@@ -216,6 +221,46 @@ namespace ExpandedAiTasks
             //Inform members of my new herd.
             foreach (Entity herdMember in newHerdMembers)
                 SetMasterHerdList(herdMember, newHerdMembers);
+        }
+
+        public static List<Entity> GetHerdMembersInRangeOfPos( Entity ent, Vec3d pos, float range )
+        {
+            List<Entity> allHerdMembers = GetMasterHerdList(ent);
+            List<Entity> membersInRange = new List<Entity>();
+            foreach( Entity member in allHerdMembers)
+            {
+                double distSqr = member.ServerPos.XYZ.SquareDistanceTo(pos);
+                if ( distSqr <= range * range )
+                    membersInRange.Add(member);
+            }
+
+            return membersInRange;
+            
+        }
+
+        public static void TryNotifyHerdMembersToAttack(EntityAgent alertEntity, Entity targetEntity, float alertRange, bool requireAwarenessToNotify )
+        {
+            if ( alertEntity.HerdId > 0 )
+            {
+                List<Entity> membersInRange = GetHerdMembersInRangeOfPos( alertEntity, alertEntity.ServerPos.XYZ, alertRange );
+                foreach (EntityAgent herdMember in membersInRange)
+                {
+                    if (herdMember.EntityId != alertEntity.EntityId && herdMember.HerdId == alertEntity.HerdId)
+                    {
+                        if ( !requireAwarenessToNotify || IsAwareOfTarget(herdMember, alertEntity, alertRange, alertRange) )
+                        {
+                            EntityTargetPairing targetPairing = new EntityTargetPairing(alertEntity, targetEntity);
+                            herdMember.Notify("attackEntity", targetPairing);
+                        } 
+                    }
+                }
+            }
+        }
+
+        public static float GetHerdAlertRangeForEntity( Entity ent )
+        {
+            //We can replace this with a Attribute in the future if we want.
+            return HERD_ALERT_RANGE;
         }
 
         public static bool IsInCombat( Entity ent )
@@ -439,6 +484,18 @@ namespace ExpandedAiTasks
 
         private static bool CanEntSeePos_BlockFilter(BlockPos pos, Block block)
         {
+            //Leaves block visability
+            if (block.BlockMaterial == EnumBlockMaterial.Leaves)
+                return false;
+
+            //Plants block visability
+            if (block.BlockMaterial == EnumBlockMaterial.Plant)
+                return false;
+
+            //Liquid Blocks visability
+            if (block.BlockMaterial == EnumBlockMaterial.Liquid)
+                return false;
+
             return true;
         }
 

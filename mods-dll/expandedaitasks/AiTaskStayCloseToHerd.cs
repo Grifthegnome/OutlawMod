@@ -173,7 +173,8 @@ namespace ExpandedAiTasks
                     if ( !herdMember.Alive )
                         continue;
 
-                    if ( herdMember.EntityId < bestEntityId)
+                    //Prioritize a herd member who is in combat, otherwise go with the lowest ent index in the herd.
+                    if ( herdMember.EntityId < bestEntityId && !AiUtility.IsInCombat( bestCanidate ) )
                     {
                         bestEntityId = herdMember.EntityId;
                         bestCanidate = herdMember;
