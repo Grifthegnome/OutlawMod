@@ -159,7 +159,8 @@ namespace ExpandedAiTasks
             itemStackSourceOfFearTotalWeight = 0;
             poiSourceOfFearTotalWeight = 0;
 
-            targetEntity = partitionUtil.GetNearestInteractableEntity(ownPos, moraleRange, (e) => IsValidMoraleTarget(e, moraleRange, canRoutFromAnyEnemy));
+            //targetEntity = partitionUtil.GetNearestInteractableEntity(ownPos, moraleRange, (e) => IsValidMoraleTarget(e, moraleRange, canRoutFromAnyEnemy));
+            targetEntity = entity.World.GetNearestEntity(ownPos, moraleRange, moraleRange, IsValidMoraleTarget);
 
             if (targetEntity != null)
             {
@@ -215,7 +216,7 @@ namespace ExpandedAiTasks
             return false;
         }
 
-        private bool IsValidMoraleTarget(Entity ent, float range, bool ignoreEntityCode = false)
+        private bool IsValidMoraleTarget(Entity ent)
         {
 
             //Handle case where our target is an enemy entity.
@@ -229,7 +230,8 @@ namespace ExpandedAiTasks
                 if (!ent.Alive)
                     return false;
 
-                if (!IsTargetableEntity(ent, range, ignoreEntityCode) || !AiUtility.IsAwareOfTarget(entity, ent, range, range))
+                bool ignoreEntityCode = canRoutFromAnyEnemy;
+                if (!IsTargetableEntity(ent, moraleRange, ignoreEntityCode) || !AiUtility.IsAwareOfTarget(entity, ent, moraleRange, moraleRange))
                     return false;
 
                 //Don't be scared of our friends.

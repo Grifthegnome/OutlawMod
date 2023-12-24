@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 
 namespace ExpandedAiTasks
@@ -69,6 +70,23 @@ namespace ExpandedAiTasks
         public void Extend( List<Entity> list )
         {
             _managedEntityArray.AddRange(list);
+        }
+
+        public void FilterByCheckResult( ActionBoolReturn<Entity> check )
+        {
+            List<Entity> compactedList = new List<Entity>();
+            foreach (Entity entity in _managedEntityArray)
+            {
+                if (entity != null)
+                {
+                    if ( check(entity) )
+                    {
+                        compactedList.Add(entity);
+                    }   
+                }
+            }
+
+            _managedEntityArray = compactedList;
         }
     }
 }

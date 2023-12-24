@@ -121,16 +121,12 @@ namespace ExpandedAiTasks
         private static bool IsLitByDynamicLight(Entity ent, int ambientLightLevel)
         {
             brightestDynamicLightLevel = ambientLightLevel;
-            partitionUtil.WalkEntityPartitions(ent.ServerPos.XYZ, MAX_DYNAMIC_LIGHT_SEARCH_DIST, (entity) => GetBrightestDynamicLightLevel(entity, MAX_DYNAMIC_LIGHT_SEARCH_DIST));
+            ent.World.GetEntitiesAround(ent.ServerPos.XYZ, MAX_DYNAMIC_LIGHT_SEARCH_DIST, MAX_DYNAMIC_LIGHT_SEARCH_DIST, GetBrightestDynamicLightLevel);
             return brightestDynamicLightLevel > ambientLightLevel;
         }
 
-        private static bool GetBrightestDynamicLightLevel(Entity ent, float range)
+        private static bool GetBrightestDynamicLightLevel(Entity ent)
         {
-            //if we've already found a light source that is bright enough to ruin our stealth, skip all others.
-            //if (brightestDynamicLightLevel > MAX_LIGHT_LEVEL)
-            //    return;
-
             if (ent is EntityItem)
             {
                 EntityItem itemEnt = (EntityItem)ent;

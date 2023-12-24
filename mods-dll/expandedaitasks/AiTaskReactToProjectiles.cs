@@ -86,7 +86,7 @@ namespace ExpandedAiTasks
         {            
             knownProjectiles.Clear();
 
-            List<EntityProjectile> projectilesInRange = EntityManager.GetAllEntityProjectilesWithinRangeOfPos(entity.ServerPos.XYZ, reactRange);
+            List<EntityProjectile> projectilesInRange = EntityManager.GetAllEntityProjectilesInFlightWithinRangeOfPos(entity.ServerPos.XYZ, reactRange);
             knownProjectiles = FilterProjectiles(projectilesInRange);
 
             EntityProjectile bestProjectile = null;
