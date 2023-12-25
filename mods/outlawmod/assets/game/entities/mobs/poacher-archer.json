@@ -266,7 +266,7 @@
 						damageFalloffEndDist: 28,
 						projectileItem: "arrow-copper",
 						projectileRemainsInWorld: true,
-						projectileBreakOnImpactChance: 0.90,
+						projectileBreakOnImpactChance: 0.95,
 						stopIfPredictFriendlyFire: true,
 
 						leadTarget: true,

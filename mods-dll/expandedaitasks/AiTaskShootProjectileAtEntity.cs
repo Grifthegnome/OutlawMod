@@ -377,8 +377,8 @@ namespace ExpandedAiTasks
 
                 if ( durability == 0 )
                     projectile.ProjectileStack.Attributes.SetInt("durability", durability);
-                
-                projectile.DropOnImpactChance = projectileBreakOnImpactChance;
+
+                projectile.DropOnImpactChance = survivedImpact ? 1.0f : 0.0f;
                 //projectile.Weight = 0.0f;
 
                 projectile.ServerPos.SetPos(shotStartPosition);
