@@ -44,7 +44,7 @@
 	},
 	variantgroups: [
 		{ code: "type", states: ["looter", "poacher", "brigand", "yeoman"]},
-		{ code: "material", states: ["chert", "granite", "andesite", "basalt", "obsidian", "peridotite", "flint", "scrap", 
+		{ code: "material", states: ["chert", "granite", "andesite", "basalt", "obsidian", "peridotite", "flint", 
 			"copper", "tinbronze", "bismuthbronze", "blackbronze", "ornategold", "ornatesilver", "hacking" ] },
 		{ loadFromProperties: "abstract/horizontalorientation" }
 	],
