@@ -75,6 +75,7 @@ namespace ExpandedAiTasks
         }
 
         bool hasPath = false;
+        bool hadPathLastFrame = false;
         private int consecutivePathFailCount = 0;
 
         float stepHeight;
@@ -365,7 +366,7 @@ namespace ExpandedAiTasks
                 bool giveUpWhenNoPath = withdrawIfNoPath;
 
                 Vec3d pathToPos = pursueLastKnownPosition ? lastKnownPos : targetPos;
-                hasPath = pathTraverser.NavigateTo_Async(pathToPos, GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck, null, 2000 );
+                hasPath = pathTraverser.NavigateTo_Async(pathToPos, GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck, OnPathFailed, 2000 );
                 
                 
                 lastPathUpdateSeconds = 0;
@@ -565,6 +566,9 @@ namespace ExpandedAiTasks
                 entity.AnimManager.StopAnimation(pursueAnimation);
 
             targetEntity = null;
+            lastKnownMotion = null;
+            lastKnownPos = null;
+            lastTimeSawTarget = 0;
             pathTraverser.Stop();
         }
 
@@ -646,10 +650,29 @@ namespace ExpandedAiTasks
             return false;
         }
 
-
         private void OnStuck()
         {
-            stopNow = true;
+            if ( withdrawIfNoPath )
+            {
+                hasPath = false;
+            }
+            else
+            {
+                stopNow = true;
+            }
+            
+        }
+
+        private void OnPathFailed()
+        {
+            if (withdrawIfNoPath)
+            {
+                hasPath = false;
+            }
+            else
+            {
+                stopNow = true;
+            }
         }
 
         private void OnGoalReached()
@@ -678,7 +701,7 @@ namespace ExpandedAiTasks
                 if (withdrawAnimation != null)
                     entity.AnimManager.StopAnimation(withdrawAnimation);
             }
-            else if (distSqr <= engageRange * engageRange)
+            else if (distSqr <= engageRange * engageRange && entity.ServerPos.Motion.Length() > 0 )
             {
                 //Engage State
                 internalMovementState = eInternalMovementState.Engaging;
@@ -692,7 +715,7 @@ namespace ExpandedAiTasks
                 if (engageAnimation != null)
                     entity.AnimManager.StartAnimation(new AnimationMetaData() { Animation = engageAnimation, Code = engageAnimation }.Init());
             }
-            else
+            else if ( entity.ServerPos.Motion.Length() > 0 )
             {
                 //Pursue State
                 internalMovementState = eInternalMovementState.Pursuing;
