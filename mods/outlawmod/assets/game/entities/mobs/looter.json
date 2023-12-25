@@ -11,32 +11,32 @@
 			{
 				type: "item",
 				code: "game:bread-rye-perfect",
-				quantity: { avg: 0.6, var: 0.4 }
+				quantity: { avg: 0.15, var: 0.0 }
 			},
 			{
 				type: "item",
 				code: "game:vegetable-carrot",
-				quantity: { avg: 0.8, var: 1.2 }
+				quantity: { avg: 0.125, var: 0.0 }
 			},
 			{
 				type: "item",
 				code: "game:vegetable-turnip",
-				quantity: { avg: 0.8, var: 1.2 }
+				quantity: { avg: 0.125, var: 0.0 }
 			},
 			{
 				type: "item",
 				code: "game:vegetable-onion",
-				quantity: { avg: 0.8, var: 1.2 }
+				quantity: { avg: 0.125, var: 0.0 }
 			},
 			{
 				type: "item",
 				code: "game:vegetable-parsnip",
-				quantity: { avg: 0.8, var: 1.2 }
+				quantity: { avg: 0.125, var: 0.0 }
 			},
 			{
 				type: "item",
 				code: "game:egg-chicken-raw",
-				quantity: { avg: 0.8, var: 1.2 }
+				quantity: { avg: 0.125, var: 0.0 }
 			},
 			{
 				type: "item",
@@ -120,11 +120,6 @@
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
 			{ code: "health", currenthealth: 6, maxhealth: 6 },
 			{ code: "harvestable", drops: [
-				{
-					type: "block", 
-					code: "game:linen-normal-down", 
-					quantity: { avg: 0.25, var: 0.75 } 
-				},
 				{
 					type: "item",
 					code: "outlawhead-looter",

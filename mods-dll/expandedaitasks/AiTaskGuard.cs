@@ -152,7 +152,7 @@ namespace ExpandedAiTasks
 
             float size = guardedEntity.SelectionBox.XSize;
 
-            pathTraverser.NavigateTo(guardedEntity.ServerPos.XYZ, moveSpeed, size + 0.2f, OnGoalReached, OnStuck, false, 1000 );
+            pathTraverser.NavigateTo_Async(guardedEntity.ServerPos.XYZ, moveSpeed, size + 0.2f, OnGoalReached, OnStuck, null, 1000 );
 
             targetOffset.Set(entity.World.Rand.NextDouble() * 2 - 1, 0, entity.World.Rand.NextDouble() * 2 - 1);
 

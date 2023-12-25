@@ -200,7 +200,7 @@
 						priority: 1.48,
 						movespeed: 0.048,
 						animationSpeed: 1.0,
-						maxDistance: 4,
+						maxDistance: 8,
 						arriveDistance: 4,
 						searchRange: 25,
 						allowStrayFromHerdInCombat: true,
