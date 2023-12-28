@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Datastructures;
+using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
 
 namespace ExpandedAiTasks
@@ -23,6 +25,8 @@ namespace ExpandedAiTasks
         {
             base.LoadConfig(taskConfig, aiConfig);
         }
+
+
         public override bool ShouldExecute()
         {
             Debug.Assert(false, "This function needs to be overriden and should never be called.");
@@ -37,6 +41,10 @@ namespace ExpandedAiTasks
                 if (((EntityAgent)e).HerdId == entity.HerdId)
                     return false;
             }
+
+            //Don't target projectiles, even it they hit us.
+            if ( e is EntityProjectile )
+                return false;
 
             return base.IsTargetableEntity(e, range, ignoreEntityCode);
         }
@@ -68,20 +76,27 @@ namespace ExpandedAiTasks
         }
 
         //This is an override for the default OnEntityHurt func that prevents Ai from aggoing on friendly herd members.
-        public override void OnEntityHurt(DamageSource source, float damage)
+        public override void OnEntityHurt(DamageSource damageSource, float damage)
         {
-            if (source.SourceEntity is EntityAgent)
+            Entity attacker = damageSource.SourceEntity;
+
+            if (attacker is EntityProjectile && damageSource.CauseEntity != null)
             {
-                EntityAgent attacker = source.SourceEntity as EntityAgent;
-                if ( attacker.HerdId != entity.HerdId)
+                attacker = damageSource.CauseEntity;
+            }
+
+            if ( attacker is EntityAgent )
+            {
+                EntityAgent attackerAgent = attacker as EntityAgent;
+                if ( attackerAgent.HerdId != entity.HerdId )
                 {
-                    attackedByEntity = source.SourceEntity;
+                    attackedByEntity   = attackerAgent;
                     attackedByEntityMs = entity.World.ElapsedMilliseconds;
                 }     
             }
             else
             {
-                attackedByEntity = source.SourceEntity;
+                attackedByEntity   = attacker;
                 attackedByEntityMs = entity.World.ElapsedMilliseconds;
             }
         }

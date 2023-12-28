@@ -7,6 +7,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using Vintagestory.API.Datastructures;
 using Vintagestory.GameContent;
+using ExpandedAiTasks;
 
 namespace OutlawMod
 {
@@ -28,7 +29,8 @@ namespace OutlawMod
             set
             {
                 WatchedAttributes.SetString("personality", value);
-                talkUtil?.SetModifiers(Personalities[value].TalkSpeedModifier, Personalities[value].PitchModifier, Personalities[value].VolumneModifier);
+                talkUtil?.SetModifiers(Personalities[value].ChorldDelayMul, Personalities[value].PitchModifier, Personalities[value].VolumneModifier);
+
             }
         }
 
@@ -89,9 +91,9 @@ namespace OutlawMod
         /// Called when the entity despawns
         /// </summary>
         /// <param name="despawn"></param>
-        public override void OnEntityDespawn(EntityDespawnReason despawn)
+        public override void OnEntityDespawn(EntityDespawnData despawnData )
         {
-            base.OnEntityDespawn(despawn);
+            base.OnEntityDespawn( despawnData );
         }
 
         public override void OnGameTick(float dt)
@@ -167,6 +169,25 @@ namespace OutlawMod
 
             }
             
+        }
+
+        public override bool ShouldReceiveDamage(DamageSource damageSource, float damage)
+        {
+            
+            Entity attacker = damageSource.SourceEntity;
+            if (attacker is EntityProjectile && damageSource.CauseEntity != null)
+            {
+                attacker = damageSource.CauseEntity;
+            }
+
+            if ( attacker is EntityAgent )
+            {
+                //We are not allowed to do friendly fire damage to herd members.
+                if (AiUtility.AreMembersOfSameHerd(attacker, this))
+                    return false;
+            }
+                
+            return true;
         }
 
         public override void PlayEntitySound(string type, IPlayer dualCallByPlayer = null, bool randomizePitch = true, float range = 24)

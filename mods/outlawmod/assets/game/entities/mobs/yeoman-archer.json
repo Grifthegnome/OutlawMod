@@ -11,7 +11,7 @@
 			{
 				type: "item",
 				code: "game:poultice-reed-horsetail",
-				quantity: { avg: 0.8, var: 0 }
+				quantity: { avg: 0.4, var: 0 }
 			},
 			{
 				type: "item",
@@ -21,17 +21,17 @@
 			{
 				type: "item",
 				code: "game:nugget-nativecopper",
-				quantity: { avg: 0.5, var: 0.5 }
+				quantity: { avg: 0.125, var: 0.0 }
 			},
 			{
 				type: "item",
 				code: "game:nugget-nativesilver",
-				quantity: { avg: 0.125, var: 1 }
+				quantity: { avg: 0.025, var: 0.0 }
 			},
 			{
 				type: "item",
 				code: "game:nugget-nativegold",
-				quantity: { avg: 0.025, var: 0 }
+				quantity: { avg: 0.005, var: 0 }
 			},
 			{
 				type: "item",
@@ -143,11 +143,6 @@
 			{ code: "health", currenthealth: 12, maxhealth: 12 },
 			{ code: "harvestable", drops: [
 				{
-					type: "block", 
-					code: "game:linen-normal-down", 
-					quantity: { avg: 0.25, var: 0.75 } 
-				},
-				{
 					type: "item",
 					code: "outlawhead-yeoman",
 					quantity: { avg: 1, var: 0 }
@@ -165,6 +160,11 @@
 			{ 
 				code: "taskai",
 				aitasks: [
+					{
+						code: "reacttoprojectiles",
+						entityCodes: ["player"],
+						priority: 5.1,
+					},
 					{
 						code: "morale",
 						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-feral" ],
@@ -216,17 +216,20 @@
 					},
 					//Flee to arrow range.
 					{
-						code: "fleeentity",
+						code: "morale",
 						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "hound-feral"],
-						priority: 3.8,
+						priority: 4.9,
 						movespeed: 0.040,
-						seekingRange: 6,
 						cancelOnHurt: false,
-						fleeingDistance: 32,
-						fleeDurationMs: 9999999,
+						routDistance: 15,
+						rallyTimeAfterRoutMs: 10000,
+						minMorale: 0.0,
+						maxMorale: 0.0,
+						moraleRange: 5,
+						useGroupMorale: true,
+						canRoutFromAnyEnemy: false,
 						animation: "sprint",
 						animationSpeed: 1,
-						executionChance: 1.0,
 					},
 					{
 						code: "shootatentity",
@@ -250,11 +253,13 @@
 						projectileItem: "arrow-copper",
 						dummyProjectile: "dummyarrow-copper",
 						projectileRemainsInWorld: true,
-						projectileBreakOnImpactChance: 0.90,
+						projectileBreakOnImpactChance: 0.95,
 						stopIfPredictFriendlyFire: true,
 
 						leadTarget: true,
             			arcShots: true,
+						fireOnLastKnownPosition: true,
+						lastKnownPositionTimeoutMs: 5000,
 
 						durationMs: 2000,
 						releaseAtMs: 1000,
@@ -277,20 +282,21 @@
 						mincooldown: 0, 
 						maxcooldown: 0, 
 						pursueSpeed: 0.040,
-						pursueRange: 40,
+						pursueRange: 45,
 						pursueAnimation: "sprint",
-						engageSpeed: 0.006,
-						engageRange: 34,
+						engageSpeed: 0.026,
+						engageRange: 4,
 						engageAnimation: "walkbowready",
-						arriveRange: 20,
-						arriveVerticalRange: 20,
+						arriveRange: 4,
+						arriveVerticalRange: 4,
+
 						withdrawIfNoPath: true,
        					withdrawDist: 20.0,
         				withdrawDistDamaged: 30.0,
 						withdrawAnimation: "idle",
 
 						animationSpeed: 1.0,
-						//maxFollowTime: 60,
+						maxFollowTime: 60,
 						alarmHerd: true,
 						//whenInEmotionState: "aggressiveondamage"
 					},
@@ -341,14 +347,26 @@
 			}
 		],
 		spawnconditions: {
+			worldgen: {
+				TriesPerChunk: { avg: 0.014, var: 0 },
+				tryOnlySurface: true,
+				lightLevelType: "MaxTimeOfDayLight",					
+				groupSize: { dist: "stronginvexp", avg: 2, var: 4 },
+				insideBlockCodes: ["game:air", "game:tallgrass-*","game:snowlayer-1"],
+				minTemp: -15,
+				maxTemp: 28,
+				minRain: 0,
+				minForestOrShrubs: 0.25,
+				companions: []
+			},
 			runtime: {
 				group: "hostile",
 				tryOnlySurface: true,
 				chance: 0.0008,
 				maxQuantity: 8,
 				"__comment": "Make them spawn away from artifical light and only at night/as the sun sets",
-				maxLightLevel: 5,
-				lightLevelType: "onlyBlockLight",					
+				maxLightLevel: 3,
+				lightLevelType: "MaxTimeOfDayLight",					
 				groupSize: { dist: "stronginvexp", avg: 2, var: 4 },
 				insideBlockCodes: ["game:air", "game:tallgrass-*","game:snowlayer-1"],
 				minTemp: -15,

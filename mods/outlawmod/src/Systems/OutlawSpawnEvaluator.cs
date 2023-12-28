@@ -92,7 +92,7 @@ namespace OutlawMod
 
         private static bool SpawnExcludedBySafeZone(Vec3d position, AssetLocation code)
         {
-            double totalDays = sapi.World.Calendar.TotalDays;
+            double totalDays = sapi.World.Calendar.ElapsedDays;
             double safeZoneDaysLeft = Math.Max(OMGlobalConstants.startingSpawnSafeZoneLifetimeInDays - totalDays, 0);
             double safeZoneRadius = OMGlobalConstants.startingSpawnSafeZoneRadius;
 
@@ -114,6 +114,10 @@ namespace OutlawMod
             //If we have an eternal safe zone, or a zone that has lifetime days remaining, try to block spawns.
             if (!OMGlobalConstants.startingSafeZoneHasLifetime || (safeZoneDaysLeft > 0))
             {
+                //We cannot access the default world spawnpoint until chunks are loaded.
+                if (sapi.WorldManager.AllLoadedChunks.Count == 0)
+                    return true;
+
                 //Make it so Outlaws can't spawn in the starting area.
                 EntityPos defaultWorldSpawn = sapi.World.DefaultSpawnPosition;
                 double distToWorldSpawnSqr = currentSpawnTryPosition.HorizontalSquareDistanceTo(defaultWorldSpawn.XYZ);

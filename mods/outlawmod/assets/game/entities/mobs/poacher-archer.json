@@ -11,12 +11,12 @@
 			{
 				type: "item",
 				code: "game:hide-raw-small",
-				quantity: { avg: 3, var: 1 }
+				quantity: { avg: 1.5, var: 0.5 }
 			},
 			{
 				type: "item",
 				code: "game:hide-raw-medium",
-				quantity: { avg: 1, var: 0.5 }
+				quantity: { avg: 0.5, var: 0.5 }
 			},
 			{
 				type: "item",
@@ -26,17 +26,17 @@
 			{
 				type: "item",
 				code: "game:bushmeat-raw",
-				quantity: { avg: 4, var: 2 }
+				quantity: { avg: 2, var: 1 }
 			},
 			{
 				type: "item",
 				code: "game:redmeat-raw",
-				quantity: { avg: 6, var: 2 }
+				quantity: { avg: 3, var: 1 }
 			},
 			{
 				type: "item",
 				code: "game:fat",
-				quantity: { avg: 2, var: 0.5 }
+				quantity: { avg: 1, var: 0.25 }
 			},
 			{
 				type: "item",
@@ -47,6 +47,11 @@
 				type: "item",
 				code: "game:bow-long",
 				quantity: { avg: 0.05, var: 0.0 }
+			},
+			{
+				type: "item",
+				code: "game:hunterbackpack",
+				quantity: { avg: 0.025, var: 0.0 }
 			}
 	],
 	client: {
@@ -148,11 +153,6 @@
 			{ code: "health", currenthealth: 12, maxhealth: 12 },
 			{ code: "harvestable", drops: [
 				{
-					type: "block", 
-					code: "game:linen-normal-down", 
-					quantity: { avg: 0.25, var: 0.75 } 
-				},
-				{
 					type: "item",
 					code: "outlawhead-poacher",
 					quantity: { avg: 1, var: 0 }
@@ -171,6 +171,11 @@
 			{ 
 				code: "taskai",
 				aitasks: [
+					{
+						code: "reacttoprojectiles",
+						entityCodes: ["player"],
+						priority: 5.1,
+					},
 					{
 						code: "morale",
 						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-feral" ],
@@ -230,6 +235,7 @@
 
 						leadTarget: true,
             			arcShots: true,
+						fireOnLastKnownPosition: false,
 
 						durationMs: 2000,
 						releaseAtMs: 1000,
@@ -260,12 +266,13 @@
 						damageFalloffEndDist: 28,
 						projectileItem: "arrow-copper",
 						projectileRemainsInWorld: true,
-						projectileBreakOnImpactChance: 0.90,
+						projectileBreakOnImpactChance: 0.95,
 						stopIfPredictFriendlyFire: true,
 
 						leadTarget: true,
             			arcShots: true,
-            			arcGravityScalar: 0.3666,
+            			fireOnLastKnownPosition: true,
+						lastKnownPositionTimeoutMs: 5000,
 
 						durationMs: 2000,
 						releaseAtMs: 1000,

@@ -26,7 +26,7 @@ namespace OutlawMod
             sapi.Event.OnTrySpawnEntity += Event_OnTrySpawnEntity;
         }
 
-        private bool Event_OnTrySpawnEntity(ref EntityProperties properties, Vec3d spawnPosition, long herdId)
+        private bool Event_OnTrySpawnEntity(IBlockAccessor blockAccessor, ref EntityProperties properties, Vec3d spawnPosition, long herdId)
         {
 
             if (OMGlobalConstants.devMode)

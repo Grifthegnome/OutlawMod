@@ -11,7 +11,7 @@
 			{
 				type: "item",
 				code: "game:poultice-reed-horsetail",
-				quantity: { avg: 0.8, var: 0 }
+				quantity: { avg: 0.4, var: 0 }
 			},
 			{
 				type: "item",
@@ -21,21 +21,21 @@
 			{
 				type: "item",
 				code: "game:nugget-nativecopper",
-				quantity: { avg: 0.5, var: 0.5 }
+				quantity: { avg: 0.125, var: 0.0 }
 			},
 			{
 				type: "item",
 				code: "game:nugget-nativesilver",
-				quantity: { avg: 0.125, var: 1 }
+				quantity: { avg: 0.025, var: 0.0 }
 			},
 			{
 				type: "item",
 				code: "game:nugget-nativegold",
-				quantity: { avg: 0.025, var: 0 }
+				quantity: { avg: 0.005, var: 0 }
 			},
 			{
 				type: "item",
-				code: "game:knife-copper",
+				code: "game:knife-generic-copper",
 				quantity: { avg: 0.10, var: 0.0 }
 			}
 	],
@@ -112,11 +112,6 @@
 			{ code: "health", currenthealth: 12, maxhealth: 12 },
 			{ code: "harvestable", drops: [
 				{
-					type: "block", 
-					code: "game:linen-normal-down", 
-					quantity: { avg: 0.25, var: 0.75 } 
-				},
-				{
 					type: "item",
 					code: "outlawhead-brigand",
 					quantity: { avg: 1, var: 0 }
@@ -135,6 +130,11 @@
 			{ 
 				code: "taskai",
 				aitasks: [
+					{
+						code: "reacttoprojectiles",
+						entityCodes: ["player"],
+						priority: 5.1,
+					},
 					{
 						code: "morale",
 						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-feral" ],

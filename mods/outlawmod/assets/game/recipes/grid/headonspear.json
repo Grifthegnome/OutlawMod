@@ -1,10 +1,43 @@
-{
-	ingredientPattern: "H,S",
-	ingredients: {
-		"H": { type: "item", code: "outlawhead-*", name: "type", quantity: 1 },
-		"S": { type: "item", code: "spear-*", name: "material", quantity: 1 }
+[
+	{
+		ingredientPattern: "H,S",
+		ingredients: {
+			"H": { type: "item", code: "outlawhead-looter", quantity: 1 },
+			"S": { type: "item", code: "spear-generic-*", name: "material", quantity: 1 }
+		},
+		width: 1,
+		height: 2,
+		output: { type: "block", code: "headonspear-looter-{material}-north"  }
 	},
-	width: 1,
-	height: 2,
-	output: { type: "block", code: "headonspear-{type}-{material}-north"  }
-}
+	{
+		ingredientPattern: "H,S",
+		ingredients: {
+			"H": { type: "item", code: "outlawhead-poacher", quantity: 1 },
+			"S": { type: "item", code: "spear-generic-*", name: "material", quantity: 1 }
+		},
+		width: 1,
+		height: 2,
+		output: { type: "block", code: "headonspear-poacher-{material}-north"  }
+	},
+	{
+		ingredientPattern: "H,S",
+		ingredients: {
+			"H": { type: "item", code: "outlawhead-brigand", quantity: 1 },
+			"S": { type: "item", code: "spear-generic-*", name: "material", quantity: 1 }
+		},
+		width: 1,
+		height: 2,
+		output: { type: "block", code: "headonspear-brigand-{material}-north"  }
+	},
+	{
+		ingredientPattern: "H,S",
+		ingredients: {
+			"H": { type: "item", code: "outlawhead-yeoman", quantity: 1 },
+			"S": { type: "item", code: "spear-generic-*", name: "material", quantity: 1 }
+		},
+		width: 1,
+		height: 2,
+		output: { type: "block", code: "headonspear-yeoman-{material}-north"  }
+	},	
+]
+

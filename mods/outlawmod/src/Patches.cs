@@ -16,8 +16,9 @@ using ExpandedAiTasks;
 
 namespace OutlawMod
 {
+
     ////////////////////////////////////////////////////////////////
-    /// PATCHING HARVESTABLE BEHAVIOR FOR CAUSE OF DEATH EVICENCE///
+    /// PATCHING HARVESTABLE BEHAVIOR FOR CAUSE OF DEATH EVIDENCE///
     ////////////////////////////////////////////////////////////////
 
     [HarmonyPatch(typeof(EntityBehaviorHarvestable))]
@@ -28,7 +29,8 @@ namespace OutlawMod
         {
             if (original != null)
             {
-                foreach (var patched in harmony.GetPatchedMethods())
+
+                foreach (var patched in harmony.GetPatchedMethods() )
                 {
                     if (patched.Name == original.Name)
                         return false;
@@ -55,7 +57,7 @@ namespace OutlawMod
                     infotext.AppendLine(Lang.Get("Looks crushed. Won't be able to harvest as much from this carcass."));
                 }
 
-                string deathByEntityLangCode = __instance.entity.WatchedAttributes.GetString("deathByEntity");
+                string deathByEntityLangCode = __instance.entity.WatchedAttributes.GetString("deathByEntityLangCode");
 
                 if (deathByEntityLangCode != null && !__instance.entity.WatchedAttributes.HasAttribute("deathByPlayer"))
                 {
@@ -177,28 +179,56 @@ namespace OutlawMod
         }
     }
 
-    //////////////////////////////////////////////////////////////////////////////////////
-    ///PATCHING TO ADD A UNIVERAL SET LOCATION FOR LAST ENTITY TO ATTACK ON ENTITY AGENT//
-    //////////////////////////////////////////////////////////////////////////////////////
-    /*
-    [HarmonyPatch(typeof(EntityAgent))]
-    public class ReceiveDamageOverride
+    //////////////////////////////////////////////////////////////
+    /// PATCHING ENTITY HEALTH BEHAVIOR TO ALLOW SNEAK ATTACKS ///
+    //////////////////////////////////////////////////////////////
+
+    [HarmonyPatch(typeof(EntityBehaviorHealth))]
+    public class OnEntityReceiveDamageOverride
     {
         [HarmonyPrepare]
         static bool Prepare(MethodBase original, Harmony harmony)
         {
+            if (original != null)
+            {
+
+                foreach (var patched in harmony.GetPatchedMethods())
+                {
+                    if (patched.Name == original.Name)
+                        return false;
+                }
+            }
+
             return true;
         }
 
-        [HarmonyPatch("ReceiveDamage")]
-        [HarmonyPostfix]
-        static void OverrideReceiveDamage(EntityAgent __instance, DamageSource damageSource, float damage)
+        [HarmonyPatch("OnEntityReceiveDamage")]
+        [HarmonyPrefix]
+        static void OverrideOnEntityReceiveDamage(EntityBehaviorHealth __instance, DamageSource damageSource, ref float damage)
         {
-            if (__instance.Alive)
+            Entity attacker = damageSource.SourceEntity;
+
+            if (attacker is EntityProjectile && damageSource.CauseEntity != null)
             {
-                AiUtility.SetLastAttacker(__instance, damageSource);
+                attacker = damageSource.CauseEntity;
+            }
+
+            //Give player super sneak attack damage if the target is not in combat and has not been in combat for 10 seconds.
+            if (attacker is EntityPlayer && !AiUtility.IsInCombat(__instance.entity) && __instance.entity.World.ElapsedMilliseconds - AiUtility.GetLastTimeEntityInCombatMs(__instance.entity) > 10000.0f && damageSource.Type != EnumDamageType.Heal)
+            {
+                if ( !AiUtility.IsAwareOfTarget( __instance.entity, attacker, 60, 60 ) )
+                {
+                    if ( AiUtility.AttackWasFromProjectile(damageSource) )
+                    {
+                        damage *= OMGlobalConstants.sneakAttackDamageMultRanged;
+                    }
+                    else
+                    {
+                        damage *= OMGlobalConstants.sneakAttackDamageMultMelee;
+                    }
+                }
             }
         }
+
     }
-    */
 }

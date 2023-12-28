@@ -5,6 +5,7 @@
 	deadHitboxSize: { x: 1, y: 0.75 },
 	eyeHeight: 0.9,
 	drops: [],
+	attributes:{ hasNightVision: true },
 	client: {
 		renderer: "Shape",
 		shape: { base: "entity/land/hound" },
@@ -169,7 +170,7 @@
 						damagePlayerAtMs: 500,
 						animation: "Attack",
 						animationSpeed: 2.5,
-						sound: "creature/wolf/attack"
+						sound: "creature/wolf/attack",
 					},
 					{
 						code: "engageentity",
@@ -193,7 +194,7 @@
 						animationSpeed: 2.2,
 						alarmHerd: true,
 						sound: "creature/wolf/growl",
-						whenInEmotionState: "aggressiveondamage"
+						whenInEmotionState: "aggressiveondamage",
 					},
 					//Don't hunt things when we can eat dead stuff nearby.
 					{
@@ -214,8 +215,7 @@
 						eatEveryting: true,
         				allowCannibalism: true,
 
-						whenNotInEmotionState: "saturated"
-
+						whenNotInEmotionState: "saturated",
 					},
 					{
 						code: "engageentity",
@@ -239,7 +239,7 @@
 						animationSpeed: 2.2,
 						alarmHerd: true,
 						sound: "creature/wolf/growl",
-						whenNotInEmotionState: "saturated"
+						whenNotInEmotionState: "saturated",
 					},
 					{
 						code: "stayclosetoherd",
@@ -253,7 +253,7 @@
 						allowHerdConsolidation: true,
 						consolidationRange: 40,
 						consolidationEntityCodes: ["hound-feral"],
-						animation: "Run"
+						animation: "Run",
 					},
 					{
 						code: "idle",
@@ -335,7 +335,7 @@
 			worldgen: {
 				TriesPerChunk: { avg: 0.07, var: 0 },
 				tryOnlySurface: true,
-				groupSize: { dist: "invexp", avg: 2, var: 2 },
+				groupSize: { dist: "stronginvexp", avg: 2, var: 2 },
 				insideBlockCodes: ["air", "tallgrass-*"],
 				minTemp: -15,
 				maxTemp: 15,

@@ -11,36 +11,36 @@
 			{
 				type: "item",
 				code: "game:bread-rye-perfect",
-				quantity: { avg: 0.6, var: 0.4 }
+				quantity: { avg: 0.15, var: 0.0 }
 			},
 			{
 				type: "item",
 				code: "game:vegetable-carrot",
-				quantity: { avg: 0.8, var: 1.2 }
+				quantity: { avg: 0.125, var: 0.0 }
 			},
 			{
 				type: "item",
 				code: "game:vegetable-turnip",
-				quantity: { avg: 0.8, var: 1.2 }
+				quantity: { avg: 0.125, var: 0.0 }
 			},
 			{
 				type: "item",
 				code: "game:vegetable-onion",
-				quantity: { avg: 0.8, var: 1.2 }
+				quantity: { avg: 0.125, var: 0.0 }
 			},
 			{
 				type: "item",
 				code: "game:vegetable-parsnip",
-				quantity: { avg: 0.8, var: 1.2 }
+				quantity: { avg: 0.125, var: 0.0 }
 			},
 			{
 				type: "item",
 				code: "game:egg-chicken-raw",
-				quantity: { avg: 0.8, var: 1.2 }
+				quantity: { avg: 0.125, var: 0.0 }
 			},
 			{
 				type: "item",
-				code: "game:woodenclub-scrap",
+				code: "game:club-generic-wood",
 				quantity: { avg: 0.10, var: 0.0 }
 			}
 			
@@ -121,11 +121,6 @@
 			{ code: "health", currenthealth: 6, maxhealth: 6 },
 			{ code: "harvestable", drops: [
 				{
-					type: "block", 
-					code: "game:linen-normal-down", 
-					quantity: { avg: 0.25, var: 0.75 } 
-				},
-				{
 					type: "item",
 					code: "outlawhead-looter",
 					quantity: { avg: 1, var: 0 }
@@ -143,6 +138,11 @@
 			{ 
 				code: "taskai",
 				aitasks: [
+					{
+						code: "reacttoprojectiles",
+						entityCodes: ["player", "yeoman-*", "poacher-*"],
+						priority: 5.1,
+					},
 					{
 						code: "morale",
 						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "hound-*" ],
@@ -193,23 +193,9 @@
 						animation: "attack",
 						animationSpeed: 2,
 					},					
-					//Flee when injured.
+
+					//DISABLING THIS UNTIL WE CAN GET IT WORKING WITH EXPANDED AI TASKS PROJECTILES, IT DOESN't WORK WITH OUR NEW STEALTH SYSTEMS BY DEFAULT.
 					/*
-					{
-						code: "fleeentity",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "hound-*" ],
-						priority: 4,
-						movespeed: 0.040,
-						seekingRange: 14,
-						cancelOnHurt: false,
-						fleeingDistance: 64,
-						fleeDurationMs: 9999999,
-						animation: "sprint",
-						animationSpeed: 1,
-						executionChance: 0.5,
-						whenInEmotionState: "fleeondamage",
-					},
-					*/
 					{
 						code: "throwatentity",
 						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*" ],
@@ -223,6 +209,7 @@
 						animationSpeed: 0.5,
 						animation: "throwlefthanded"
 					},
+					*/
 					//Agro When Damaged
 					{
 						code: "engageentity",
@@ -318,14 +305,25 @@
 			}
 		],
 		spawnconditions: {
+			worldgen: {
+				TriesPerChunk: { avg: 0.05, var: 0 },
+				tryOnlySurface: true,				
+				groupSize: { dist: "stronginvexp", avg: 4, var: 4 },
+				insideBlockCodes: ["game:air", "game:tallgrass-*","game:snowlayer-1"],
+				minTemp: -15,
+				maxTemp: 28,
+				minRain: 0,
+				minForest: 0.0,
+				companions: []
+			},
 			runtime: {
 				group: "hostile",
 				tryOnlySurface: true,
 				chance: 0.0022,
 				maxQuantity: 16,
-				"__comment": "Make them spawn away from artifical light, both day and night",
-				maxLightLevel: 6,
-				lightLevelType: "onlyBlockLight",					
+				"__comment": "Make them spawn away from artifical light, at night",
+				maxLightLevel: 3,
+				lightLevelType: "MaxTimeOfDayLight",					
 				groupSize: { dist: "stronginvexp", avg: 4, var: 4 },
 				insideBlockCodes: ["game:air", "game:tallgrass-*","game:snowlayer-1"],
 				minTemp: -15,

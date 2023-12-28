@@ -29,7 +29,7 @@ namespace ExpandedAiTasks
         bool aggroOnProximity = false;
         float aggroProximity = 5f;
 
-        EntityPartitioning partitionUtil;
+        //EntityPartitioning partitionUtil;
 
         protected bool stuck = false;
         protected bool stopNow = false;
@@ -114,7 +114,7 @@ namespace ExpandedAiTasks
             //If someone has attacked our guard entity, tell our targeting behaviors to target the enemy and early out.
             if (attacker == null || !attacker.Alive)
             {
-                attacker = partitionUtil.GetNearestEntity(guardedEntity.ServerPos.XYZ, detectionDistance, (e) => IsThreateningGuardedTarget(e, detectionDistance));
+                attacker = partitionUtil.GetNearestInteractableEntity(guardedEntity.ServerPos.XYZ, detectionDistance, (e) => IsThreateningGuardedTarget(e, detectionDistance));
                 attackerStartTargetMs = entity.World.ElapsedMilliseconds;
             }
 
@@ -152,7 +152,7 @@ namespace ExpandedAiTasks
 
             float size = guardedEntity.SelectionBox.XSize;
 
-            pathTraverser.NavigateTo(guardedEntity.ServerPos.XYZ, moveSpeed, size + 0.2f, OnGoalReached, OnStuck, false, 1000, true);
+            pathTraverser.NavigateTo_Async(guardedEntity.ServerPos.XYZ, moveSpeed, size + 0.2f, OnGoalReached, OnStuck, null, 1000 );
 
             targetOffset.Set(entity.World.Rand.NextDouble() * 2 - 1, 0, entity.World.Rand.NextDouble() * 2 - 1);
 
@@ -246,7 +246,7 @@ namespace ExpandedAiTasks
             if (nextTargetCheckTime <= targetUpdateTime)
             {
                 //If someone has attacked our guard entity, tell our targeting behaviors to target the enemy and early out.
-                Entity attacker = partitionUtil.GetNearestEntity(guardedEntity.ServerPos.XYZ, maxDistance, (e) => IsThreateningGuardedTarget(e, detectionDistance));
+                Entity attacker = partitionUtil.GetNearestInteractableEntity(guardedEntity.ServerPos.XYZ, maxDistance, (e) => IsThreateningGuardedTarget(e, detectionDistance));
                 if (attacker != null)
                 {
                     TrySendGuardedEntityAttackedNotfications(attacker);

@@ -34,6 +34,10 @@ By default, Outlaws will use a variety of recorded voice lines. Classic Vintage 
 
 OutlawsUseClassicVintageStoryVoices: Set this to true if you want Classic Vintage Story Voices for Outlaws.
 
+//STEALTH SYSTEM
+SneakAttackDamageMultRanged: The amount to multiply attack damage when an unaware enemy is hit with a ranged weapon.
+SneakAttackDamageMultMelee: The amount to multiply attack damage when an unaware enemy is hit with a melee weapon.
+
 //DEVELOPER STUFF
 This stuff is really just for me to work on the Mod, it's not super exciting, sorry.
 

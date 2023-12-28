@@ -10,8 +10,8 @@
 	drops: [
 			{
 				type: "item",
-				code: "game:poultice-linen-horsetail",
-				quantity: { avg: 0.8, var: 0 }
+				code: "game:poultice-reed-horsetail",
+				quantity: { avg: 0.4, var: 0 }
 			},
 			{
 				type: "item",
@@ -21,21 +21,21 @@
 			{
 				type: "item",
 				code: "game:nugget-nativecopper",
-				quantity: { avg: 0.5, var: 0.5 }
+				quantity: { avg: 0.125, var: 0.0 }
 			},
 			{
 				type: "item",
 				code: "game:nugget-nativesilver",
-				quantity: { avg: 0.125, var: 1 }
+				quantity: { avg: 0.025, var: 0.0 }
 			},
 			{
 				type: "item",
 				code: "game:nugget-nativegold",
-				quantity: { avg: 0.025, var: 0 }
+				quantity: { avg: 0.005, var: 0 }
 			},
 			{
 				type: "item",
-				code: "game:axe-copper",
+				code: "game:axe-felling-copper",
 				quantity: { avg: 0.05, var: 0.0 }
 			}
 	],
@@ -98,11 +98,6 @@
 			{ code: "health", currenthealth: 16, maxhealth: 16 },
 			{ code: "harvestable", drops: [
 				{
-					type: "block", 
-					code: "game:linen-normal-down", 
-					quantity: { avg: 0.25, var: 0.75 } 
-				},
-				{
 					type: "item",
 					code: "outlawhead-brigand",
 					quantity: { avg: 1, var: 0 }
@@ -119,6 +114,11 @@
 			{ 
 				code: "taskai",
 				aitasks: [
+					{
+						code: "reacttoprojectiles",
+						entityCodes: ["player"],
+						priority: 5.1,
+					},
 					{
 						code: "morale",
 						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-feral" ],
@@ -263,14 +263,25 @@
 			}
 		],
 		spawnconditions: {
+			worldgen: {
+				TriesPerChunk: { avg: 0.014, var: 0 },
+				tryOnlySurface: true,				
+				groupSize: { dist: "stronginvexp", avg: 2, var: 3 },
+				insideBlockCodes: ["game:air", "game:tallgrass-*","game:snowlayer-1"],
+				minTemp: -15,
+				maxTemp: 28,
+				minRain: 0,
+				minForestOrShrubs: 0.25,
+				companions: ["bandit-knife", "bandit-spear"]
+			},
 			runtime: {
 				group: "hostile",
 				tryOnlySurface: true,
 				chance: 0.0008,
 				maxQuantity: 4,
 				"__comment": "Make them spawn away from artifical light and only at night/as the sun sets",
-				maxLightLevel: 5,
-				lightLevelType: "onlyBlockLight",					
+				maxLightLevel: 3,
+				lightLevelType: "MaxTimeOfDayLight",					
 				groupSize: { dist: "stronginvexp", avg: 2, var: 3 },
 				insideBlockCodes: ["game:air", "game:tallgrass-*","game:snowlayer-1"],
 				minTemp: -15,

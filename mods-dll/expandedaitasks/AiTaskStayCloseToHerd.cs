@@ -173,7 +173,8 @@ namespace ExpandedAiTasks
                     if ( !herdMember.Alive )
                         continue;
 
-                    if ( herdMember.EntityId < bestEntityId)
+                    //Prioritize a herd member who is in combat, otherwise go with the lowest ent index in the herd.
+                    if ( herdMember.EntityId < bestEntityId && !AiUtility.IsInCombat( bestCanidate ) )
                     {
                         bestEntityId = herdMember.EntityId;
                         bestCanidate = herdMember;
@@ -213,8 +214,8 @@ namespace ExpandedAiTasks
             base.StartExecute();
 
             float size = herdLeaderEntity.SelectionBox.XSize;
-
-            pathTraverser.NavigateTo(herdLeaderEntity.ServerPos.XYZ, moveSpeed, size + 0.2f, OnGoalReached, OnStuck, false, 3000, true);
+           
+            pathTraverser.WalkTowards(herdLeaderEntity.ServerPos.XYZ, moveSpeed, size + 0.2f, OnGoalReached, OnStuck);
 
             targetOffset.Set(entity.World.Rand.NextDouble() * 2 - 1, 0, entity.World.Rand.NextDouble() * 2 - 1);
 

@@ -10,11 +10,15 @@ using Vintagestory.API.Config;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
+using Vintagestory.API.Client;
+using System.Text;
 
 namespace ExpandedAiTasks
 {
     public class AiTaskShootProjectileAtEntity : AiTaskBaseExpandedTargetable
     {
+        const float FRIENDLY_FIRE_DETECTION_ANGLE = 5.0f;
+
         int durationMs;
         int releaseAtMs;
 
@@ -44,11 +48,15 @@ namespace ExpandedAiTasks
         bool stopIfPredictFriendlyFire = false;
         bool leadTarget = true;
         bool arcShots = true;
+        bool fireOnLastKnownPosition = true;
+        float lastKnownPositionTimeoutMs = 5000f;
 
         Entity targetLastFrame = null;
         double dtSinceTargetAquired = 0.0f;
+        Vec3d targetLKP = null;
+        double lastTimeSeenTarget = 0;
 
-        EntityPartitioning partitionUtil;
+        //EntityPartitioning partitionUtil;
 
         float accum = 0;
         bool didShoot;
@@ -94,7 +102,9 @@ namespace ExpandedAiTasks
             this.projectileBreakOnImpactChance = taskConfig[ "projectileBreakOnImpactChance"].AsFloat(0.0f);
             this.stopIfPredictFriendlyFire = taskConfig["stopIfPredictFriendlyFire"].AsBool(false);
             this.leadTarget = taskConfig["leadTarget"].AsBool(true);
-            this.arcShots = taskConfig["arcShots"].AsBool(true); 
+            this.arcShots = taskConfig["arcShots"].AsBool(true);
+            this.fireOnLastKnownPosition = taskConfig["fireOnLastKnownPosition"].AsBool(true);
+            this.lastKnownPositionTimeoutMs = taskConfig["lastKnownPositionTimeoutMs"].AsFloat(5000f);
 
             //Error checking for bad json values.
             Debug.Assert(damageFalloffPercent >= 0.0f && damageFalloffPercent <= 1.0f, "AiTaskValue damageFalloffPercent must be a 0.0 to 1.0 value.");
@@ -133,13 +143,13 @@ namespace ExpandedAiTasks
                 attackedByEntity = null;
             }
 
-            if (retaliateAttacks && attackedByEntity != null && attackedByEntity.Alive && IsTargetableEntity(attackedByEntity, 15, true) && hasDirectContact(attackedByEntity, range, vertRange))
+            if (retaliateAttacks && attackedByEntity != null && attackedByEntity.Alive && IsTargetableEntity(attackedByEntity, range, true) && AiUtility.IsAwareOfTarget(entity, attackedByEntity, range, vertRange))
             {
                 targetEntity = attackedByEntity;
             }
             else if (guardTargetAttackedByEntity != null && guardTargetAttackedByEntity.Alive)
             {
-                if ( hasDirectContact(guardTargetAttackedByEntity, range, range / 2f))
+                if (AiUtility.IsAwareOfTarget(entity, guardTargetAttackedByEntity, range, vertRange))
                     targetEntity = guardTargetAttackedByEntity;
             }
             else
@@ -149,26 +159,43 @@ namespace ExpandedAiTasks
 
             if (targetEntity == null || !targetEntity.Alive)
             {
-                targetEntity = partitionUtil.GetNearestEntity(entity.ServerPos.XYZ, range, (e) => IsTargetableEntity(e, range) && hasDirectContact(e, range, vertRange));
+                targetEntity = partitionUtil.GetNearestInteractableEntity(entity.ServerPos.XYZ, range, (e) => IsTargetableEntity(e, range) && AiUtility.IsAwareOfTarget(entity, e, range, vertRange));
             }
 
+            //Reset our zeroing accuracy. (May need changes to play nice with LKP)
             if ( targetEntity != targetLastFrame)
+            {
                 dtSinceTargetAquired = 0.0f;
+            }
 
-             targetLastFrame = targetEntity;
+            //If we can fire on last known position and we had a target and last know position last frame, but our current target is null.
+            if (fireOnLastKnownPosition && targetLastFrame != null && targetLastFrame.Alive && targetLKP != null && targetEntity == null)
+            {
+                double dtSinceTargetSeen = entity.World.ElapsedMilliseconds - lastTimeSeenTarget;
+                double distSqrToLKP = targetLKP.SquareDistanceTo(entity.ServerPos.XYZ);
 
+                //If we haven't timed out on our target's last know position and we are in range.
+                if (dtSinceTargetSeen <= lastKnownPositionTimeoutMs && distSqrToLKP <= range * range )
+                {
+                    targetEntity = targetLastFrame;
+                }
+                else
+                {
+                    targetLastFrame = targetEntity;
+                    targetLKP = null;
+                }     
+            }
+            else
+            {
+                targetLastFrame = targetEntity;
+                targetLKP = null;
+            }
+            
             
             if ( targetEntity != null)
             {
                 //If the target is too close to fire upon.
                 if( ownPos.SquareDistanceTo(targetEntity.ServerPos.XYZ) <= minDist * minDist)
-                    return false;
-
-                Vec3d shotStartPosition = entity.ServerPos.XYZ.Add(0, entity.LocalEyePos.Y, 0);
-                Vec3d shotTargetPos = targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0);
-
-                //If we care about shooting friendlies and we are going to shoot a friendly, early out.
-                if (stopIfPredictFriendlyFire && WillFriendlyFire(shotStartPosition, shotTargetPos))
                     return false;
             }
 
@@ -180,6 +207,12 @@ namespace ExpandedAiTasks
             accum = 0;
             didShoot = false;
             stopNow = false;
+
+            if ( fireOnLastKnownPosition && AiUtility.IsAwareOfTarget(entity, targetEntity, maxDist, maxVertDist))
+            {
+                targetLKP = targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0);
+                lastTimeSeenTarget = entity.World.ElapsedMilliseconds;
+            }
 
             if (entity?.Properties.Server?.Attributes != null)
             {
@@ -195,7 +228,7 @@ namespace ExpandedAiTasks
             curTurnRadPerSec = minTurnAnglePerSec + (float)entity.World.Rand.NextDouble() * (maxTurnAnglePerSec - minTurnAnglePerSec);
             curTurnRadPerSec *= GameMath.DEG2RAD * 50 * 0.02f;
 
-            entity.Notify("haltMovement", entity);
+        //    entity.Notify("haltMovement", entity);
             entity.PlayEntitySound("shootatentity", null, true);
         }
 
@@ -207,13 +240,37 @@ namespace ExpandedAiTasks
             if (targetEntity == null)
                 return false;
 
+            if ( fireOnLastKnownPosition && AiUtility.IsAwareOfTarget(entity, targetEntity, maxDist, maxVertDist))
+            {
+                targetLKP = targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0);
+                lastTimeSeenTarget = entity.World.ElapsedMilliseconds;
+            }
+
+            if (fireOnLastKnownPosition && targetLKP == null)
+                return false;
+
+            //to do: Make this work with lkp. Right now it rotates to face the current target position.
+            //I think we have done the above, confirm and remove comment if true.
+
             Vec3f targetVec = new Vec3f();
 
-            targetVec.Set(
-                (float)(targetEntity.ServerPos.X - entity.ServerPos.X),
-                (float)(targetEntity.ServerPos.Y - entity.ServerPos.Y),
-                (float)(targetEntity.ServerPos.Z - entity.ServerPos.Z)
-            );
+            if (fireOnLastKnownPosition)
+            {
+                targetVec.Set(
+                    (float)(targetLKP.X - entity.ServerPos.X),
+                    (float)(targetLKP.Y - entity.ServerPos.Y),
+                    (float)(targetLKP.Z - entity.ServerPos.Z)
+                );
+            }
+            else
+            {
+                targetVec.Set(
+                    (float)(targetEntity.ServerPos.X - entity.ServerPos.X),
+                    (float)(targetEntity.ServerPos.Y - entity.ServerPos.Y),
+                    (float)(targetEntity.ServerPos.Z - entity.ServerPos.Z)
+                );
+            }
+            
 
             float desiredYaw = (float)Math.Atan2(targetVec.X, targetVec.Z);
 
@@ -256,16 +313,9 @@ namespace ExpandedAiTasks
                 if ( yawCoinToss > 0.5f )
                     yawDir = -1.0f;
 
-                Vec3d shotStartPosition = entity.ServerPos.XYZ.Add(0, entity.LocalEyePos.Y, 0);
-                Vec3d shotTargetPos = targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0);
-
-                //Do the work needed to lead our target
-                Vec3d shotToTargetNorm = ( shotTargetPos - shotStartPosition ).Normalize();
-                Vec3d targetMotionNorm = targetEntity.ServerPos.Motion.Clone().Normalize();
-                double dot = shotToTargetNorm.Dot(targetMotionNorm);
-
-                if (dot < 0)
-                    dot *= -1;
+                //Bug Potential: if the BehindCopy is not set far enought from the shooter, the arrow will collide with the shooter and result in weird behaviors.
+                Vec3d shotStartPosition = entity.SidedPos.BehindCopy(0.75).XYZ.Add(0, entity.LocalEyePos.Y, 0);
+                Vec3d shotTargetPos = fireOnLastKnownPosition ? targetLKP : targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0);
 
                 if (leadTarget)
                     shotTargetPos = CalculateInterceptLocation(shotStartPosition, entity.ServerPos.Motion, maxVelocity * 2, shotTargetPos, targetEntity.ServerPos.Motion);
@@ -295,18 +345,11 @@ namespace ExpandedAiTasks
                 Vec3d shotDriftDirection = new Vec3d(0.0f, rndPitch, rndYaw);
                 Vec3d shotTargetPosWithDrift = shotTargetPos.Add( shotDriftDirection.X, shotDriftDirection.Y, shotDriftDirection.Z );
 
-                double distf = Math.Pow(shotStartPosition.SquareDistanceTo(shotTargetPosWithDrift), 0.1);
-
                 Vec3d velocity = (shotTargetPosWithDrift - shotStartPosition).Normalize() * maxVelocity;
-                Vec3d firePos = entity.SidedPos.BehindCopy(0.21).XYZ.Add(0, entity.LocalEyePos.Y, 0);
 
                 //If we care about shooting friendlies and we are going to shoot a friendly, early out.
-                if (stopIfPredictFriendlyFire && WillFriendlyFire(firePos.Clone(), shotTargetPosWithDrift.Clone()))
+                if (stopIfPredictFriendlyFire && WillFriendlyFire(shotStartPosition.Clone(), shotTargetPosWithDrift.Clone()))
                     return false;
-
-                //If on the frame we are intending to fire, we can't see our target, cancel the shot.
-                //if (!AiUtility.CanEntSeePos(entity, targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0), 45))
-                //   return false;
 
                 float projectileDamage = GetProjectileDamageAfterFalloff( distToTargetSqr );
 
@@ -326,27 +369,27 @@ namespace ExpandedAiTasks
                 //This dummy projectile sets its shape and materials to match the assets of a real projectile item that the ai is "fireing." The dummy projectile uses the real projectile item type for its item stack, so that the player picks up the real projectile,
                 //and not the dummy when it lands in the world.
 
-                EntityProperties itemType = entity.World.GetEntityType(new AssetLocation(projectileItem));
-                EntityProperties dummyType = entity.World.GetEntityType(new AssetLocation(dummyProjectile));
-                Entity projectile = entity.World.ClassRegistry.CreateEntity(dummyType);
-                ((EntityProjectile)projectile).FiredBy = entity;
-                ((EntityProjectile)projectile).Damage = projectileDamage;
-                ((EntityProjectile)projectile).ProjectileStack = new ItemStack(entity.World.GetItem(new AssetLocation(projectileItem)));
+                EntityProperties dummyType  = entity.World.GetEntityType(new AssetLocation(dummyProjectile));
+                EntityProjectile projectile = entity.World.ClassRegistry.CreateEntity(dummyType) as EntityProjectile;
+                projectile.FiredBy = entity;
+                projectile.Damage = projectileDamage;
+                projectile.ProjectileStack = new ItemStack(entity.World.GetItem(new AssetLocation(projectileItem)));
 
                 if ( durability == 0 )
-                    ((EntityProjectile)projectile).ProjectileStack.Attributes.SetInt("durability", durability);
-                
-                ((EntityProjectile)projectile).DropOnImpactChance = projectileBreakOnImpactChance;
-                ((EntityProjectile)projectile).Weight = 0.0f;
+                    projectile.ProjectileStack.Attributes.SetInt("durability", durability);
 
-                projectile.ServerPos.SetPos(firePos);
+                projectile.DropOnImpactChance = survivedImpact ? 1.0f : 0.0f;
+                //projectile.Weight = 0.0f;
+
+                projectile.ServerPos.SetPos(shotStartPosition);
                 projectile.ServerPos.Motion.Set(velocity);
+                projectile.Pos.SetFrom(projectile.ServerPos);
 
-                projectile.Pos.SetFrom(entity.ServerPos);
                 projectile.World = entity.World;
-                ((EntityProjectile)projectile).SetRotation();
+                projectile.SetRotation();
 
                 entity.World.SpawnEntity(projectile);
+
             }
 
             return accum < durationMs / 1000f && !stopNow;
@@ -383,7 +426,7 @@ namespace ExpandedAiTasks
             Vec3d targetRelativeVelocity
         )
         {
-            //double velocitySquared = targetRelativeVelocity.sqrMagnitude;
+
             double velocitySquared = targetRelativeVelocity.LengthSq();
             if (velocitySquared < 0.001f)
                 return 0f;
@@ -447,25 +490,29 @@ namespace ExpandedAiTasks
 
             foreach(Entity herdMember in herdMembers)
             {
+                if (herdMember == entity)
+                    continue;
+
                 if (!herdMember.Alive)
                     continue;
 
-                Vec3d shooterToHerdMember = ( herdMember.ServerPos.XYZ.Add(0, herdMember.LocalEyePos.Y, 0) - firePos);
+                Vec3d shooterHerdMemberEyePos = herdMember.ServerPos.XYZ.Add(0, herdMember.LocalEyePos.Y, 0);
+                Vec3d shooterToHerdMember = (shooterHerdMemberEyePos - firePos);
                 shooterToHerdMember = shooterToHerdMember.Normalize();
                 double dot = shooterToHerdMember.Dot(shooterToTarget);
 
-                double distToFriend = firePos.SquareDistanceTo( herdMember.ServerPos.XYZ );
+                double distToFriendSqr = firePos.SquareDistanceTo( shooterHerdMemberEyePos );
 
                 //If we are really bunched up, don't fire;
-                if (distToFriend <= 1.5 * 1.5)
-                    return true;
+                //if (distToFriendSqr <= 2 * 2)
+                //   return true;
 
-                double friendlyFireDot = Math.Cos(22 * (Math.PI / 180));
+                double friendlyFireDot = Math.Cos(FRIENDLY_FIRE_DETECTION_ANGLE * (Math.PI / 180));
                 //If our ally is in our field of fire.
                 if (dot >= friendlyFireDot)
                 {
                     double distToTargetSqr = firePos.SquareDistanceTo(shotTargetPos);
-                    double distToFriendSqr = firePos.SquareDistanceTo(herdMember.ServerPos.XYZ);
+                    //double distToFriendSqr = firePos.SquareDistanceTo(herdMember.ServerPos.XYZ);
 
                     //If our friend seems to be between us and our target, don't fire.
                     if ( distToTargetSqr > distToFriendSqr)
@@ -480,7 +527,32 @@ namespace ExpandedAiTasks
         public override bool Notify(string key, object data)
         {
 
-            if (key == "entityAttackedGuardedEntity")
+            if (key == "attackEntity")
+            {
+                //If we don't have a target, assist our group.
+                if (targetEntity == null)
+                {
+                    //If we are in range of our ally, respond.
+                    EntityTargetPairing targetPairing = (EntityTargetPairing)data;
+                    Entity herdMember = targetPairing.entityTargeting;
+                    Entity newTarget = targetPairing.targetEntity;
+
+                    if (newTarget == null || !IsTargetableEntity(newTarget, maxDist, true) || !AiUtility.IsAwareOfTarget(entity, newTarget, maxDist, maxVertDist))
+                        return false;
+
+                    double distSqr = entity.ServerPos.XYZ.SquareDistanceTo(herdMember.ServerPos.XYZ);
+                    if (distSqr <= maxDist * maxDist)
+                    {
+                        targetEntity = newTarget;
+
+                        targetLKP          = targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0);
+                        lastTimeSeenTarget = entity.World.ElapsedMilliseconds;
+
+                        return true;
+                    }
+                }
+            }
+            else if (key == "entityAttackedGuardedEntity")
             {
                 //If a guard task tells us our guard target has been attacked, engage the target as if they attacked us.
                 if ((Entity)data != null && guardTargetAttackedByEntity != (Entity)data)

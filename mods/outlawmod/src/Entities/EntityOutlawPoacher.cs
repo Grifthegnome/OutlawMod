@@ -78,9 +78,10 @@ namespace OutlawMod
             }
         }
 
-        public override void OnEntityDespawn(EntityDespawnReason despawn)
+        public override void OnEntityDespawn(EntityDespawnData despawnData )
         {
-            base.OnEntityDespawn(despawn);
+
+            base.OnEntityDespawn( despawnData );
 
             foreach( long callbackId in callbacks )
             {

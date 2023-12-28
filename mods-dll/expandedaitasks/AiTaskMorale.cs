@@ -57,7 +57,7 @@ namespace ExpandedAiTasks
 
         float stepHeight;
 
-        EntityPartitioning partitionUtil;
+        //EntityPartitioning partitionUtil;
 
         Vec3d tmpVec = new Vec3d();
         Vec3d collTmpVec = new Vec3d();
@@ -159,7 +159,8 @@ namespace ExpandedAiTasks
             itemStackSourceOfFearTotalWeight = 0;
             poiSourceOfFearTotalWeight = 0;
 
-            targetEntity = partitionUtil.GetNearestEntity(ownPos, moraleRange, (e) => IsValidMoraleTarget(e, moraleRange, canRoutFromAnyEnemy));
+            //targetEntity = partitionUtil.GetNearestInteractableEntity(ownPos, moraleRange, (e) => IsValidMoraleTarget(e, moraleRange, canRoutFromAnyEnemy));
+            targetEntity = entity.World.GetNearestEntity(ownPos, moraleRange, moraleRange, IsValidMoraleTarget);
 
             if (targetEntity != null)
             {
@@ -181,8 +182,41 @@ namespace ExpandedAiTasks
             return false;
         }
 
+        private bool IsTargetableItem(Entity ent)
+        {
+            //If this entity is an item, we should only count it as a target if we are afraid of it.
+            if ( ent is EntityItem )
+            {
+                ItemStack itemStack = ((EntityItem)ent).Itemstack;
+                string path = "";
+                if (itemStack.Item != null)
+                    path = itemStack.Item.Code.Path;
+                else if (itemStack.Block != null)
+                    path = itemStack.Block.Code.Path;
+                
+                if ( path != "" )
+                {
+                    //Try to match exact entity codes.
+                    if (itemStackSourcesOfFearWeightsByCodeExact.ContainsKey(path))
+                    {
+                        return true;
+                    }
 
-        private bool IsValidMoraleTarget(Entity ent, float range, bool ignoreEntityCode = false)
+                    //Try to match partials entity codes.
+                    foreach (var codePartial in itemStackSourcesOfFearWeightsByCodePartial)
+                    {
+                        if (path.StartsWithFast(codePartial.Key))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private bool IsValidMoraleTarget(Entity ent)
         {
 
             //Handle case where our target is an enemy entity.
@@ -192,7 +226,12 @@ namespace ExpandedAiTasks
                 if (entitySourcesOfFearWeightsByCodeExact.Count > 0 || entitySourcesOfFearWeightsByCodePartial.Count > 0 || ent.Code.Path == "player")
                     entitySourceOfFearTotalWeight += GetEntitySourceOfFearWeight(ent);
 
-                if (!IsTargetableEntity(ent, range, ignoreEntityCode))
+                //Dead things can contribute to morale but not be the cause of a route.
+                if (!ent.Alive)
+                    return false;
+
+                bool ignoreEntityCode = canRoutFromAnyEnemy;
+                if (!IsTargetableEntity(ent, moraleRange, ignoreEntityCode) || !AiUtility.IsAwareOfTarget(entity, ent, moraleRange, moraleRange))
                     return false;
 
                 //Don't be scared of our friends.
@@ -206,9 +245,17 @@ namespace ExpandedAiTasks
                 {
                     EntityItem item = ent as EntityItem;
                     if ( itemStackSourcesOfFearWeightsByCodeExact.Count > 0 || itemStackSourcesOfFearWeightsByCodePartial.Count > 0 )
-                        itemStackSourceOfFearTotalWeight += item.Itemstack != null ? GetItemStackSourceOfFearWeight(item.Itemstack) : 0;      
+                        itemStackSourceOfFearTotalWeight += item.Itemstack != null ? GetItemStackSourceOfFearWeight(item.Itemstack) : 0;
+
+                    //Don't target items if they don't scare us.
+                    if (!IsTargetableItem(ent))
+                        return false;
                 }
             }
+
+            //Currently, projectiles cannot scare us.
+            if (ent is EntityProjectile)
+                return false;
 
             return true;
 
@@ -350,6 +397,7 @@ namespace ExpandedAiTasks
             targetEntity = null;
 
             //Clear are whole target history, so we don't attempt to re-engage pre-rout targets.
+            //To Do: Right now, we are using morale to make archers withdraw to a safe-firing distance, we do not want them to reset their target in this case.
             entity.Notify("clearTargetHistory", entity);
         }
 

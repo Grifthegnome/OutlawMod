@@ -5,6 +5,7 @@
 	deadHitboxSize: { x: 1, y: 0.75 },
 	eyeHeight: 0.9,
 	drops: [],
+	attributes:{ hasNightVision: true },
 	client: {
 		renderer: "Shape",
 		shape: { base: "entity/land/hound-hunting" },
@@ -153,7 +154,7 @@
             			aggroProximity: 6,
 
 						animation: "Run",
-						animationSpeed: 1.5
+						animationSpeed: 1.5,
 					},
 					{
 						code: "melee",
@@ -169,7 +170,7 @@
 						damagePlayerAtMs: 500,
 						animation: "Attack",
 						animationSpeed: 2.5,
-						sound: "creature/wolf/attack"
+						sound: "creature/wolf/attack",
 					},
 					{
 						code: "engageentity",
@@ -199,7 +200,7 @@
 						priority: 1.48,
 						movespeed: 0.048,
 						animationSpeed: 1.0,
-						maxDistance: 4,
+						maxDistance: 8,
 						arriveDistance: 4,
 						searchRange: 25,
 						allowStrayFromHerdInCombat: true,
@@ -207,7 +208,7 @@
 						consolidationRange: 40,
 						consolidationEntityCodes: ["poacher-*", "hound-hunting"],
 						animation: "Run",
-						animationSpeed: 1.5
+						animationSpeed: 1.5,
 					},
 					{
 						code: "idle",

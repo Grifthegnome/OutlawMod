@@ -1,103 +1,55 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{F4A19D9E-F292-4499-B59B-2489491DF4A5}</ProjectGuid>
+    <TargetFramework>net7.0</TargetFramework>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>outlawmod</RootNamespace>
-    <AssemblyName>outlawmod</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(ProjectDir)\bin</OutputPath>
+    <OutputPath>..\..\</OutputPath>
     <IntermediateOutputPath>..\..\obj\Debug\outlawmod\</IntermediateOutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>$(ProjectDir)\bin</OutputPath>
+    <OutputPath>..\..\</OutputPath>
     <IntermediateOutputPath>..\..\obj\Release\outlawmod\</IntermediateOutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>D:\Users\User\AppData\Roaming\Vintagestory\Lib\0Harmony.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\AppData\Roaming\Vintagestory\Lib\0Harmony.dll</HintPath>
     </Reference>
-    <Reference Include="expandedaitasks, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\expandedaitasks.dll</HintPath>
+    <Reference Include="expandedaitasks">
+      <HintPath>expandedaitasks.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net">
-      <HintPath>D:\Users\User\AppData\Roaming\Vintagestory\Lib\protobuf-net.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\AppData\Roaming\Vintagestory\Lib\protobuf-net.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
     <Reference Include="VintagestoryAPI">
-      <HintPath>D:\Users\User\AppData\Roaming\Vintagestory\VintagestoryAPI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VSSurvivalMod">
-      <HintPath>D:\Users\User\AppData\Roaming\Vintagestory\Mods\VSSurvivalMod.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VSEssentials">
-      <HintPath>D:\Users\User\AppData\Roaming\Vintagestory\Mods\VSEssentials.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\..\..\..\AppData\Roaming\Vintagestory\VintagestoryAPI.dll</HintPath>
     </Reference>
     <Reference Include="VSCreativeMod">
-      <HintPath>D:\Users\User\AppData\Roaming\Vintagestory\Mods\VSCreativeMod.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\..\..\..\AppData\Roaming\Vintagestory\Mods\VSCreativeMod.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>D:\Users\User\AppData\Roaming\Vintagestory\Lib\Newtonsoft.Json.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="VSEssentials">
+      <HintPath>..\..\..\..\..\..\AppData\Roaming\Vintagestory\Mods\VSEssentials.dll</HintPath>
+    </Reference>
+    <Reference Include="VSSurvivalMod">
+      <HintPath>..\..\..\..\..\..\AppData\Roaming\Vintagestory\Mods\VSSurvivalMod.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="modinfo.json" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="src\BlockEntities\BlockEntityOutlawSpawnBlocker.cs" />
-    <Compile Include="src\Blocks\BlockStocks.cs" />
-    <Compile Include="src\Blocks\BlockHeadOnSpear.cs" />
-    <Compile Include="src\Entities\EntityOutlawPoacher.cs" />
-    <Compile Include="src\OMGlobalConstants.cs" />
-    <Compile Include="src\Item\ItemOutlawHead.cs" />
-    <Compile Include="src\Systems\OutlawSpawnEvaluator.cs" />
-    <Compile Include="src\Systems\IOutlawSpawnBlocker.cs" />
-    <Compile Include="src\Utility\Utility.cs" />
-    <Compile Include="src\Entities\EntityOutlaw.cs" />
-    <Compile Include="src\CustomSpawnConditons.cs" />
-    <Compile Include="src\Patches.cs" />
-    <Compile Include="src\Utility\MathUtility.cs" />
-    <Compile Include="src\Core.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="assets\" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
   <PropertyGroup>
-    <PostBuildEvent>
-copy "$(TargetPath)" "$(ProjectDir)" 
-copy "$(TargetDir)\$(TargetName).pdb" "$(ProjectDir)" 
-    </PostBuildEvent>
+    <BaseOutputPath></BaseOutputPath>
   </PropertyGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy &quot;$(OutputPath)outlawmod.dll&quot; &quot;$(SolutionDir)mods\outlawmod&quot;&#xD;&#xA;    " />
+  </Target>
 </Project>
