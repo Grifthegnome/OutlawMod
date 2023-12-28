@@ -432,6 +432,8 @@
 		fleeentity: "creature/bandit/flee",
 		morale: "creature/bandit/flee",
 		seekentity: "creature/bandit/youdead",
+		drawSound: "bow-draw",
+		shootSound: "bow-release",
 	},
 	idleSoundChance: 0.08
 }

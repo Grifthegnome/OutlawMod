@@ -106,6 +106,7 @@ namespace ExpandedAiTasks
             this.fireOnLastKnownPosition = taskConfig["fireOnLastKnownPosition"].AsBool(true);
             this.lastKnownPositionTimeoutMs = taskConfig["lastKnownPositionTimeoutMs"].AsFloat(5000f);
 
+
             //Error checking for bad json values.
             Debug.Assert(damageFalloffPercent >= 0.0f && damageFalloffPercent <= 1.0f, "AiTaskValue damageFalloffPercent must be a 0.0 to 1.0 value.");
             Debug.Assert(damageFalloffStartDist < damageFalloffEndDist || damageFalloffEndDist < 0.0f, "AiTaskValue damageFalloffStartDist: " + damageFalloffStartDist + " cannot be greater than damageFalloffEndDist: " + damageFalloffEndDist);
@@ -228,8 +229,11 @@ namespace ExpandedAiTasks
             curTurnRadPerSec = minTurnAnglePerSec + (float)entity.World.Rand.NextDouble() * (maxTurnAnglePerSec - minTurnAnglePerSec);
             curTurnRadPerSec *= GameMath.DEG2RAD * 50 * 0.02f;
 
-        //    entity.Notify("haltMovement", entity);
-            entity.PlayEntitySound("shootatentity", null, true);
+            //entity.PlayEntitySound("shootatentity", null, true);
+
+            //Play sound for preparing to shoot.
+            entity.PlayEntitySound("drawSound", null, true, maxDist);
+
         }
 
 
@@ -389,6 +393,8 @@ namespace ExpandedAiTasks
                 projectile.SetRotation();
 
                 entity.World.SpawnEntity(projectile);
+
+                entity.PlayEntitySound("shootSound", null, true, maxDist);
 
             }
 
