@@ -35,7 +35,13 @@
 	randomDrawOffset: true,
 	lightAbsorption: 0,
 	resistance: 1,
-	drops: [],
+	drops: [
+		{
+			type: "item", 
+			code: "bone", 
+			quantity: { avg: 4, var: 0.5 },
+		},
+	],
 	sidesolid: { all: false },
 	sideopaque: { all: false },
 	selectionbox: { x1: 0, y1: 0, z1: 0, x2: 1, y2: 0.4, z2: 1 },	
