@@ -248,7 +248,7 @@
 					//Poacher only attacks non-animals to aggro first.
 					{
 						code: "shootatentity",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "hound-feral"],
+						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "hound-feral", "humanoid-villager-*"],
 						priority: 5.0,
 						priorityForCancel: 9,
 						mincooldown: 1000, 
@@ -286,7 +286,7 @@
 					{
 						code: "fleeentity",
 						entityCodes: ["player", "drifter-*", "looter", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "chicken-rooster", "chicken-hen", "chicken-baby", "hare-male", "hare-female", 
-							"fox-male", "fox-female", "fox-arctic-male", "fox-arctic-female", "pig-wild-male", "pig-wild-female", "raccoon-male", "raccoon-female", "sheep-bighorn-male", "sheep-bighorn-female", "hound-feral"],
+							"fox-male", "fox-female", "fox-arctic-male", "fox-arctic-female", "pig-wild-male", "pig-wild-female", "raccoon-male", "raccoon-female", "sheep-bighorn-male", "sheep-bighorn-female", "hound-feral", "humanoid-villager-*"],
 						priority: 3.0,
 						movespeed: 0.040,
 						seekingRange: 6,
@@ -301,7 +301,7 @@
 					//Run from the player if we take damage.
 					{
 						code: "fleeentity",
-						entityCodes: ["player", "drifter-*", "looter", "hound-feral"],
+						entityCodes: ["player", "drifter-*", "looter", "hound-feral", "humanoid-villager-*"],
 						priority: 3.5,
 						priorityForCancel: 4.0,
 						movespeed: 0.040,
@@ -370,7 +370,7 @@
 						animation: "look",
 						whenNotInEmotionState: "aggressiveondamage",
 						whenNotInEmotionState: "fleeondamage",
-						stopOnNearbyEntityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter"],
+						stopOnNearbyEntityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "humanoid-villager-*"],
 						stopRange: 5
 					},
 					{
@@ -384,7 +384,7 @@
 						animation: "idle",
 						whenNotInEmotionState: "aggressiveondamage",
 						whenNotInEmotionState: "fleeondamage",
-						stopOnNearbyEntityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter"],
+						stopOnNearbyEntityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "humanoid-villager-*"],
 						stopRange: 5
 					},
 					{
