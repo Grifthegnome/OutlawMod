@@ -4,7 +4,7 @@
   "name": "Expanded Ai Tasks",
   "authors": ["Grifthegnome" ],
   "description": "Expands the Libary of Ai Tasks Available to Modders.",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "dependencies": {
     "game": "1.18.15"
   }
