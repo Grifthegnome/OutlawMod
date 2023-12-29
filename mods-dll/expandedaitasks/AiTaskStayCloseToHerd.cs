@@ -16,10 +16,6 @@ namespace ExpandedAiTasks
 {
     public class AiTaskStayCloseToHerd : AiTaskBase
     {
-        protected const float ALWAYS_ALLOW_TELEPORT_BEYOND_RANGE_FROM_PLAYER = 80;
-        protected const float BLOCK_TELEPORT_WHEN_PLAYER_CLOSER_THAN = 60;
-        protected const float BLOCK_TELEPORT_AFTER_COMBAT_DURATION = 45;
-
         protected Entity herdLeaderEntity;
         protected List<Entity> herdEnts;
         protected float moveSpeed = 0.03f;
@@ -247,48 +243,10 @@ namespace ExpandedAiTasks
 
             if (stuck && allowTeleport && distSqr > teleportAfterRange * teleportAfterRange)
             {
-                TryTeleport();
+                AiUtility.TryTeleportToEntity(entity, herdLeaderEntity);
             }
 
             return !stuck && !stopNow && pathTraverser.Active && herdLeaderEntity != null && herdLeaderEntity.Alive;
-        }
-
-        private Vec3d FindDecentTeleportPos()
-        {
-            var ba = entity.World.BlockAccessor;
-            var rnd = entity.World.Rand;
-
-            Vec3d pos = new Vec3d();
-            BlockPos bpos = new BlockPos();
-            Cuboidf collisionBox = entity.CollisionBox;
-            int[] yTestOffsets = { 0, -1, 1, -2, 2, -3, 3 };
-            for (int i = 0; i < 3; i++)
-            {
-                double randomXOffset = rnd.NextDouble() * 10 - 5;
-                double randomYOffset = rnd.NextDouble() * 10 - 5;
-
-                for (int j = 0; j < yTestOffsets.Length; j++)
-                {
-                    int yAxisOffset = yTestOffsets[j];
-                    pos.Set(herdLeaderEntity.ServerPos.X + randomXOffset, herdLeaderEntity.ServerPos.Y + yAxisOffset, herdLeaderEntity.ServerPos.Z + randomYOffset);
-
-                    // Test if this location is free and clear.
-                    if (!entity.World.CollisionTester.IsColliding(entity.World.BlockAccessor, collisionBox, pos, false))
-                    {
-                        //POSSIBLE PERFORMANCE HAZARD!!!
-                        //This call is effectively 2 X (3 X 7) traces per player if it fails. That's way too much!
-                        //If players can't see the entity's foot position.
-                        if (!AiUtility.CanAnyPlayerSeePos(pos, ALWAYS_ALLOW_TELEPORT_BEYOND_RANGE_FROM_PLAYER, entity.World))
-                        {
-                            //If players can't see the entity's eye position.
-                            if (!AiUtility.CanAnyPlayerSeePos(pos.Add(0, entity.LocalEyePos.Y, 0), ALWAYS_ALLOW_TELEPORT_BEYOND_RANGE_FROM_PLAYER, entity.World))
-                                return pos;
-                        }   
-                    }     
-                }
-            }
-
-            return null;
         }
 
         public virtual bool CanJoinThisEntityInHerd(EntityAgent herdMember)
@@ -314,40 +272,6 @@ namespace ExpandedAiTasks
             return false;
         }
 
-        protected void TryTeleport()
-        {
-            if (herdLeaderEntity == null)
-                return;
-
-            if (!allowTeleport) 
-                return;
-
-            if (AiUtility.IsInCombat(entity))
-                return;
-
-            //We cannot teleport if we were recently in combat.
-            if (entity.World.ElapsedMilliseconds - AiUtility.GetLastTimeEntityInCombatMs(entity) < BLOCK_TELEPORT_AFTER_COMBAT_DURATION)
-                return;
-
-            if (AiUtility.IsAnyPlayerWithinRangeOfPos(entity.ServerPos.XYZ, BLOCK_TELEPORT_WHEN_PLAYER_CLOSER_THAN, world))
-                return;
-
-            if (AiUtility.IsAnyPlayerWithinRangeOfPos(herdLeaderEntity.ServerPos.XYZ, BLOCK_TELEPORT_WHEN_PLAYER_CLOSER_THAN, world))
-                return;
-
-            if (AiUtility.CanAnyPlayerSeeMe(entity, ALWAYS_ALLOW_TELEPORT_BEYOND_RANGE_FROM_PLAYER))
-                return;
-
-            if (AiUtility.CanAnyPlayerSeeMe(herdLeaderEntity, ALWAYS_ALLOW_TELEPORT_BEYOND_RANGE_FROM_PLAYER))
-                return;
-
-            Vec3d pos = FindDecentTeleportPos();
-            
-            if (pos != null) 
-                 entity.TeleportTo(pos);
-        }
-
-
         public override void FinishExecute(bool cancelled)
         {
             pathTraverser.Stop();
@@ -357,12 +281,20 @@ namespace ExpandedAiTasks
         protected void OnStuck()
         {
             stuck = true;
+            
+            if ( allowTeleport )
+                AiUtility.TryTeleportToEntity(entity, herdLeaderEntity);
+            
             pathTraverser.Stop();
         }
 
-        public override void OnNoPath(Vec3d target)
+        public void OnPathFailed()
         {
-            TryTeleport();
+            stopNow = true;
+
+            if (allowTeleport)
+                AiUtility.TryTeleportToEntity(entity, herdLeaderEntity);
+
             pathTraverser.Stop();
         }
 

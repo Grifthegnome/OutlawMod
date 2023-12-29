@@ -64,6 +64,10 @@ namespace ExpandedAiTasks
         //To Do: Consider narrowing AI FOV at night.
         private const float AI_VISION_FOV = 120;
 
+        private const float ALWAYS_ALLOW_TELEPORT_BEYOND_RANGE_FROM_PLAYER = 80;
+        private const float BLOCK_TELEPORT_WHEN_PLAYER_CLOSER_THAN = 60;
+        private const float BLOCK_TELEPORT_AFTER_COMBAT_DURATION = 45;
+
         public static string GetAiTaskName( AiTaskBase task )
         {
             return AiTaskRegistry.TaskCodes[task.GetType()];
@@ -696,6 +700,74 @@ namespace ExpandedAiTasks
                 return true;
 
             return false;
+        }
+
+        public static void TryTeleportToEntity(Entity entityToTeleport, Entity targetEntity )
+        {
+            if (targetEntity == null)
+                return;
+
+            if (AiUtility.IsInCombat(entityToTeleport))
+                return;
+
+            //We cannot teleport if we were recently in combat.
+            if (entityToTeleport.World.ElapsedMilliseconds - AiUtility.GetLastTimeEntityInCombatMs(entityToTeleport) < BLOCK_TELEPORT_AFTER_COMBAT_DURATION)
+                return;
+
+            if (AiUtility.IsAnyPlayerWithinRangeOfPos(entityToTeleport.ServerPos.XYZ, BLOCK_TELEPORT_WHEN_PLAYER_CLOSER_THAN, entityToTeleport.World))
+                return;
+
+            if (AiUtility.IsAnyPlayerWithinRangeOfPos(targetEntity.ServerPos.XYZ, BLOCK_TELEPORT_WHEN_PLAYER_CLOSER_THAN, entityToTeleport.World))
+                return;
+
+            if (AiUtility.CanAnyPlayerSeeMe(entityToTeleport, ALWAYS_ALLOW_TELEPORT_BEYOND_RANGE_FROM_PLAYER))
+                return;
+
+            if (AiUtility.CanAnyPlayerSeeMe(targetEntity, ALWAYS_ALLOW_TELEPORT_BEYOND_RANGE_FROM_PLAYER))
+                return;
+
+            Vec3d teleportPos = FindDecentTeleportPos(entityToTeleport, targetEntity.ServerPos.XYZ);
+
+            if (teleportPos != null)
+                entityToTeleport.TeleportTo(teleportPos);
+        }
+
+        private static Vec3d FindDecentTeleportPos(Entity entityToTeleport, Vec3d teleportLocation)
+        {
+            var ba = entityToTeleport.World.BlockAccessor;
+            var rnd = entityToTeleport.World.Rand;
+
+            Vec3d pos = new Vec3d();
+            BlockPos bpos = new BlockPos();
+            Cuboidf collisionBox = entityToTeleport.CollisionBox;
+            int[] yTestOffsets = { 0, -1, 1, -2, 2, -3, 3 };
+            for (int i = 0; i < 3; i++)
+            {
+                double randomXOffset = rnd.NextDouble() * 10 - 5;
+                double randomYOffset = rnd.NextDouble() * 10 - 5;
+
+                for (int j = 0; j < yTestOffsets.Length; j++)
+                {
+                    int yAxisOffset = yTestOffsets[j];
+                    pos.Set(teleportLocation.X + randomXOffset, teleportLocation.Y + yAxisOffset, teleportLocation.Z + randomYOffset);
+
+                    // Test if this location is free and clear.
+                    if (!entityToTeleport.World.CollisionTester.IsColliding(entityToTeleport.World.BlockAccessor, collisionBox, pos, false))
+                    {
+                        //POSSIBLE PERFORMANCE HAZARD!!!
+                        //This call is effectively 2 X (3 X 7) traces per player if it fails. That's way too much!
+                        //If players can't see the entity's foot position.
+                        if (!AiUtility.CanAnyPlayerSeePos(pos, ALWAYS_ALLOW_TELEPORT_BEYOND_RANGE_FROM_PLAYER, entityToTeleport.World))
+                        {
+                            //If players can't see the entity's eye position.
+                            if (!AiUtility.CanAnyPlayerSeePos(pos.Add(0, entityToTeleport.LocalEyePos.Y, 0), ALWAYS_ALLOW_TELEPORT_BEYOND_RANGE_FROM_PLAYER, entityToTeleport.World))
+                                return pos;
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }
