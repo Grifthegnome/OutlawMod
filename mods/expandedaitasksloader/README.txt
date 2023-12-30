@@ -471,3 +471,17 @@ AI Tasks Documentation:
 		consolidationRange: 40,
 		animation: "sprint"
 	},
+========================================================================================================================
+	AiTaskReactToProjectiles (registered as "reacttoprojectiles")
+		
+		This AiTask assigns allows Ai to aggro when someone shoots a projectile near them.
+	
+	json Settings
+		None
+
+	Use Example from OutlawMod, yeoman-archer.json
+	{
+		code: "reacttoprojectiles",
+		entityCodes: ["player"],
+		priority: 5.1,
+	},

@@ -158,7 +158,7 @@
 					},
 					{
 						code: "melee",
-						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-hunting"],
+						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-hunting", "humanoid-villager-*"],
 						priority: 2,
 						damage: 2,
 						damageTier: 1,
@@ -174,7 +174,7 @@
 					},
 					{
 						code: "engageentity",
-						entityCodes: ["player", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-hunting"],
+						entityCodes: ["player", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-hunting", "humanoid-villager-*"],
 						priority: 1.53,		
 						maxTargetHealth: 5.0,
 						packHunting: "false",			
@@ -199,7 +199,7 @@
 					//Don't hunt things when we can eat dead stuff nearby.
 					{
 						code: "eatdead",
-						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-hunting"],
+						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-hunting", "humanoid-villager-*"],
 						priority: 1.52,
 
 						moveSpeed: 0.006,
@@ -219,7 +219,7 @@
 					},
 					{
 						code: "engageentity",
-						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-hunting"],
+						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-hunting", "humanoid-villager-*"],
 						priority: 1.5,
 						maxTargetHealth: 5.0,
 						packHunting: "true",
@@ -266,7 +266,7 @@
 						animation: "Sleep",
 						whenNotInEmotionState: "aggressiveondamage",
 						duringDayTimeFrames: [ { fromHour: 22, toHour: 4 }, { fromHour: 1, toHour: 3 } ],
-						stopOnNearbyEntityCodes: ["player","bandit-*", "poacher-*", "yeoman-*", "looter"],
+						stopOnNearbyEntityCodes: ["player","bandit-*", "poacher-*", "yeoman-*", "looter", "humanoid-villager-*"],
 						stopRange: 10,
 						stopOnHurt: true
 					},

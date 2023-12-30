@@ -8,6 +8,7 @@ using Vintagestory.API.Datastructures;
 using Vintagestory.API.Util;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
+using System.Xml.XPath;
 
 
 namespace ExpandedAiTasks
@@ -33,7 +34,7 @@ namespace ExpandedAiTasks
 
         protected bool stuck = false;
         protected bool stopNow = false;
-        protected bool allowTeleport;
+        protected bool allowTeleport = true;
         protected float teleportAfterRange;
 
         protected Vec3d targetOffset = new Vec3d();
@@ -62,6 +63,9 @@ namespace ExpandedAiTasks
             guardHerd = taskConfig["guardHerd"].AsBool(false);
             aggroOnProximity = taskConfig["aggroOnProximity"].AsBool(false);
             aggroProximity = taskConfig["aggroProximity"].AsFloat(5f);
+
+            allowTeleport = taskConfig["allowTeleport"].AsBool(true);
+            teleportAfterRange = taskConfig["teleportAfterRange"].AsFloat(15f);
 
             Debug.Assert(maxDistance >= arriveDistance, "maxDistance must be greater than or equal to arriveDistance for AiTaskGuard on entity " + entity.Code.Path);
         }
@@ -152,7 +156,7 @@ namespace ExpandedAiTasks
 
             float size = guardedEntity.SelectionBox.XSize;
 
-            pathTraverser.NavigateTo_Async(guardedEntity.ServerPos.XYZ, moveSpeed, size + 0.2f, OnGoalReached, OnStuck, null, 1000 );
+            pathTraverser.NavigateTo_Async(guardedEntity.ServerPos.XYZ, moveSpeed, size + 0.2f, OnGoalReached, OnStuck, OnPathFailed, 1000 );
 
             targetOffset.Set(entity.World.Rand.NextDouble() * 2 - 1, 0, entity.World.Rand.NextDouble() * 2 - 1);
 
@@ -243,6 +247,9 @@ namespace ExpandedAiTasks
             if (guardedEntity == null || !guardedEntity.Alive)
                 return false;
 
+            if (pathTraverser.Ready == false)
+                return false;
+
             if (nextTargetCheckTime <= targetUpdateTime)
             {
                 //If someone has attacked our guard entity, tell our targeting behaviors to target the enemy and early out.
@@ -280,7 +287,7 @@ namespace ExpandedAiTasks
 
             if (allowTeleport && dist > teleportAfterRange * teleportAfterRange && entity.World.Rand.NextDouble() < 0.05)
             {
-                TryTeleport();
+                AiUtility.TryTeleportToEntity(entity, guardedEntity);
             }
 
             return !stuck && !stopNow && pathTraverser.Active;
@@ -342,15 +349,6 @@ namespace ExpandedAiTasks
             return null;
         }
 
-
-        protected void TryTeleport()
-        {
-            if (!allowTeleport) return;
-            Vec3d pos = FindDecentTeleportPos();
-            if (pos != null) entity.TeleportTo(pos);
-        }
-
-
         public override void FinishExecute(bool cancelled)
         {
             base.FinishExecute(cancelled);
@@ -359,18 +357,26 @@ namespace ExpandedAiTasks
         protected void OnStuck()
         {
             stuck = true;
-            TryTeleport();
+
+            if ( allowTeleport )
+                AiUtility.TryTeleportToEntity(entity, guardedEntity);
+
             pathTraverser.Stop();
         }
 
-        public override void OnNoPath(Vec3d target)
+        public void OnPathFailed()
         {
-            TryTeleport();
+            stopNow = true;
+
+            if (allowTeleport)
+                AiUtility.TryTeleportToEntity(entity, guardedEntity);
+
             pathTraverser.Stop();
         }
 
         protected void OnGoalReached()
         {
+            stopNow = true;
             pathTraverser.Stop();
         }
 
