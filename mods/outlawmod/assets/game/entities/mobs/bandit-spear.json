@@ -211,23 +211,18 @@
         				withdrawDistDamaged: 40.0,
 						withdrawAnimation: "idle",
 
+						swimAnimation: "swim",
+
 						animationSpeed: 1.0,
 						//maxFollowTime: 60,
 						alarmHerd: true,
 						whenInEmotionState: "aggressiveondamage"
 					},
-					{
-						code: "getoutofwater",
-						priority: 2.2,
-						movespeed: 0.040,
-						animation: "swim",
-						animationSpeed: 0.3
-					},
 					//Close the distance to enemy target.
 					{
 						code: "engageentity",
 						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "humanoid-villager-*" ],
-						priority: 1.5,
+						priority: 2.25,
 						priorityForCancel: 2.5,
 						mincooldown: 0, 
 						maxcooldown: 0, 
@@ -246,10 +241,21 @@
         				withdrawDistDamaged: 40.0,
 						withdrawAnimation: "idle",
 
+						swimAnimation: "swim",
+
 						animationSpeed: 1.0,
 						//maxFollowTime: 60,
 						alarmHerd: true,
 					},
+
+					{
+						code: "getoutofwater",
+						priority: 2.0,
+						movespeed: 0.040,
+						animation: "swim",
+						animationSpeed: 0.3
+					},
+
 					{
 						code: "stayclosetoherd",
 						priority: 1.1,

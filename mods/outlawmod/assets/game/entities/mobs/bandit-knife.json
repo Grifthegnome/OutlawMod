@@ -216,18 +216,14 @@
         				withdrawDistDamaged: 40.0,
 						withdrawAnimation: "idle",
 
+						swimAnimation: "swim",
+
 						animationSpeed: 1.0,
 						//maxFollowTime: 60,
 						alarmHerd: true,
 						whenInEmotionState: "aggressiveondamage"
 					},
-					{
-						code: "getoutofwater",
-						priority: 2,
-						movespeed: 0.040,
-						animation: "swim",
-						animationSpeed: 0.3
-					},
+					
 					//Close the distance to enemy target.
 					//Double the agro distance of normal outlaws because of skirmish behavior.
 					{
@@ -249,10 +245,21 @@
         				withdrawDistDamaged: 40.0,
 						withdrawAnimation: "idle",
 
+						swimAnimation: "swim",
+
 						animationSpeed: 1.0,
 						//maxFollowTime: 60,
 						alarmHerd: true
 					},
+
+					{
+						code: "getoutofwater",
+						priority: 2,
+						movespeed: 0.040,
+						animation: "swim",
+						animationSpeed: 0.3
+					},
+
 					{
 						code: "stayclosetoherd",
 						priority: 1.1,

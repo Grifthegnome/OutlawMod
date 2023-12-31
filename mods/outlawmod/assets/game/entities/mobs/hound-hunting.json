@@ -184,6 +184,7 @@
 						engageSpeed: 0.035,
 						engageRange: 4,
 						engageAnimation: "Run",
+						swimAnimation: "walk",
 
 						//This currently breaks because of the hound's collision box. 
 						withdrawIfNoPath: false,

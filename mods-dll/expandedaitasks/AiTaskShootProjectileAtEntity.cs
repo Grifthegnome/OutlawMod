@@ -127,6 +127,8 @@ namespace ExpandedAiTasks
             if (cooldownUntilMs > entity.World.ElapsedMilliseconds) 
                 return false;
 
+            if (entity.Swimming)
+                return false;
 
             float range = maxDist;
             float vertRange = maxVertDist;
@@ -232,16 +234,19 @@ namespace ExpandedAiTasks
             //entity.PlayEntitySound("shootatentity", null, true);
 
             //Play sound for preparing to shoot.
-            entity.PlayEntitySound("drawSound", null, true, maxDist);
+            if ( !entity.Swimming )
+                entity.PlayEntitySound("drawSound", null, true, maxDist);
 
         }
-
 
         public override bool ContinueExecute(float dt)
         {
             AiUtility.UpdateLastTimeEntityInCombatMs(entity);
 
             if (targetEntity == null)
+                return false;
+
+            if (entity.Swimming)
                 return false;
 
             if ( fireOnLastKnownPosition && AiUtility.IsAwareOfTarget(entity, targetEntity, maxDist, maxVertDist))

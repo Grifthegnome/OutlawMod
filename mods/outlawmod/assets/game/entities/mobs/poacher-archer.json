@@ -336,6 +336,8 @@
 						withdrawDistDamaged: 40.0,
 						withdrawAnimation: "sneakidle",
 
+						swimAnimation: "swim",
+
 						animationSpeed: 1.0,
 						alarmHerd: true,
 						soundStartMs: 950,

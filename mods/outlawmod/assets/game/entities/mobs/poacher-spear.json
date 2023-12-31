@@ -254,6 +254,8 @@
 						withdrawDistDamaged: 40.0,
 						withdrawAnimation: "idle",
 
+						swimAnimation: "swim",
+
 						animationSpeed: 1.0,
 						alarmHerd: true,
 						soundStartMs: 950,
@@ -313,6 +315,8 @@
 						withdrawDistDamaged: 40.0,
 						withdrawAnimation: "idle",
 	
+						swimAnimation: "swim",
+
 						animationSpeed: 1.0,
 						alarmHerd: true,
 						soundStartMs: 950,

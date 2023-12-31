@@ -9,6 +9,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Datastructures;
 using Vintagestory.GameContent;
 using System.Threading.Tasks;
+using System.Security.Cryptography.X509Certificates;
 
 namespace ExpandedAiTasks
 {
@@ -44,6 +45,7 @@ namespace ExpandedAiTasks
         private const double AI_HEARING_AWARENESS_STANDNG_MODIFIER = 1.0;
         private const double AI_HEARING_AWARENESS_WALK_MODIFIER = 1.2;
         private const double AI_HEARING_AWARENESS_SPRINT_MODIFIER = 2.0;
+        private const double AI_HEARING_AWARENESS_SWIMMING_MODIFIER = 0.0;
 
         private const double AI_VISION_AWARENESS_SNEAK_MODIFIER = 0.20;
         private const double AI_VISION_AWARENESS_STANDNG_MODIFIER = 0.5;
@@ -52,7 +54,7 @@ namespace ExpandedAiTasks
 
         //To Do: Consider adding smell. (See if there is a concept of wind direction.)
 
-        private const double AI_HEARING_RANGE = 7.5;
+        private const double AI_HEARING_RANGE = 5.0;
 
         private const double MAX_LIGHT_LEVEL = 22;//12;
         private const double MIN_LIGHT_LEVEL = 4;
@@ -514,6 +516,12 @@ namespace ExpandedAiTasks
                     return false;
             }
 
+            //AI can see through other AI.
+            if ( ent is EntityAgent )
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -576,7 +584,11 @@ namespace ExpandedAiTasks
 
         public static double GetAiHearingAwarenessScalarForPlayerMovementType(EntityPlayer playerEnt)
         {
-            if (playerEnt.Controls.Sneak && playerEnt.OnGround)
+            if ( playerEnt.Swimming )
+            {
+                return AI_HEARING_AWARENESS_SWIMMING_MODIFIER;
+            }
+            else if (playerEnt.Controls.Sneak && playerEnt.OnGround)
             {
                 return AI_HEARING_AWARENESS_SNEAK_MODIFIER;
             }
@@ -769,5 +781,109 @@ namespace ExpandedAiTasks
 
             return null;
         }
+
+        public static bool LocationInLiquid(IWorldAccessor world, Vec3d pos)
+        {
+            BlockPos blockPos = new BlockPos((int)pos.X, (int)pos.Y, (int)pos.Z);
+            Block block = world.BlockAccessor.GetBlock(blockPos);
+
+            if (block != null)
+            {
+                return block.BlockMaterial == EnumBlockMaterial.Liquid;
+            }
+
+            return false;
+        }
+
+        public static Vec3d ClampPositionToGround(IWorldAccessor world, Vec3d startingPos, int maxBlockDistance)
+        {
+            BlockPos posAsBlockPos = new BlockPos((int)startingPos.X, (int)startingPos.Y, (int)startingPos.Z);
+            BlockPos previousCheckPos = posAsBlockPos.Copy();
+            BlockPos currentCheckPos = posAsBlockPos.Copy();
+
+            Block currentBlock = world.BlockAccessor.GetBlock(currentCheckPos);
+
+            if (currentBlock == null)
+            {
+                return startingPos;
+            }
+            else
+            {
+                //our starting point is in solid
+                if (IsPositionInSolid( world, startingPos ))
+                    return startingPos;
+            }
+
+            int groundCheckTries = 0;
+            while (maxBlockDistance > groundCheckTries)
+            {
+                currentCheckPos = previousCheckPos.DownCopy();
+                currentBlock = world.BlockAccessor.GetBlock(currentCheckPos);
+
+                //Check Block Below us.
+                if (currentBlock != null)
+                {
+                    if (IsPositionInSolid(world, currentCheckPos) )
+                    {
+                        return new Vec3d( previousCheckPos.X, previousCheckPos.Y, previousCheckPos.Z);
+                    }
+
+                }
+
+                previousCheckPos = currentCheckPos;
+                groundCheckTries++;
+            }
+            
+            return startingPos;
+
+        }
+
+        public static bool IsPositionInSolid(IWorldAccessor world, Vec3d pos)
+        {
+            BlockPos blockPos = new BlockPos((int)pos.X, (int)pos.Y, (int)pos.Z);
+            return IsPositionInSolid(world, blockPos);
+        }
+
+        public static bool IsPositionInSolid(IWorldAccessor world, BlockPos blockPos )
+        {
+            IBlockAccessor blockAccessor = world.BlockAccessor;
+            Block blockAtPos = blockAccessor.GetBlock(blockPos);
+
+            bool solid = blockAtPos.BlockMaterial != EnumBlockMaterial.Air && blockAtPos.BlockMaterial != EnumBlockMaterial.Liquid && blockAtPos.BlockMaterial != EnumBlockMaterial.Snow &&
+                blockAtPos.BlockMaterial != EnumBlockMaterial.Plant && blockAtPos.BlockMaterial != EnumBlockMaterial.Leaves;
+
+            if (solid)
+            {
+                bool confirmedSolid = false;
+                foreach (BlockFacing facing in BlockFacing.ALLFACES)
+                {
+                    if (blockAtPos.SideSolid[facing.Index] == true)
+                    {
+                        confirmedSolid = true;
+                        break;
+                    }
+
+                    BlockEntity blockEnt = blockAccessor.GetBlockEntity(blockPos);
+                    if (blockAtPos is BlockMicroBlock)
+                    {
+                        if (blockAccessor.GetBlockEntity(blockPos) is BlockEntityMicroBlock)
+                        {
+                            BlockEntityMicroBlock microBlockEnt = blockAccessor.GetBlockEntity(blockPos) as BlockEntityMicroBlock;
+                            if (microBlockEnt.sideAlmostSolid[facing.Index] == true)
+                            {
+                                confirmedSolid = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                solid = confirmedSolid;
+            }
+
+            return solid;
+        }
+
     }
+
 }
