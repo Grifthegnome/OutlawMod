@@ -291,7 +291,10 @@ namespace ExpandedAiTasks
 
             float moveSpeed = GetMovementSpeedForState(internalMovementState);
 
-            hasPath = pathTraverser.NavigateTo(targetPos.Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, searchDepth );
+            //hasPath = pathTraverser.NavigateTo(targetPos.Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, searchDepth );
+
+            hasPath = pathTraverser.NavigateTo_Async(targetPos.Clone(), GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck, OnPathFailed, searchDepth );
+
             if (!hasPath)
             {
                 UpdateWithdrawPos();
