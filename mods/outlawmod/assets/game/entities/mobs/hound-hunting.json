@@ -145,7 +145,8 @@
 						detectionDistance: 40,
            				maxDistance: 6,
             			arriveDistance: 4,
-            			moveSpeed: 0.048,
+            			moveSpeedNear: 0.006,
+						moveSpeedFarAway: 0.048,
 						guardAgroDurationMs: 30000,
 						guardAgroChaseDist: 40,
 
@@ -153,7 +154,8 @@
             			aggroOnProximity: true,
             			aggroProximity: 6,
 
-						animation: "Run",
+						moveNearAnimation: "Walk",
+						moveFarAnimation: "Run",
 						animationSpeed: 1.5,
 					},
 					{

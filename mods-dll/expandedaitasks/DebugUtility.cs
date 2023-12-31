@@ -13,6 +13,11 @@ namespace ExpandedAiTasks
 {
     public static class DebugUtility
     {
+        public static void DebugDrawPosition(IWorldAccessor world, Vec3d pos, int red, int green, int blue)
+        {
+            BlockPos blockPos = new BlockPos((int)pos.X, (int)pos.Y, (int)pos.Z);
+            DebugDrawBlockLocation(world, blockPos, red, green, blue);
+        }
         public static void DebugDrawBlockLocation(IWorldAccessor world, BlockPos blockPos, int red, int green, int blue )
         {
             // Debug visualization

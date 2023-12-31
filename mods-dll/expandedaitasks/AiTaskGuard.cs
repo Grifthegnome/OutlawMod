@@ -9,6 +9,7 @@ using Vintagestory.API.Util;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
 using System.Xml.XPath;
+using System.Drawing;
 
 
 namespace ExpandedAiTasks
@@ -22,15 +23,19 @@ namespace ExpandedAiTasks
         float detectionDistance = 20f;
         float maxDistance = 6f;
         float arriveDistance = 3f;
-        float moveSpeed = 0.04f;
+        float moveSpeedNear = 0.04f;
+        float moveSpeedFarAway = 0.04f;
         float guardAgroDurationMs = 30000f;
         float guardAgroChaseDist = 40f;
+
+        string moveNearAnimation = "Walk";
+        string moveFarAnimation = "Run";
 
         bool guardHerd = false;
         bool aggroOnProximity = false;
         float aggroProximity = 5f;
 
-        //EntityPartitioning partitionUtil;
+        protected bool guardTargetSwimmingLastFrame = false;
 
         protected bool stuck = false;
         protected bool stopNow = false;
@@ -41,6 +46,8 @@ namespace ExpandedAiTasks
 
         //Guarding is not an agressive action.
         public override bool AggressiveTargeting => false;
+
+        float stepHeight;
 
         public AiTaskGuard(EntityAgent entity) : base(entity)
         {
@@ -55,10 +62,13 @@ namespace ExpandedAiTasks
             detectionDistance = taskConfig["detectionDistance"].AsFloat(20f);
             maxDistance = taskConfig["maxDistance"].AsFloat(6f);
             arriveDistance = taskConfig["arriveDistance"].AsFloat(3f);
-            moveSpeed = taskConfig["moveSpeed"].AsFloat(0.04f);
+            moveSpeedNear = taskConfig["moveSpeed"].AsFloat(0.006f);
+            moveSpeedFarAway = taskConfig["moveSpeedFarAway"].AsFloat(0.04f);
             guardAgroDurationMs = taskConfig["guardAgroDurationMs"].AsFloat(30000f);
             guardAgroChaseDist = taskConfig["guardAgroChaseDist"].AsFloat(40f);
 
+            moveNearAnimation = taskConfig["moveNearAnimation"].AsString("Walk");
+            moveFarAnimation = taskConfig["moveFarAnimation"].AsString("Run");
 
             guardHerd = taskConfig["guardHerd"].AsBool(false);
             aggroOnProximity = taskConfig["aggroOnProximity"].AsBool(false);
@@ -154,14 +164,63 @@ namespace ExpandedAiTasks
         {
             base.StartExecute();
 
+            var bh = entity.GetBehavior<EntityBehaviorControlledPhysics>();
+            stepHeight = bh == null ? 0.6f : bh.stepHeight;
+
             float size = guardedEntity.SelectionBox.XSize;
 
-            pathTraverser.NavigateTo_Async(guardedEntity.ServerPos.XYZ, moveSpeed, size + 0.2f, OnGoalReached, OnStuck, OnPathFailed, 1000 );
+            guardTargetSwimmingLastFrame = guardedEntity.Swimming;
+
+            PlayBestMoveAnimation();
+            pathTraverser.NavigateTo_Async(guardedEntity.ServerPos.XYZ, GetBestMoveSpeed(), size + 0.2f, OnGoalReached, OnStuck, OnPathFailed, 5000 );
 
             targetOffset.Set(entity.World.Rand.NextDouble() * 2 - 1, 0, entity.World.Rand.NextDouble() * 2 - 1);
 
             stuck = false;
             stopNow = false;
+        }
+
+        protected float GetBestMoveSpeed()
+        {
+            double distSqr = entity.ServerPos.SquareDistanceTo( guardedEntity.ServerPos.XYZ );
+            float size = entity.SelectionBox.XSize;
+
+            if (size < 0)
+                size *= 1;
+
+            if (distSqr > ( maxDistance + size) * ( maxDistance + size) )
+                return moveSpeedFarAway;
+
+            return moveSpeedNear;
+        }
+
+        protected void PlayBestMoveAnimation()
+        {
+            double distSqr = entity.ServerPos.SquareDistanceTo(guardedEntity.ServerPos.XYZ);
+            float size = entity.SelectionBox.XSize;
+
+            if (size < 0)
+                size *= 1;
+
+            if (distSqr > (maxDistance + size) * (maxDistance + size))
+            {
+                if (moveFarAnimation != null)
+                    entity.AnimManager.StartAnimation(new AnimationMetaData() { Animation = moveFarAnimation, Code = moveFarAnimation }.Init());
+
+                if (moveNearAnimation != null)
+                    entity.AnimManager.StopAnimation(moveNearAnimation);
+            }
+            else
+            {
+                if (moveNearAnimation != null)
+                    entity.AnimManager.StartAnimation(new AnimationMetaData() { Animation = moveNearAnimation, Code = moveNearAnimation }.Init());
+
+                if (moveFarAnimation != null)
+                    entity.AnimManager.StopAnimation(moveFarAnimation);
+            }
+                
+
+            
         }
 
         protected EntityAgent GetBestGuardTargetFromHerd()
@@ -240,14 +299,16 @@ namespace ExpandedAiTasks
         float nextTargetCheckTime = 0f;
         const float GUARD_TARGET_CHECK_INTERVAL = 0.25f;
 
+        public override bool CanContinueExecute()
+        {
+            return pathTraverser.Ready;
+        }
+
         public override bool ContinueExecute(float dt)
         {
             targetUpdateTime += dt;
 
             if (guardedEntity == null || !guardedEntity.Alive)
-                return false;
-
-            if (pathTraverser.Ready == false)
                 return false;
 
             if (nextTargetCheckTime <= targetUpdateTime)
@@ -268,14 +329,32 @@ namespace ExpandedAiTasks
                 nextTargetCheckTime = targetUpdateTime + GUARD_TARGET_CHECK_INTERVAL;
             }
 
-                
+            targetOffset.Set(entity.World.Rand.NextDouble() * 2 - 1, 0, entity.World.Rand.NextDouble() * 2 - 1);
             double x = guardedEntity.ServerPos.X + targetOffset.X;
             double y = guardedEntity.ServerPos.Y;
             double z = guardedEntity.ServerPos.Z + targetOffset.Z;
 
-            pathTraverser.CurrentTarget.X = x;
-            pathTraverser.CurrentTarget.Y = y;
-            pathTraverser.CurrentTarget.Z = z;
+            Vec3d guardPos = new Vec3d(x, y, z);
+            Vec3d guardPosClamped = AiUtility.ClampPositionToGround(world, guardPos, 5);
+
+            pathTraverser.CurrentTarget.X = guardPosClamped.X;
+            pathTraverser.CurrentTarget.Y = guardPosClamped.Y;
+            pathTraverser.CurrentTarget.Z = guardPosClamped.X;
+
+            float size = guardedEntity.SelectionBox.XSize;
+            PlayBestMoveAnimation();
+
+            if ( guardedEntity.Swimming )
+            {
+                guardPosClamped = UpdateSwimSteering(guardPosClamped);
+                pathTraverser.WalkTowards(guardPosClamped, GetBestMoveSpeed(), size + 0.2f, OnGoalReached, OnStuck);
+            }
+            else if ( !guardedEntity.Swimming && guardTargetSwimmingLastFrame )
+            {
+                pathTraverser.NavigateTo_Async(guardPosClamped, GetBestMoveSpeed(), size + 0.2f, OnGoalReached, OnStuck, OnPathFailed, 5000);
+            }
+
+            DebugUtility.DebugDrawPosition(world, guardPosClamped, 255, 0, 255);
 
             float dist = entity.ServerPos.SquareDistanceTo(x, y, z);
 
@@ -289,6 +368,8 @@ namespace ExpandedAiTasks
             {
                 AiUtility.TryTeleportToEntity(entity, guardedEntity);
             }
+
+            guardTargetSwimmingLastFrame = guardedEntity.Swimming;
 
             return !stuck && !stopNow && pathTraverser.Active;
         }
@@ -349,9 +430,66 @@ namespace ExpandedAiTasks
             return null;
         }
 
+        Vec3d tmpVec = new Vec3d();
+        Vec3d collTmpVec = new Vec3d();
+        private Vec3d UpdateSwimSteering( Vec3d steerTarget )
+        {
+            float yaw = (float)Math.Atan2(entity.ServerPos.X - steerTarget.X, entity.ServerPos.Z - steerTarget.Z);
+
+            // Simple steering behavior
+            tmpVec = tmpVec.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z);
+            tmpVec.Ahead(0.9, 0, yaw - GameMath.PI / 2);
+
+            // Running into wall?
+            if (Traversable(tmpVec))
+            {
+                steerTarget.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z).Ahead(10, 0, yaw - GameMath.PI / 2);
+                return steerTarget;
+            }
+
+            // Try 90 degrees left
+            tmpVec = tmpVec.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z);
+            tmpVec.Ahead(0.9, 0, yaw - GameMath.PI);
+            if (Traversable(tmpVec))
+            {
+                steerTarget.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z).Ahead(10, 0, yaw - GameMath.PI);
+                return steerTarget;
+            }
+
+            // Try 90 degrees right
+            tmpVec = tmpVec.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z);
+            tmpVec.Ahead(0.9, 0, yaw);
+            if (Traversable(tmpVec))
+            {
+                steerTarget.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z).Ahead(10, 0, yaw);
+                return steerTarget;
+            }
+
+            // Run towards target o.O
+            tmpVec = tmpVec.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z);
+            tmpVec.Ahead(0.9, 0, -yaw);
+            steerTarget.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z).Ahead(10, 0, -yaw);
+
+            return steerTarget;
+        }
+
+        bool Traversable(Vec3d pos)
+        {
+            return
+                !world.CollisionTester.IsColliding(world.BlockAccessor, entity.SelectionBox, pos, false) ||
+                !world.CollisionTester.IsColliding(world.BlockAccessor, entity.SelectionBox, collTmpVec.Set(pos).Add(0, Math.Min(1, stepHeight), 0), false)
+            ;
+        }
+
         public override void FinishExecute(bool cancelled)
         {
             base.FinishExecute(cancelled);
+
+            if (moveFarAnimation != null)
+                entity.AnimManager.StopAnimation(moveFarAnimation);
+
+            if ( moveNearAnimation != null )
+                entity.AnimManager.StopAnimation(moveNearAnimation);
         }
 
         protected void OnStuck()

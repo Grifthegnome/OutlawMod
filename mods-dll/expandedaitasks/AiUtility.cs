@@ -811,7 +811,7 @@ namespace ExpandedAiTasks
             {
                 //our starting point is in solid
                 if (IsPositionInSolid( world, startingPos ))
-                    return startingPos;
+                    return PopPositionAboveGround(world, startingPos, maxBlockDistance);
             }
 
             int groundCheckTries = 0;
@@ -836,6 +836,48 @@ namespace ExpandedAiTasks
             
             return startingPos;
 
+        }
+
+        public static Vec3d PopPositionAboveGround(IWorldAccessor world, Vec3d startingPos, int maxBlockDistance)
+        {
+            BlockPos posAsBlockPos = new BlockPos((int)startingPos.X, (int)startingPos.Y, (int)startingPos.Z);
+            BlockPos previousCheckPos = posAsBlockPos.Copy();
+            BlockPos currentCheckPos = posAsBlockPos.Copy();
+
+            Block currentBlock = world.BlockAccessor.GetBlock(currentCheckPos);
+
+            if (currentBlock == null)
+            {
+                return startingPos;
+            }
+            else
+            {
+                //our starting point is in solid
+                if (!IsPositionInSolid(world, startingPos))
+                    return startingPos;
+            }
+
+            int groundCheckTries = 0;
+            while (maxBlockDistance > groundCheckTries)
+            {
+                currentCheckPos = previousCheckPos.UpCopy();
+                currentBlock = world.BlockAccessor.GetBlock(currentCheckPos);
+
+                //Check Block Below us.
+                if (currentBlock != null)
+                {
+                    if (!IsPositionInSolid(world, currentCheckPos))
+                    {
+                        return new Vec3d(currentCheckPos.X, currentCheckPos.Y, currentCheckPos.Z);
+                    }
+
+                }
+
+                previousCheckPos = currentCheckPos;
+                groundCheckTries++;
+            }
+
+            return startingPos;
         }
 
         public static bool IsPositionInSolid(IWorldAccessor world, Vec3d pos)

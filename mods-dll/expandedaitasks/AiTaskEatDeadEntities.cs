@@ -185,6 +185,10 @@ namespace ExpandedAiTasks
                     return false;
             }
 
+            //don't eat things in the water.
+            if (e.Swimming)
+                return false;
+
             //Depending on how rotten the dead thing is we can detect it from farther away.
             double detectRange = GetDetectionRangeForEnt(e);
             if (entity.ServerPos.SquareDistanceTo(e.ServerPos) > detectRange * detectRange)

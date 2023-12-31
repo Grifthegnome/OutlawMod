@@ -302,8 +302,6 @@ namespace ExpandedAiTasks
 
             float moveSpeed = GetMovementSpeedForState(internalMovementState);
 
-            //hasPath = pathTraverser.NavigateTo(targetPos.Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, searchDepth );
-
             hasPath = pathTraverser.NavigateTo_Async(targetPos.Clone(), GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck, OnPathFailed, searchDepth );
 
             if (!hasPath)
@@ -355,22 +353,37 @@ namespace ExpandedAiTasks
             if (pursueLastKnownPosition)
                 canSeeTarget = AiUtility.IsAwareOfTarget(entity,targetEntity, pursueRange, pursueRange);
 
-            targetPos.Set(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
-
-            if (canSeeTarget)
-            {
-                lastKnownMotion = targetEntity.ServerPos.Motion.Clone();
-                lastKnownPos.Set(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
-                lastTimeSawTarget = entity.World.ElapsedMilliseconds;
-            }
-
             Vec3d pathToPos = !pursueLastKnownPosition || canSeeTarget ? targetPos : lastKnownPos;
-            Vec3d clampedPathPos = AiUtility.ClampPositionToGround(world, pathToPos, 2);
+            Vec3d clampedPathPos = AiUtility.ClampPositionToGround(world, pathToPos, 5);
 
             //Depending on whether we are pursuing or engaging, determine the distance our target has to move for us to recompute our path.
             //When we are engaging (close range follow) we need to recompute more often so we can say on our target.
             float minRecomputeNavDistance = internalMovementState == eInternalMovementState.Engaging ? 1 * 1 : 1.5f * 1.5f;
             bool activelyMoving = lastPathUpdatePos.SquareDistanceTo(targetEntity.ServerPos.XYZ) >= minRecomputeNavDistance;
+
+            if ( activelyMoving )
+            {
+                targetPos.Set(targetEntity.ServerPos.X + (targetEntity.ServerPos.Motion.X * 10), targetEntity.ServerPos.Y, targetEntity.ServerPos.Z + (targetEntity.ServerPos.Motion.Z * 10));
+
+                if (canSeeTarget)
+                {
+                    lastKnownMotion = targetEntity.ServerPos.Motion.Clone();
+                    lastKnownPos.Set(targetEntity.ServerPos.X + (lastKnownMotion.X * 10), targetEntity.ServerPos.Y, targetEntity.ServerPos.Z + (lastKnownMotion.Z * 10));
+                    lastTimeSawTarget = entity.World.ElapsedMilliseconds;
+                }
+            }
+            else
+            {
+                targetPos.Set(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
+
+                if (canSeeTarget)
+                {
+                    lastKnownMotion = targetEntity.ServerPos.Motion.Clone();
+                    lastKnownPos.Set(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
+                    lastTimeSawTarget = entity.World.ElapsedMilliseconds;
+                }
+            }
+            
 
             /*
             if ( lastPathUpdateSeconds >= 0.75f ||
