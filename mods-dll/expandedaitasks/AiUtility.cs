@@ -647,6 +647,19 @@ namespace ExpandedAiTasks
             if (!AiUtility.IsAnyPlayerWithinRangeOfPos(targetEntity.ServerPos.XYZ, 250, targetEntity.World))
                 return false;
 
+            //Because traces and light checks are expensive, see if we have already run this calculation this frame and
+            //if we have, use the saved value for the entity. This will prevent redundant calls to get the same data.
+            if (AwarenessManager.EntityHasAwarenessEntry(searchingEntity))
+            {
+                if (AwarenessManager.EntityHasAwarenessEntryForTargetEntity(searchingEntity, targetEntity) )
+                {
+                    if (!AwarenessManager.EntityAwarenessEntryForTargetEntityIsStale(searchingEntity, targetEntity))
+                    {
+                        return AwarenessManager.GetEntityAwarenessForTargetEntity(searchingEntity, targetEntity);
+                    }
+                }
+            }
+
             Cuboidd cuboidd = targetEntity.SelectionBox.ToDouble().Translate(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
             Vec3d selectionBoxMidPoint = searchingEntity.ServerPos.XYZ.Add(0.0, searchingEntity.SelectionBox.Y2 / 2f, 0.0).Ahead(searchingEntity.SelectionBox.XSize / 2f, 0f, searchingEntity.ServerPos.Yaw);
             double shortestDist = cuboidd.ShortestDistanceFrom(selectionBoxMidPoint);
@@ -672,7 +685,11 @@ namespace ExpandedAiTasks
             double shortestVisionVertDist = shortestVertDist * aiAwarenessVisionScalar;
 
             if (shortestDist >= (double)maxDist || shortestVertDist >= (double)maxVerDist)
+            {
+                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, false);
                 return false;
+            }
+                
 
             ///////////////////
             ///HEARING CHECK///
@@ -681,7 +698,11 @@ namespace ExpandedAiTasks
             //if we can hear the target moving, enage 
             double aiHearingRange = AI_HEARING_RANGE * aiAwarenessHearingScalar;
             if (shortestDist <= aiHearingRange && targetEntity.ServerPos.Motion.LengthSq() > 0)
+            {
+                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, true);
                 return true;
+            }
+                
 
             //////////////////////////
             ///EYE-TO-EYE LOS CHECK///
@@ -689,7 +710,11 @@ namespace ExpandedAiTasks
             //If we don't have direct line of sight to the target's eyes.
             Entity[] ignoreEnts = { targetEntity };
             if (!AiUtility.CanEntSeePos(searchingEntity, targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0), AI_VISION_FOV, ignoreEnts))
+            {
+                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, false);
                 return false;
+            }
+                
 
             /////////////////
             ///LIGHT CHECK///
@@ -697,11 +722,19 @@ namespace ExpandedAiTasks
 
             //If this Ai can see in the dark, we don't need to check lights.
             if (EntityHasNightVison( searchingEntity ) )
+            {
+                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, true);
                 return true;
+            }
+                
 
             //If no players are within a close range, don't bother with illumination checks.
             if (!AiUtility.IsAnyPlayerWithinRangeOfPos(targetEntity.ServerPos.XYZ, 60, targetEntity.World))
+            {
+                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, true);
                 return true;
+            }
+                
 
             //This ensures we only run one full illumination update every 500ms.
             int lightLevel = IlluminationManager.GetIlluminationLevelForEntity(targetEntity);
@@ -709,8 +742,12 @@ namespace ExpandedAiTasks
             double lightLevelVisualAwarenessDist = lightLevelDist * aiAwarenessVisionScalar;
 
             if (shortestDist <= lightLevelVisualAwarenessDist)
+            {
+                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, true);
                 return true;
+            }
 
+            AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, false);
             return false;
         }
 

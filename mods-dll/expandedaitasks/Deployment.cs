@@ -19,6 +19,9 @@ namespace ExpandedAiTasks
                 RegisterAiTasksOnServer();
                 IlluminationManager.Init(api as ICoreServerAPI);
                 api.Event.OnEntityDespawn += IlluminationManager.OnDespawn;
+                api.Event.OnEntityDespawn += AwarenessManager.OnDespawn;
+
+                api.Event.OnEntityDeath += AwarenessManager.OnDeath;
 
                 //Tell Entity Manager to Track Projectile Spawns.
                 api.Event.OnEntitySpawn += EntityManager.OnEntityProjectileSpawn;
