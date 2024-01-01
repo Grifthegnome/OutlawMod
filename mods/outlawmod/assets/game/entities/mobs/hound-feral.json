@@ -16,8 +16,7 @@
 			{ code: "controlledphysics", stepHeight: 1.5 }, 
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
 			{ code: "interpolateposition" },
-			{ code: "harvestable" },
-			{ code: "despawn", minPlayerDistance: 8, belowLightLevel: 8, minSeconds: 300 }
+			{ code: "harvestable" }
 		],
 		animations: [
 			{
@@ -349,7 +348,9 @@
 				group: "hostile",
 				tryOnlySurface: true,
 				chance: 0.0066,
-				maxQuantity: 20,
+				maxQuantity: 12,
+				maxQuantityByGroup: { code: "hound-feral", maxQuantity: 12 },
+				spawnCapPlayerScaling: 0.05,
 				"__comment": "Make them spawn away from artifical light so they don't spawn inside farmland",
 				maxLightLevel: 6,
 				lightLevelType: "onlyBlockLight",					

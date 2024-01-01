@@ -47,7 +47,6 @@
 			{ code: "repulseagents" }, 
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
 			{ code: "controlledphysics", stepHeight: 1.1251 }, 
-			{ code: "despawn", minPlayerDistance: 64, belowLightLevel: 8, minSeconds: 300 },
 			{ code: "harvestable"},
 			{ code: "interpolateposition" }
 		],
@@ -91,7 +90,7 @@
 		behaviors: [
 			{ code: "nametag", selectFromRandomName: ["Brigand"], "showtagonlywhentargeted": true }, 
 			{ code: "repulseagents" }, 
-			{ code: "despawn", minPlayerDistance: 32, belowLightLevel: 1, minSeconds: 900 },
+			{ code: "despawn", minPlayerDistance: 8, belowLightLevel: 8, minSeconds: 300 },
 			{ code: "controlledphysics", stepHeight: 1.1251 }, 
 			{ code: "deaddecay", hoursToDecay: 96, decayedBlock: "carcass-human" },
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
@@ -104,6 +103,7 @@
 				},
 				]
 			},
+			{ code: "breathe" },
 			{ 
 				code: "emotionstates",
 				states: [
@@ -283,6 +283,8 @@
 				tryOnlySurface: true,
 				chance: 0.0008,
 				maxQuantity: 4,
+				maxQuantityByGroup: { code: "bandit-*", maxQuantity: 5 },
+				spawnCapPlayerScaling: 0.05,
 				"__comment": "Make them spawn away from artifical light and only at night/as the sun sets",
 				maxLightLevel: 3,
 				lightLevelType: "MaxTimeOfDayLight",					

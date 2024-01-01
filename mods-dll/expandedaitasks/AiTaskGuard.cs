@@ -354,7 +354,7 @@ namespace ExpandedAiTasks
                 pathTraverser.NavigateTo_Async(guardPosClamped, GetBestMoveSpeed(), size + 0.2f, OnGoalReached, OnStuck, OnPathFailed, 5000);
             }
 
-            DebugUtility.DebugDrawPosition(world, guardPosClamped, 255, 0, 255);
+            //DebugUtility.DebugDrawPosition(world, guardPosClamped, 255, 0, 255);
 
             float dist = entity.ServerPos.SquareDistanceTo(x, y, z);
 

@@ -20,8 +20,7 @@
 			{ code: "controlledphysics", stepHeight: 1.5 }, 
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
 			{ code: "interpolateposition" },
-			{ code: "harvestable" },
-			{ code: "despawn", minPlayerDistance: 8, belowLightLevel: 8, minSeconds: 300 }
+			{ code: "harvestable" }
 		],
 		animations: [
 			{
