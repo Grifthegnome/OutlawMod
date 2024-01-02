@@ -48,7 +48,10 @@ namespace ExpandedAiTasks
     public static class AwarenessManager
     {
         private static Dictionary<long, Dictionary<long, AwarenessData>> awarenessData = new Dictionary<long, Dictionary<long, AwarenessData>>();
-    
+
+        //Note: This value should be as high as we can make it without its effect being perceptable to players.
+        private const float AWARENESS_STALE_AFTER_TIME_MS = 250f;
+
         public static bool EntityHasAwarenessEntry( Entity ent )
         {
             return awarenessData.ContainsKey(ent.EntityId);
@@ -61,7 +64,7 @@ namespace ExpandedAiTasks
 
         public static bool EntityAwarenessEntryForTargetEntityIsStale( Entity ent, Entity targetEnt)
         {
-            return ent.World.ElapsedMilliseconds > awarenessData[ent.EntityId][targetEnt.EntityId].lastComputationTime;
+            return ent.World.ElapsedMilliseconds > awarenessData[ent.EntityId][targetEnt.EntityId].lastComputationTime + AWARENESS_STALE_AFTER_TIME_MS;
         }
 
         public static bool EntityIsAwareOfTargetEntity( Entity ent, Entity targetEnt ) 

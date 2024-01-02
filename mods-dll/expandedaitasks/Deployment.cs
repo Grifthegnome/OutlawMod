@@ -18,6 +18,7 @@ namespace ExpandedAiTasks
             {
                 RegisterAiTasksOnServer();
                 IlluminationManager.Init(api as ICoreServerAPI);
+                AiUtility.Init();
                 api.Event.OnEntityDespawn += IlluminationManager.OnDespawn;
                 api.Event.OnEntityDespawn += AwarenessManager.OnDespawn;
 
@@ -28,6 +29,7 @@ namespace ExpandedAiTasks
             }
 
             RegisterAiTasksShared();
+            RegisterEntityBehaviors(api);
         }
         private static void RegisterAiTasksOnServer()
         {
@@ -83,6 +85,11 @@ namespace ExpandedAiTasks
 
             if (!AiTaskRegistry.TaskTypes.ContainsKey("reacttoprojectiles"))
                 AiTaskRegistry.Register("reacttoprojectiles", typeof(AiTaskReactToProjectiles));
+        }
+
+        private static void RegisterEntityBehaviors( ICoreAPI api )
+        {
+            api.RegisterEntityBehaviorClass("lodrepulseagents", typeof(EntityBehaviorLODRepulseAgents));
         }
     }
 }

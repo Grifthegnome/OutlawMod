@@ -54,21 +54,30 @@ namespace ExpandedAiTasks
 
         //To Do: Consider adding smell. (See if there is a concept of wind direction.)
 
-        private const double AI_HEARING_RANGE = 5.0;
+        private const double AI_HEARING_RANGE = 3.5;
 
         private const double MAX_LIGHT_LEVEL = 22;//12;
         private const double MIN_LIGHT_LEVEL = 4;
         private const double MAX_LIGHT_LEVEL_DETECTION_DIST = 60;
         private const double MIN_LIGHT_LEVEL_DETECTION_DIST = 2;
 
-        private const float HERD_ALERT_RANGE = 30;
+        private const float HERD_ALERT_RANGE = 15;
 
         //To Do: Consider narrowing AI FOV at night.
         private const float AI_VISION_FOV = 120;
 
         private const float ALWAYS_ALLOW_TELEPORT_BEYOND_RANGE_FROM_PLAYER = 80;
-        private const float BLOCK_TELEPORT_WHEN_PLAYER_CLOSER_THAN = 60;
-        private const float BLOCK_TELEPORT_AFTER_COMBAT_DURATION = 45;
+        private const float BLOCK_TELEPORT_WHEN_PLAYER_CLOSER_THAN = 30;
+        private const float BLOCK_TELEPORT_AFTER_COMBAT_DURATION = 30000;
+
+        private const string BUTTERFLY_CODE = "butterfly";
+
+        private static List<string> alwaysIgnoreEntityCodes = new List<string>();
+
+        public static void Init()
+        {
+            alwaysIgnoreEntityCodes.Add(BUTTERFLY_CODE);
+        }
 
         public static string GetAiTaskName( AiTaskBase task )
         {
@@ -461,7 +470,7 @@ namespace ExpandedAiTasks
         private static Entity losTraceSourceEnt = null;
         private static Entity[] ignoreEnts = null;
 
-        public static bool CanEntSeePos( Entity ent, Vec3d pos, float fov, Entity[] entsToIgnore = null)
+        public static bool CanEntSeePos( Entity ent, Vec3d pos, float fov = AI_VISION_FOV, Entity[] entsToIgnore = null)
         {
             blockSel = null;
             entitySel = null;
@@ -496,10 +505,6 @@ namespace ExpandedAiTasks
 
             //Plants block visability
             if (block.BlockMaterial == EnumBlockMaterial.Plant)
-                return false;
-
-            //Liquid Blocks visability
-            if (block.BlockMaterial == EnumBlockMaterial.Liquid)
                 return false;
 
             return true;
@@ -638,6 +643,9 @@ namespace ExpandedAiTasks
         //3. This function does many similar things to CanSense, but gets called seperately, we need to determine whether the two should remain seperate.
         public static bool IsAwareOfTarget(Entity searchingEntity, Entity targetEntity, float maxDist, float maxVerDist)
         {
+            //Bulk ignore entities that we just don't care about, like butterflies.
+            if (EntityCodeInList(targetEntity, alwaysIgnoreEntityCodes))
+                return false;
 
             //We cannot percieve ourself as a target.
             if (searchingEntity == targetEntity)
@@ -821,7 +829,7 @@ namespace ExpandedAiTasks
 
         public static bool LocationInLiquid(IWorldAccessor world, Vec3d pos)
         {
-            BlockPos blockPos = new BlockPos((int)pos.X, (int)pos.Y, (int)pos.Z);
+            BlockPos blockPos = pos.AsBlockPos;
             Block block = world.BlockAccessor.GetBlock(blockPos);
 
             if (block != null)
@@ -834,7 +842,7 @@ namespace ExpandedAiTasks
 
         public static Vec3d ClampPositionToGround(IWorldAccessor world, Vec3d startingPos, int maxBlockDistance)
         {
-            BlockPos posAsBlockPos = new BlockPos((int)startingPos.X, (int)startingPos.Y, (int)startingPos.Z);
+            BlockPos posAsBlockPos = startingPos.AsBlockPos;
             BlockPos previousCheckPos = posAsBlockPos.Copy();
             BlockPos currentCheckPos = posAsBlockPos.Copy();
 
@@ -877,7 +885,7 @@ namespace ExpandedAiTasks
 
         public static Vec3d PopPositionAboveGround(IWorldAccessor world, Vec3d startingPos, int maxBlockDistance)
         {
-            BlockPos posAsBlockPos = new BlockPos((int)startingPos.X, (int)startingPos.Y, (int)startingPos.Z);
+            BlockPos posAsBlockPos = startingPos.AsBlockPos;
             BlockPos previousCheckPos = posAsBlockPos.Copy();
             BlockPos currentCheckPos = posAsBlockPos.Copy();
 
@@ -917,9 +925,15 @@ namespace ExpandedAiTasks
             return startingPos;
         }
 
+        public static Vec3d MovePositionByBlockInDirectionOfVector( Vec3d positionToMove, Vec3d directionToMove )
+        {
+            BlockPos endBlockPos = (positionToMove + directionToMove).AsBlockPos;
+            return new Vec3d(endBlockPos.X, endBlockPos.Y, endBlockPos.Z);
+        }
+
         public static bool IsPositionInSolid(IWorldAccessor world, Vec3d pos)
         {
-            BlockPos blockPos = new BlockPos((int)pos.X, (int)pos.Y, (int)pos.Z);
+            BlockPos blockPos = pos.AsBlockPos;
             return IsPositionInSolid(world, blockPos);
         }
 
@@ -961,6 +975,20 @@ namespace ExpandedAiTasks
             }
 
             return solid;
+        }
+
+        public static bool EntityCodeInList( Entity ent, List<string> codes )
+        {
+            foreach ( string code in codes ) 
+            {
+                if (ent.Code.Path == code)
+                    return true;
+
+                if (ent.Code.Path.StartsWithFast(code))
+                    return true;
+            }
+
+            return false;
         }
 
     }

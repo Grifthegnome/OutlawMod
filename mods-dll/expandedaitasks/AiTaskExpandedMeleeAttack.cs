@@ -84,13 +84,13 @@ namespace ExpandedAiTasks
                 attackedByEntity = null;
             }
 
-            if (retaliateAttacks && attackedByEntity != null && attackedByEntity.Alive && IsTargetableEntity(attackedByEntity, 15, true) && AiUtility.IsAwareOfTarget(entity, attackedByEntity, minDist, minVerDist))
+            if (retaliateAttacks && attackedByEntity != null && attackedByEntity.Alive && IsTargetableEntity(attackedByEntity, minDist, true) && AiUtility.IsAwareOfTarget(entity, attackedByEntity, minDist, minVerDist))
             {
                 targetEntity = attackedByEntity;
             }
             else if (guardTargetAttackedByEntity != null && guardTargetAttackedByEntity.Alive)
             {
-                if (IsTargetableEntity(guardTargetAttackedByEntity, 15, false) && AiUtility.IsAwareOfTarget(entity, guardTargetAttackedByEntity, minDist, minVerDist))
+                if (IsTargetableEntity(guardTargetAttackedByEntity, minDist, true) && AiUtility.IsAwareOfTarget(entity, guardTargetAttackedByEntity, minDist, minVerDist))
                     targetEntity = guardTargetAttackedByEntity;
             }
             else
@@ -102,14 +102,17 @@ namespace ExpandedAiTasks
             {
                 targetEntity = entity.World.GetNearestEntity(pos, minDist, minVerDist, (e) =>
                 {
-                    return IsTargetableEntity(e, 15) && AiUtility.IsAwareOfTarget(entity, e, minDist, minVerDist);
+                    return IsTargetableEntity(e, minDist, false) && AiUtility.IsAwareOfTarget(entity, e, minDist, minVerDist);
                 });
             }
 
             lastCheckOrAttackMs = entity.World.ElapsedMilliseconds;
             damageInflicted = false;
 
-            return targetEntity != null;
+            if (targetEntity != null)
+                return IsInMeleeRange(targetEntity);
+
+            return false;
         }
 
 
@@ -149,9 +152,10 @@ namespace ExpandedAiTasks
             if (lastCheckOrAttackMs + damagePlayerAtMs > entity.World.ElapsedMilliseconds) 
                 return true;
 
-            if (!damageInflicted && correctYaw)
+            if (!damageInflicted && correctYaw && IsInMeleeRange(targetEntity))
             {
-                if (!AiUtility.IsAwareOfTarget(entity, targetEntity, minDist, minVerDist)) 
+                //To do: We should test if this check is really needed anymore.
+                if (!IsTargetableEntity(targetEntity, minDist, true) || !AiUtility.IsAwareOfTarget(entity, targetEntity, minDist, minVerDist)) 
                     return false;
 
                 bool alive = targetEntity.Alive;
@@ -186,6 +190,18 @@ namespace ExpandedAiTasks
         {
             base.FinishExecute(cancelled);
             targetEntity = null;
+        }
+
+        protected bool IsInMeleeRange( Entity targetEnt )
+        {
+            bool inHorizontalRange = entity.ServerPos.SquareHorDistanceTo(targetEnt.ServerPos.XYZ) <= minDist * minDist;
+
+            double verticalDist = entity.ServerPos.XYZ.Y - targetEnt.ServerPos.XYZ.Y;
+            verticalDist = verticalDist < 0 ? -verticalDist : verticalDist;
+
+            bool inVerticalRange = (verticalDist <= minVerDist);
+
+            return inHorizontalRange && inVerticalRange;
         }
 
         public override bool Notify(string key, object data)

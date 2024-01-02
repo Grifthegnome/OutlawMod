@@ -169,7 +169,7 @@ namespace ExpandedAiTasks
 
             float size = guardedEntity.SelectionBox.XSize;
 
-            guardTargetSwimmingLastFrame = guardedEntity.Swimming;
+            guardTargetSwimmingLastFrame = guardedEntity.Swimming || guardedEntity.FeetInLiquid;
 
             PlayBestMoveAnimation();
             pathTraverser.NavigateTo_Async(guardedEntity.ServerPos.XYZ, GetBestMoveSpeed(), size + 0.2f, OnGoalReached, OnStuck, OnPathFailed, 5000 );
@@ -344,12 +344,12 @@ namespace ExpandedAiTasks
             float size = guardedEntity.SelectionBox.XSize;
             PlayBestMoveAnimation();
 
-            if ( guardedEntity.Swimming )
+            if ( guardedEntity.Swimming || guardedEntity.FeetInLiquid )
             {
                 guardPosClamped = UpdateSwimSteering(guardPosClamped);
                 pathTraverser.WalkTowards(guardPosClamped, GetBestMoveSpeed(), size + 0.2f, OnGoalReached, OnStuck);
             }
-            else if ( !guardedEntity.Swimming && guardTargetSwimmingLastFrame )
+            else if ( (!guardedEntity.Swimming && !guardedEntity.FeetInLiquid ) && guardTargetSwimmingLastFrame )
             {
                 pathTraverser.NavigateTo_Async(guardPosClamped, GetBestMoveSpeed(), size + 0.2f, OnGoalReached, OnStuck, OnPathFailed, 5000);
             }
@@ -369,7 +369,7 @@ namespace ExpandedAiTasks
                 AiUtility.TryTeleportToEntity(entity, guardedEntity);
             }
 
-            guardTargetSwimmingLastFrame = guardedEntity.Swimming;
+            guardTargetSwimmingLastFrame = guardedEntity.Swimming || guardedEntity.FeetInLiquid;
 
             return !stuck && !stopNow && pathTraverser.Active;
         }

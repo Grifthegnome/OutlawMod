@@ -63,7 +63,7 @@
 		behaviors: [
 			{ code: "nametag", selectFromRandomName: ["Poacher"], "showtagonlywhentargeted": true }, 
 			{ code: "nametag", "showtagonlywhentargeted": true }, 
-			{ code: "repulseagents" }, 
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
 			{ code: "controlledphysics", stepHeight: 1.1251 },
 			{ code: "harvestable" },
@@ -133,7 +133,7 @@
 		},
 		behaviors: [
 			{ code: "nametag", selectFromRandomName: ["Poacher"], "showtagonlywhentargeted": true }, 
-			{ code: "repulseagents" }, 
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
 			{ code: "despawn", minPlayerDistance: 8, belowLightLevel: 8, minSeconds: 300 },
 			{ code: "controlledphysics", stepHeight: 1.1251 }, 
 			{ code: "deaddecay", hoursToDecay: 96, decayedBlock: "carcass-human" },
