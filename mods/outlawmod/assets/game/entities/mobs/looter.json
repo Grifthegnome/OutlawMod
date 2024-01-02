@@ -52,8 +52,6 @@
 			"looter": { base: "entity/bandit/looter", alternates: [ { base: "entity/bandit/looter2" }, { base: "entity/bandit/looter3" }, { base: "entity/bandit/looter4" } ] },
 		},
 		behaviors: [
-			{ code: "nametag", selectFromRandomName: ["Looter"], "showtagonlywhentargeted": true }, 
-			{ code: "nametag", "showtagonlywhentargeted": true }, 
 			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
 			{ code: "controlledphysics", stepHeight: 1.1251 }, 
@@ -111,7 +109,6 @@
 			}
 		},
 		behaviors: [
-			{ code: "nametag", selectFromRandomName: ["Looter"], "showtagonlywhentargeted": true }, 
 			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
 			{ code: "despawn", minPlayerDistance: 8, belowLightLevel: 8, minSeconds: 300 },
 			{ code: "controlledphysics", stepHeight: 1.1251 }, 

@@ -11,7 +11,6 @@
 		shape: { base: "entity/land/hound" },
 		texture: { base: "entity/hound/hound_feral_black", alternates: [ { base: "entity/hound/hound_feral_brown" }, { base: "entity/hound/hound_feral_grey" }, { base: "entity/hound/hound_feral_grey_shaggy" }, { base: "entity/hound/hound_feral_tan" }, { base: "entity/hound/hound_feral_white" }, { base: "entity/hound/hound_feral_white_black" }, { base: "entity/hound/hound_feral_wolf_sable" }, { base: "entity/hound/hound_feral_bald" }] },
 		behaviors: [
-			{ code: "nametag", selectFromRandomName: ["Feral Hound"], "showtagonlywhentargeted": true }, 
 			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
 			{ code: "controlledphysics", stepHeight: 1.5 }, 
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
@@ -59,7 +58,6 @@
 	},
 	server: {
 		behaviors: [
-			{ code: "nametag", selectFromRandomName: ["Feral Hound"], "showtagonlywhentargeted": true }, 
 			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
 			{ code: "controlledphysics", stepHeight: 1.5 },
 			{ code: "despawn", minPlayerDistance: 8, belowLightLevel: 8, minSeconds: 300 },
