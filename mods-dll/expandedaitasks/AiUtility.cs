@@ -521,11 +521,11 @@ namespace ExpandedAiTasks
         {
             //Leaves block visability
             if (block.BlockMaterial == EnumBlockMaterial.Leaves)
-                return false;
+                return true;
 
             //Plants block visability
             if (block.BlockMaterial == EnumBlockMaterial.Plant)
-                return false;
+                return true;
 
             return true;
         }
