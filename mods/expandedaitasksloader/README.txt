@@ -485,3 +485,21 @@ AI Tasks Documentation:
 		entityCodes: ["player"],
 		priority: 5.1,
 	},
+========================================================================================================================
+	EntityBehaviorLODRepulseAgents (registered as "lodrepulseagents")
+		
+		This Entity Behavior functions like RepulseAgents, but it has LOD (Level of Detail) functionality.
+		RepulseAgents is an incredibly expensive behavior, but it is mostly cosmetic to keep EntityAgents from interpenetrating.
+		This only really matters if a player is nearby to see the entities resolving interpenetration.
+		With that in mind, "lodrepulseagents" is a replacement for "repulseagents" that is recommended for Entities running ExpandedAiTasks.
+		Entities using this behavior will not not collide beyond a certain distance from the player.
+		As a player gets closer, the fidelity and tick rate will increase until it matches Vintage Story's native RepulseAgents behavior at close range.
+		It is also important to note that "lodrepulseagents" will not run when an entity is dead, nor will it run on dead entities. This is to save performance.
+	
+	json Settings
+		None
+
+	Use Example from OutlawMod, yeoman-archer.json
+	behaviors: [
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
+		],
