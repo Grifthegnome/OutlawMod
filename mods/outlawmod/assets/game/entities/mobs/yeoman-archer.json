@@ -164,7 +164,6 @@
 					},
 					{
 						code: "morale",
-						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-feral" ],
 						priority: 5.0,
 						movespeed: 0.040,
 						cancelOnHurt: false,
@@ -214,17 +213,32 @@
 					//Flee to arrow range.
 					{
 						code: "morale",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "hound-feral", "humanoid-villager-*"],
 						priority: 4.9,
 						movespeed: 0.040,
 						cancelOnHurt: false,
 						routDistance: 15,
 						rallyTimeAfterRoutMs: 10000,
-						minMorale: 0.0,
-						maxMorale: 0.0,
+						minMorale: -100.0,
+						maxMorale: -100.0,
 						moraleRange: 5,
 						useGroupMorale: true,
 						canRoutFromAnyEnemy: false,
+						tacticalRetreat: true,
+						
+						entitySourcesOfFear: [
+							{ code: "player", fearWeight: 1.0},
+							{ code: "looter", fearWeight: 1.0},
+							{ code: "hound-feral", fearWeight: 1.0},
+							{ code: "drifter-*", fearWeight: 1.0},
+							{ code: "humanoid-villager-*", fearWeight: 1.0},
+							{ code: "wolf-male", fearWeight: 1.0},
+							{ code: "wolf-female", fearWeight: 1.0},
+							{ code: "hyena-male", fearWeight: 1.0},
+							{ code: "hyena-female", fearWeight: 1.0},
+							{ code: "locust-*", fearWeight: 1.0},
+							{ code: "bear-*", fearWeight: 1.0},
+						],
+						
 						animation: "sprint",
 						animationSpeed: 1,
 					},

@@ -179,6 +179,26 @@ namespace ExpandedAiTasks
             return lastInCombatMs;
         }
 
+        public static void UpdateLastTimeEntityFailedMoraleMs( Entity ent )
+        {
+            ent.Attributes.SetDouble("lastTimeFailedMoraleMs", ent.World.ElapsedMilliseconds);
+        }
+
+        public static double GetLastTimeEntityFailedMoraleMs(Entity ent)
+        {
+            //There's an issue where where lastTimeFailedMoraleMs this is saved on the ent, which we don't want.
+            //Until we can find a way to store and update this at runtime without native behavior saving it,
+            //we have to manually zero out the loaded bad value. 
+            double lastFailedMoraleMs = ent.Attributes.GetDouble("lastTimeFailedMoraleMs");
+            if (lastFailedMoraleMs > ent.World.ElapsedMilliseconds)
+            {
+                ent.Attributes.SetDouble("lastTimeFailedMoraleMs", 0);
+                lastFailedMoraleMs = 0;
+            }
+
+            return lastFailedMoraleMs;
+        }
+
         public static void SetMasterHerdList( Entity ent, List<Entity> herdList )
         {
             List<long> herdListEntIds = new List<long>();

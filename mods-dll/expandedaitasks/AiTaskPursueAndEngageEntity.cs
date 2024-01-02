@@ -81,6 +81,8 @@ namespace ExpandedAiTasks
 
         private eInternalMovementState internalMovementState = eInternalMovementState.Pursuing;
 
+        const float NO_AGRESSIVE_PERSUIT_AFTER_ROUTE_MS = 30000;
+
         private enum eInternalMovementState
         {
             Pursuing,
@@ -227,6 +229,11 @@ namespace ExpandedAiTasks
             //Aquire a target if we don't have one.
             if ( targetEntity == null || !targetEntity.Alive )
             {
+
+                //If we recently routed due to poor morale, don't go chasing people unless they attacked us.
+                if (AiUtility.GetLastTimeEntityFailedMoraleMs(entity) + NO_AGRESSIVE_PERSUIT_AFTER_ROUTE_MS >= entity.World.ElapsedMilliseconds)
+                    return false;
+
                 targetEntity = AquireNewTarget();
             }
                 

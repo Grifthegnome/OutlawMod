@@ -43,7 +43,7 @@
 				airDragFactor: 0.0,
 				gravityFactor: 1.0
 			}, 
-			{ code: "despawn", minSeconds: 600 }
+			{ code: "despawn", minSeconds: 90 }
 		],
 	},
 	sounds: {
