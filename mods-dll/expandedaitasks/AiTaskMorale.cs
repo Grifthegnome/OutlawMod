@@ -63,7 +63,7 @@ namespace ExpandedAiTasks
 
         const float AUTO_FAIL_MORALE_AFTER_FLEE_DURATION_MS = 30000;
 
-        const float SKIP_MORALE_WHEN_PLAYER_BEYOND_DIST = 30;
+        const float SKIP_MORALE_WHEN_PLAYER_BEYOND_DIST = 50;
         
         Vec3d tmpVec = new Vec3d();
         Vec3d collTmpVec = new Vec3d();
