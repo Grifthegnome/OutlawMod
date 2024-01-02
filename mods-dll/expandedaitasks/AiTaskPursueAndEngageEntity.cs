@@ -9,12 +9,14 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
+using Vintagestory.API.Client;
 
 namespace ExpandedAiTasks
 {
     public class AiTaskPursueAndEngageEntity : AiTaskBaseExpandedTargetable
     {
         protected Vec3d targetPos;
+        protected Vec3d lastPathUpdatePos = new Vec3d();
         protected Vec3d lastKnownPos;
         protected Vec3d lastKnownMotion;
         protected Vec3d withdrawPos = new Vec3d();
@@ -41,10 +43,20 @@ namespace ExpandedAiTasks
         protected float withdrawEndTime = 30.0f;
         protected string withdrawAnimation = "idle";
 
+        protected string swimAnimation = "swim";
+
         protected bool alarmHerd = false;
         protected bool packHunting = false; //Each individual herd member's maxTargetHealth value will equal maxTargetHealth * number of herd members.
         protected bool pursueLastKnownPosition = true;
-        protected float noLOSTimeoutMs = 3000.0f;
+        protected float noLOSTimeoutMs = 5000.0f;
+
+        protected float lastNewTargetCheckTime = 0;
+        protected float checkForNewTargetInterval = 500.0f;
+
+        protected int lastKnownPositionExtendCount = 0;
+        protected int lastKnownPositionExtendMax = 10;
+
+        bool updatedByTeammateLastFrame = false;
 
         //State Vars
         protected bool stopNow = false;
@@ -61,17 +73,22 @@ namespace ExpandedAiTasks
         //protected EntityPartitioning partitionUtil;
         protected float extraTargetDistance = 0f;
 
+        float healthLastFrame = 0;
+
         protected bool lowTempMode;
 
         protected int searchWaitMs = 250;
 
         private eInternalMovementState internalMovementState = eInternalMovementState.Pursuing;
 
+        const float NO_AGRESSIVE_PERSUIT_AFTER_ROUTE_MS = 30000;
+
         private enum eInternalMovementState
         {
             Pursuing,
             Engaging,
-            Arrived
+            Arrived,
+            Withdrawn
         }
 
         bool hasPath = false;
@@ -114,13 +131,15 @@ namespace ExpandedAiTasks
             withdrawEndTime = taskConfig["withdrawEndTime"].AsFloat(30.0f);
             withdrawAnimation = taskConfig["withdrawAnimation"].AsString("idle");
 
+            swimAnimation = taskConfig["swimAnimation"].AsString("swim");
+
             extraTargetDistance = taskConfig["extraTargetDistance"].AsFloat(0f);
             maxFollowTime = taskConfig["maxFollowTime"].AsFloat(60);
             
             alarmHerd = taskConfig["alarmHerd"].AsBool(false);
             packHunting = taskConfig["packHunting"].AsBool(false);
             pursueLastKnownPosition = taskConfig["pursueLastKnownPosition"].AsBool(true);
-            noLOSTimeoutMs = taskConfig["noLOSTimeout"].AsFloat(3000.0f);
+            noLOSTimeoutMs = taskConfig["noLOSTimeout"].AsFloat(15000.0f);
 
             retaliateAttacks = taskConfig["retaliateAttacks"].AsBool(true);
 
@@ -170,9 +189,17 @@ namespace ExpandedAiTasks
             float range = pursueRange;
             targetEntity = null;
             targetPos = null;
+            lastPathUpdatePos = null;
             lastKnownPos = null;
+            
             lastKnownMotion = null;
             lastTimeSawTarget = 0;
+            lastKnownPositionExtendCount = 0;
+            updatedByTeammateLastFrame = false;
+
+            ITreeAttribute treeAttribute = entity.WatchedAttributes.GetTreeAttribute("health");
+            if (treeAttribute != null)
+                healthLastFrame = treeAttribute.GetFloat("currenthealth");
 
             lastSearchTotalMs = entity.World.ElapsedMilliseconds;
 
@@ -202,6 +229,11 @@ namespace ExpandedAiTasks
             //Aquire a target if we don't have one.
             if ( targetEntity == null || !targetEntity.Alive )
             {
+
+                //If we recently routed due to poor morale, don't go chasing people unless they attacked us.
+                if (AiUtility.GetLastTimeEntityFailedMoraleMs(entity) + NO_AGRESSIVE_PERSUIT_AFTER_ROUTE_MS >= entity.World.ElapsedMilliseconds)
+                    return false;
+
                 targetEntity = AquireNewTarget();
             }
                 
@@ -211,9 +243,11 @@ namespace ExpandedAiTasks
                 TryAlarmHerd();
                 
                 targetPos = targetEntity.ServerPos.XYZ;
+                lastPathUpdatePos = targetEntity.ServerPos.XYZ;
                 lastKnownPos = targetEntity.ServerPos.XYZ;
-                lastKnownMotion = targetEntity.ServerPos.Motion;
+                lastKnownMotion = targetEntity.ServerPos.Motion.Clone();
                 lastTimeSawTarget = entity.World.ElapsedMilliseconds;
+                lastKnownPositionExtendCount = 0;
                 withdrawPos = targetPos.Clone();
                 withdrawTargetMoveDistBeforeEncroaching = Math.Max(1.0f, withdrawDist / 4);
 
@@ -291,10 +325,11 @@ namespace ExpandedAiTasks
 
             float moveSpeed = GetMovementSpeedForState(internalMovementState);
 
-            hasPath = pathTraverser.NavigateTo(targetPos.Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, searchDepth );
+            hasPath = pathTraverser.NavigateTo_Async(targetPos.Clone(), GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck, OnPathFailed, searchDepth );
+
             if (!hasPath)
             {
-                UpdateWithdrawPos();
+                UpdateWithdrawPosition();
                 bool witdrawOk = pathTraverser.NavigateTo(withdrawPos.Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck, giveUpWhenNoPath, searchDepth );
 
                 stopNow = !witdrawOk;
@@ -310,6 +345,11 @@ namespace ExpandedAiTasks
                 entity.PlayEntitySound("engageentity", null, true);
             }
             
+        }
+
+        public override bool CanContinueExecute()
+        {
+            return pathTraverser.Ready;
         }
 
         float lastPathUpdateSeconds;
@@ -328,62 +368,83 @@ namespace ExpandedAiTasks
             currentFollowTime += dt;
             lastPathUpdateSeconds += dt;
 
-            eInternalMovementState lastMovementState = internalMovementState;
-            UpdateMovementState();
-
-            double distToTargetEntitySqr = entity.ServerPos.SquareDistanceTo(targetEntity.ServerPos.XYZ);
-
-            //Depending on whether we are pursuing or engaging, determine the distance our target has to move for us to recompute our path.
-            //When we are engaging (close range follow) we need to recompute more often so we can say on our target.
-            float minRecomputeNavDistance = internalMovementState == eInternalMovementState.Engaging ? 1 * 1 : 3 * 3;
-            bool activelyMoving = targetPos.SquareDistanceTo(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z) >= minRecomputeNavDistance;
             bool canSeeTarget = true;
 
             if (pursueLastKnownPosition)
                 canSeeTarget = AiUtility.IsAwareOfTarget(entity,targetEntity, pursueRange, pursueRange);
 
-            if ( lastPathUpdateSeconds >= 0.75f ||
-                activelyMoving || internalMovementState != lastMovementState ||
-                targetEntity != targetLastUpdate)
+            Vec3d pathToPos = !pursueLastKnownPosition || canSeeTarget ? targetPos : lastKnownPos;
+            Vec3d clampedPathPos = AiUtility.ClampPositionToGround(world, pathToPos, 15);
+
+            eInternalMovementState lastMovementState = internalMovementState;
+            UpdateMovementState(clampedPathPos);
+
+            //Depending on whether we are pursuing or engaging, determine the distance our target has to move for us to recompute our path.
+            //When we are engaging (close range follow) we need to recompute more often so we can say on our target.
+            float minRecomputeNavDistance = internalMovementState == eInternalMovementState.Engaging ? 1 * 1 : 1.5f * 1.5f;
+            bool activelyMoving = lastPathUpdatePos.SquareDistanceTo(targetEntity.ServerPos.XYZ) >= minRecomputeNavDistance;
+
+            if ( activelyMoving )
             {
-                if (activelyMoving)
+                targetPos.Set(targetEntity.ServerPos.X + (targetEntity.ServerPos.Motion.X * 10), targetEntity.ServerPos.Y, targetEntity.ServerPos.Z + (targetEntity.ServerPos.Motion.Z * 10));
+
+                if (canSeeTarget)
                 {
-                    targetPos.Set(targetEntity.ServerPos.X + targetEntity.ServerPos.Motion.X * 10, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z + targetEntity.ServerPos.Motion.Z * 10);
+                    lastKnownMotion = targetEntity.ServerPos.Motion.Clone();
+                    lastKnownPos.Set(targetEntity.ServerPos.X + (lastKnownMotion.X * 10), targetEntity.ServerPos.Y, targetEntity.ServerPos.Z + (lastKnownMotion.Z * 10));
+                    lastTimeSawTarget = entity.World.ElapsedMilliseconds;
+                    lastKnownPositionExtendCount = 0;
 
-                    if ( canSeeTarget )
-                        lastKnownPos.Set(targetEntity.ServerPos.X + targetEntity.ServerPos.Motion.X * 10, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z + targetEntity.ServerPos.Motion.Z * 10);
-
+                    //If we see the enemy, update our squad.
+                    TryAlarmHerd();
                 }
-                else
+            }
+            else
+            {
+                targetPos.Set(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
+
+                if (canSeeTarget)
                 {
-                    targetPos.Set(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
-
-                    if ( canSeeTarget )
-                        lastKnownPos.Set(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
-                }
+                    lastKnownMotion = targetEntity.ServerPos.Motion.Clone();
+                    lastKnownPos.Set(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
+                    lastTimeSawTarget = entity.World.ElapsedMilliseconds;
+                    lastKnownPositionExtendCount = 0;
                     
-
-                bool giveUpWhenNoPath = withdrawIfNoPath;
-
-                Vec3d pathToPos = pursueLastKnownPosition ? lastKnownPos : targetPos;
-                hasPath = pathTraverser.NavigateTo_Async(pathToPos, GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck, OnPathFailed, 2000 );
-                
-                
-                lastPathUpdateSeconds = 0;
-
-                if (hasPath)
-                {
-                    consecutivePathFailCount = 0;
+                    //If we see the enemy, update our squad.
+                    TryAlarmHerd();
                 }
+            }
+            
+            if (activelyMoving || internalMovementState != lastMovementState || targetEntity != targetLastUpdate || updatedByTeammateLastFrame)
+            {
+                lastPathUpdatePos.Set(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
+                //If the target is in liquid, walk at the target.
+                //To Do: Make sure Ai don't get stuck while walking towards water.
+                if (AiUtility.LocationInLiquid(world, clampedPathPos) || entity.Swimming || entity.FeetInLiquid )
+                {
+                    Vec3d steeringPosition = UpdateSteeringToPosition(clampedPathPos.Clone());
+                    hasPath = pathTraverser.WalkTowards(steeringPosition, GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck);
+                }   
                 else
                 {
-                    consecutivePathFailCount++;
+                    int searchDepth = 3500;
+                    // 1 in 20 times we do an expensive search
+                    if (world.Rand.NextDouble() < 0.05)
+                    {
+                        searchDepth = 10000;
+                    }
+
+                    hasPath = pathTraverser.NavigateTo_Async(clampedPathPos.Clone(), GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck, OnPathFailed, searchDepth);
                 }
-            
+
+                updatedByTeammateLastFrame = false;
+                lastPathUpdateSeconds = 0;            
             }
 
             //Update our target this update.
             targetLastUpdate = targetEntity;
+
+            double distToTargetEntitySqr = !pursueLastKnownPosition || canSeeTarget ? entity.ServerPos.SquareDistanceTo(targetEntity.ServerPos.XYZ) : entity.ServerPos.SquareDistanceTo(lastKnownPos);
 
             if ( hasPath || !withdrawIfNoPath )
             {
@@ -393,29 +454,29 @@ namespace ExpandedAiTasks
                 //If we have LOS to our target
                 if ( pursueLastKnownPosition && canSeeTarget)
                 {
-                    lastKnownPos.Set(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
-                    lastKnownMotion = targetEntity.ServerPos.Motion;
-                    lastTimeSawTarget = entity.World.ElapsedMilliseconds;
-                    pathTraverser.CurrentTarget.X = targetEntity.ServerPos.X;
-                    pathTraverser.CurrentTarget.Y = targetEntity.ServerPos.Y;
-                    pathTraverser.CurrentTarget.Z = targetEntity.ServerPos.Z;
+                    pathTraverser.CurrentTarget.X = clampedPathPos.X;
+                    pathTraverser.CurrentTarget.Y = clampedPathPos.Y;
+                    pathTraverser.CurrentTarget.Z = clampedPathPos.Z;
                 }
                 //If we can't see our target.
                 if (pursueLastKnownPosition && !canSeeTarget)
                 {
-                    pathTraverser.CurrentTarget.X = lastKnownPos.X;
-                    pathTraverser.CurrentTarget.Y = lastKnownPos.Y;
-                    pathTraverser.CurrentTarget.Z = lastKnownPos.Z;
+                    pathTraverser.CurrentTarget.X = clampedPathPos.X;
+                    pathTraverser.CurrentTarget.Y = clampedPathPos.Y;
+                    pathTraverser.CurrentTarget.Z = clampedPathPos.Z;
                 }
                 //If we magically always know where our target is.
                 else if ( !pursueLastKnownPosition)
                 {
                     lastTimeSawTarget = entity.World.ElapsedMilliseconds;
-                    pathTraverser.CurrentTarget.X = targetEntity.ServerPos.X;
-                    pathTraverser.CurrentTarget.Y = targetEntity.ServerPos.Y;
-                    pathTraverser.CurrentTarget.Z = targetEntity.ServerPos.Z;
+                    
+                    pathTraverser.CurrentTarget.X = clampedPathPos.X;
+                    pathTraverser.CurrentTarget.Y = clampedPathPos.Y;
+                    pathTraverser.CurrentTarget.Z = clampedPathPos.Z;
                 }
-                
+
+                UpdateMovementAnims( internalMovementState );
+
             }
             else if ( withdrawIfNoPath )
             {
@@ -430,6 +491,9 @@ namespace ExpandedAiTasks
                     float currentHealth = treeAttribute.GetFloat("currenthealth");
                     float maxHealth = treeAttribute.GetFloat("maxhealth");
 
+                    if (currentHealth != healthLastFrame)
+                        reachedWithdrawPosition = false;
+
                     //If we are below half health or recently damaged, retreat farther.
                     if ( currentHealth < maxHealth * 0.5 || attackedByEntityMs < 15000 && attackedByEntity != null )
                     {
@@ -440,13 +504,32 @@ namespace ExpandedAiTasks
                 float withdrawRange = injured ? withdrawDistDamaged : withdrawDist;
                 double encroachRange = withdrawRange - withdrawTargetMoveDistBeforeEncroaching;
                 bool targetEncroaching = distToTargetEntitySqr <= encroachRange * encroachRange;
-                //Withdraw till we reach our withdraw range, otherwise, only move if the target encroaches (moves closer while we still have no path).
-                if (!reachedWithdrawPosition && distToTargetEntitySqr <= withdrawRange * withdrawRange || targetEncroaching)
-                {
-                    UpdateWithdrawPos();
 
+
+                Vec3d targetPos = !pursueLastKnownPosition || canSeeTarget ? TargetEntity.ServerPos.XYZ : lastKnownPos;
+
+                //Scale withdraw distance based on how high above us our target is.
+                double horizontalDist = entity.ServerPos.HorDistanceTo( targetPos );
+                double verticalDist = targetPos.Y - entity.ServerPos.Y;
+
+                double withdrawScalar = 0.0;
+
+                if (injured)
+                    withdrawScalar = 1.0;
+                else if (verticalDist <= 0)
+                    withdrawScalar = 0.0;
+                else
+                    withdrawScalar = verticalDist == 0 ? 0.0 : verticalDist / horizontalDist;
+
+                double scaledWithdrawRange = MathUtility.GraphClampedValue(0.0, 1.0, 0.0, withdrawRange, withdrawScalar);
+
+                //Withdraw till we reach our withdraw range, otherwise, only move if the target encroaches (moves closer while we still have no path).
+                if (!reachedWithdrawPosition && distToTargetEntitySqr <= scaledWithdrawRange * scaledWithdrawRange || targetEncroaching )
+                {
+                    UpdateWithdrawPosition();
+                    UpdateMovementAnims(internalMovementState);
                     float size = targetEntity.SelectionBox.XSize;
-                    pathTraverser.WalkTowards(withdrawPos, GetMovementSpeedForState(internalMovementState), size + 0.2f, OnGoalReached, OnStuck);
+                    pathTraverser.WalkTowards(withdrawPos.Clone(), GetMovementSpeedForState(internalMovementState), size + 0.2f, OnGoalReached, OnStuck);
                 }
                 else
                 {
@@ -455,22 +538,17 @@ namespace ExpandedAiTasks
 
                     pathTraverser.Stop();
 
-                    if (engageAnimation != null)
-                        entity.AnimManager.StopAnimation(engageAnimation);
-
-                    if (pursueAnimation != null)
-                        entity.AnimManager.StopAnimation(pursueAnimation);
-
-                    if (withdrawAnimation != null)
-                        entity.AnimManager.StartAnimation(new AnimationMetaData() { Animation = withdrawAnimation, Code = withdrawAnimation }.Init());
+                    UpdateMovementAnims(eInternalMovementState.Withdrawn);
 
                     //Turn to face target.
                     Vec3f targetVec = new Vec3f();
 
+                    Vec3d facePosition = pursueLastKnownPosition ? lastKnownPos : targetPos;
+
                     targetVec.Set(
-                        (float)(targetEntity.ServerPos.X - entity.ServerPos.X),
-                        (float)(targetEntity.ServerPos.Y - entity.ServerPos.Y),
-                        (float)(targetEntity.ServerPos.Z - entity.ServerPos.Z)
+                        (float)(facePosition.X - entity.ServerPos.X),
+                        (float)(facePosition.Y - entity.ServerPos.Y),
+                        (float)(facePosition.Z - entity.ServerPos.Z)
                     );
 
                     targetVec.Normalize();
@@ -480,8 +558,13 @@ namespace ExpandedAiTasks
                     float yawDist = GameMath.AngleRadDistance(entity.ServerPos.Yaw, desiredYaw);
                     entity.ServerPos.Yaw += GameMath.Clamp(yawDist, -curTurnRadPerSec * dt, curTurnRadPerSec * dt);
                     entity.ServerPos.Yaw = entity.ServerPos.Yaw % GameMath.TWOPI;
+
+                    //If we have withdraw to a safe location, try to alert others in our group to come help us.
+                    TryAlarmHerd();
                 }
             }
+
+            //DebugUtility.DebugTargetPositionAndLaskKnownPositionandCurrentNavPositionBlockLocation(world, targetPos, lastKnownPos, pathTraverser);
 
             //if we have reached our target for the time being.
             if (internalMovementState == eInternalMovementState.Arrived)
@@ -491,10 +574,12 @@ namespace ExpandedAiTasks
                 //Turn to face target.
                 Vec3f targetVec = new Vec3f();
 
+                Vec3d facePosition = pursueLastKnownPosition ? lastKnownPos : targetPos;
+
                 targetVec.Set(
-                    (float)(targetEntity.ServerPos.X - entity.ServerPos.X),
-                    (float)(targetEntity.ServerPos.Y - entity.ServerPos.Y),
-                    (float)(targetEntity.ServerPos.Z - entity.ServerPos.Z)
+                    (float)(facePosition.X - entity.ServerPos.X),
+                    (float)(facePosition.Y - entity.ServerPos.Y),
+                    (float)(facePosition.Z - entity.ServerPos.Z)
                 );
 
                 targetVec.Normalize();
@@ -518,12 +603,14 @@ namespace ExpandedAiTasks
                 }
                     
             }
-            //If our path keeps failing, every 10 failures see if we can aquire a new target.
-            else if ( consecutivePathFailCount / 10 >= 1.0f && consecutivePathFailCount % 10 == 0 )
+            //See if we can get a new target if it presents itself.
+            else if ( (!hasPath || !canSeeTarget) && entity.World.ElapsedMilliseconds >= lastNewTargetCheckTime + checkForNewTargetInterval )
             {
                 Entity newTarget = AquireNewTarget();
                 if (newTarget != null && newTarget != targetEntity)
+                {
                     stopNow = true;
+                }
             }
                 
             Cuboidd targetBox = targetEntity.SelectionBox.ToDouble().Translate(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
@@ -535,23 +622,26 @@ namespace ExpandedAiTasks
             float range = pursueRange;
 
             //If we reach the location and can't seem to find the enemy, start moving the direction they went.
-            bool reachedLKP = false;
-            if (pursueLastKnownPosition && !canSeeTarget && entity.ServerPos.XYZ.SquareDistanceTo(lastKnownPos) < 1 * 1)
+            if (pursueLastKnownPosition && !canSeeTarget && entity.ServerPos.XYZ.SquareDistanceTo(lastKnownPos) < (MinDistanceToTarget() + 3) * (MinDistanceToTarget() + 3) )
             {
-                lastKnownPos += lastKnownMotion;
-                reachedLKP = true;
+                lastKnownPos = AiUtility.MovePositionByBlockInDirectionOfVector(pathTraverser.CurrentTarget.Clone(), lastKnownMotion.Clone().Normalize() * engageRange);
+                lastTimeSawTarget = entity.World.ElapsedMilliseconds;
+                lastKnownPositionExtendCount++;
             }
-                
 
-            return
-                ( lastTimeSawTarget + noLOSTimeoutMs >= entity.World.ElapsedMilliseconds || !pursueLastKnownPosition || !reachedLKP) &&
+            ITreeAttribute attribute = entity.WatchedAttributes.GetTreeAttribute("health");
+            if (attribute != null)
+                healthLastFrame = attribute.GetFloat("currenthealth");
+
+            return ( lastTimeSawTarget + noLOSTimeoutMs >= entity.World.ElapsedMilliseconds && lastKnownPositionExtendCount < lastKnownPositionExtendMax || !pursueLastKnownPosition) &&
                 currentFollowTime < maxFollowTime &&
                 currentWithdrawTime < withdrawEndTime &&
-                distance < range * range &&
+                //distance < range &&
                 targetEntity.Alive &&
                 !inCreativeMode &&
                 !stopNow
             ;
+                
         }
 
         public override void FinishExecute(bool cancelled)
@@ -577,13 +667,17 @@ namespace ExpandedAiTasks
         {
             if (key == "pursueEntity" || key == "attackEntity")
             {
+
+                //If we are in range of our ally, respond.
+                EntityTargetPairing targetPairing = (EntityTargetPairing)data;
+                Entity herdMember = targetPairing.entityTargeting;
+                Entity newTarget = targetPairing.targetEntity;
+
+                bool infoUpdateFromTeammate = targetEntity == newTarget;
+
                 //If we don't have a target, assist our group.
-                if (targetEntity == null )
+                if (targetEntity == null || infoUpdateFromTeammate)
                 {
-                    //If we are in range of our ally, respond.
-                    EntityTargetPairing targetPairing = (EntityTargetPairing)data;
-                    Entity herdMember = targetPairing.entityTargeting;
-                    Entity newTarget = targetPairing.targetEntity;
 
                     if (newTarget == null)
                         return false;
@@ -593,10 +687,21 @@ namespace ExpandedAiTasks
                     {
                         targetEntity = newTarget;
                         targetPos = targetEntity.ServerPos.XYZ;
+                        lastPathUpdatePos = targetEntity.ServerPos.XYZ;
                         lastKnownPos = targetEntity.ServerPos.XYZ;
-                        lastKnownMotion = targetEntity.ServerPos.Motion;
+                        lastKnownMotion = targetEntity.ServerPos.Motion.Clone();
                         lastTimeSawTarget = entity.World.ElapsedMilliseconds;
-                        return true;
+
+                        if (infoUpdateFromTeammate)
+                        {
+                            updatedByTeammateLastFrame = true;
+                            return false;
+                        }
+                        else
+                        {
+                            return true;
+                        }
+                            
                     }
                 }
             }
@@ -626,8 +731,9 @@ namespace ExpandedAiTasks
                     guardTargetAttackedByEntity = (Entity)data;
                     targetEntity = guardTargetAttackedByEntity;
                     targetPos = targetEntity.ServerPos.XYZ;
+                    lastPathUpdatePos = targetEntity.ServerPos.XYZ;
                     lastKnownPos = targetEntity.ServerPos.XYZ;
-                    lastKnownMotion = targetEntity.ServerPos.Motion;
+                    lastKnownMotion = targetEntity.ServerPos.Motion.Clone();
                     lastTimeSawTarget = entity.World.ElapsedMilliseconds;
                     return true;
                 }
@@ -680,45 +786,50 @@ namespace ExpandedAiTasks
             pathTraverser.Retarget();
         }
 
-        private void UpdateMovementState()
+        private void UpdateMovementState( Vec3d positionToUse )
         {
-            Vec3d entityVertival = new Vec3d(0, this.entity.ServerPos.XYZ.Y, 0);
-            Vec3d targetVertival = new Vec3d(0, targetEntity.ServerPos.XYZ.Y, 0);
+            Vec3d entityVertical = new Vec3d(0, this.entity.ServerPos.XYZ.Y, 0);
+            Vec3d targetVertical = new Vec3d(0, positionToUse.Y, 0);
 
-            double distSqr = this.entity.ServerPos.SquareDistanceTo(targetPos);
-            double distSqrVertical = targetVertival.SquareDistanceTo(entityVertival);
+            double distSqr = this.entity.ServerPos.SquareDistanceTo(positionToUse);
+            double distSqrVertical = targetVertical.SquareDistanceTo(entityVertical);
 
             if ( distSqr <= arriveRange * arriveRange && distSqrVertical <= arriveVerticalRange * arriveVerticalRange)
             {
                 internalMovementState = eInternalMovementState.Arrived;
-
-                if (pursueAnimation != null)
-                    entity.AnimManager.StopAnimation(pursueAnimation);
-
-                if (engageAnimation != null)
-                    entity.AnimManager.StopAnimation(engageAnimation);
-
-                if (withdrawAnimation != null)
-                    entity.AnimManager.StopAnimation(withdrawAnimation);
             }
-            else if (distSqr <= engageRange * engageRange && entity.ServerPos.Motion.Length() > 0 )
+            else if (distSqr <= engageRange * engageRange && entity.ServerPos.Motion.Length() > 0.0 )
             {
                 //Engage State
-                internalMovementState = eInternalMovementState.Engaging;
+                internalMovementState = eInternalMovementState.Engaging;                
+            }
+            else if ( entity.ServerPos.Motion.Length() > 0.0 )
+            {
+                //Pursue State
+                internalMovementState = eInternalMovementState.Pursuing;                
+            }
+        }
+
+        private void UpdateMovementAnims( eInternalMovementState animState )
+        {
+            if (animState == eInternalMovementState.Withdrawn)
+            {
+                if (engageAnimation != null)
+                    entity.AnimManager.StopAnimation(engageAnimation);
 
                 if (pursueAnimation != null)
                     entity.AnimManager.StopAnimation(pursueAnimation);
 
-                if (withdrawAnimation != null)
-                    entity.AnimManager.StopAnimation(withdrawAnimation);
+                if (swimAnimation != null)
+                    entity.AnimManager.StopAnimation(swimAnimation);
 
-                if (engageAnimation != null)
-                    entity.AnimManager.StartAnimation(new AnimationMetaData() { Animation = engageAnimation, Code = engageAnimation }.Init());
+                if (withdrawAnimation != null)
+                    entity.AnimManager.StartAnimation(new AnimationMetaData() { Animation = withdrawAnimation, Code = withdrawAnimation }.Init());
             }
-            else if ( entity.ServerPos.Motion.Length() > 0 )
+            else if (animState == eInternalMovementState.Arrived || entity.ServerPos.Motion.Length() < 0.0125)
             {
-                //Pursue State
-                internalMovementState = eInternalMovementState.Pursuing;
+                if (pursueAnimation != null)
+                    entity.AnimManager.StopAnimation(pursueAnimation);
 
                 if (engageAnimation != null)
                     entity.AnimManager.StopAnimation(engageAnimation);
@@ -726,10 +837,61 @@ namespace ExpandedAiTasks
                 if (withdrawAnimation != null)
                     entity.AnimManager.StopAnimation(withdrawAnimation);
 
+                if (swimAnimation != null && !entity.Swimming)
+                    entity.AnimManager.StopAnimation(swimAnimation);
+            }
+            else if (animState == eInternalMovementState.Engaging)
+            {
                 if (pursueAnimation != null)
-                    entity.AnimManager.StartAnimation(new AnimationMetaData() { Animation = pursueAnimation, Code = pursueAnimation }.Init());
+                    entity.AnimManager.StopAnimation(pursueAnimation);
+
+                if (withdrawAnimation != null)
+                    entity.AnimManager.StopAnimation(withdrawAnimation);
+
+                if (entity.Swimming)
+                {
+                    if (swimAnimation != null)
+                        entity.AnimManager.StartAnimation(new AnimationMetaData() { Animation = swimAnimation, Code = swimAnimation }.Init());
+
+                    if (engageAnimation != null)
+                        entity.AnimManager.StopAnimation(engageAnimation);
+                }
+                else
+                {
+                    if (engageAnimation != null)
+                        entity.AnimManager.StartAnimation(new AnimationMetaData() { Animation = engageAnimation, Code = engageAnimation }.Init());
+                }
+
+            }
+            else if (animState == eInternalMovementState.Pursuing)
+            {
+                if (engageAnimation != null)
+                    entity.AnimManager.StopAnimation(engageAnimation);
+
+                if (withdrawAnimation != null)
+                    entity.AnimManager.StopAnimation(withdrawAnimation);
+
+                if (entity.Swimming)
+                {
+                    if (swimAnimation != null)
+                        entity.AnimManager.StartAnimation(new AnimationMetaData() { Animation = swimAnimation, Code = swimAnimation }.Init());
+
+                    if (pursueAnimation != null)
+                        entity.AnimManager.StopAnimation(pursueAnimation);
+                }
+                else
+                {
+                    if (pursueAnimation != null)
+                        entity.AnimManager.StartAnimation(new AnimationMetaData() { Animation = pursueAnimation, Code = pursueAnimation }.Init());
+
+                    if (swimAnimation != null)
+                        entity.AnimManager.StopAnimation(swimAnimation);
+                }
+
             }
         }
+
+
 
         private float GetMovementSpeedForState( eInternalMovementState movementState )
         {
@@ -747,7 +909,48 @@ namespace ExpandedAiTasks
             return 0.0f;
         }
 
-        private void UpdateWithdrawPos()
+        private Vec3d UpdateSteeringToPosition( Vec3d steeringTarget ) 
+        {
+            float yaw = (float)Math.Atan2(entity.ServerPos.X - steeringTarget.X, entity.ServerPos.Z - steeringTarget.Z);
+
+            // Simple steering behavior
+            tmpVec = tmpVec.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z);
+            tmpVec.Ahead(0.9, 0, yaw - GameMath.PI / 2);
+
+            // Running into wall?
+            if (IsTraversable(tmpVec))
+            {
+                steeringTarget.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z).Ahead(10, 0, yaw - GameMath.PI / 2);
+                return steeringTarget;
+            }
+
+            // Try 90 degrees left
+            tmpVec = tmpVec.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z);
+            tmpVec.Ahead(0.9, 0, yaw - GameMath.PI);
+            if (IsTraversable(tmpVec))
+            {
+                steeringTarget.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z).Ahead(10, 0, yaw - GameMath.PI);
+                return steeringTarget;
+            }
+
+            // Try 90 degrees right
+            tmpVec = tmpVec.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z);
+            tmpVec.Ahead(0.9, 0, yaw);
+            if (IsTraversable(tmpVec))
+            {
+                steeringTarget.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z).Ahead(10, 0, yaw);
+                return steeringTarget;
+            }
+
+            // Run towards target o.O
+            tmpVec = tmpVec.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z);
+            tmpVec.Ahead(0.9, 0, -yaw);
+            steeringTarget.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z).Ahead(10, 0, -yaw);
+            return steeringTarget;
+
+        }
+
+        private void UpdateWithdrawPosition()
         {
             float yaw = (float)Math.Atan2(targetEntity.ServerPos.X - entity.ServerPos.X, targetEntity.ServerPos.Z - entity.ServerPos.Z);
 
@@ -800,6 +1003,7 @@ namespace ExpandedAiTasks
 
         private Entity AquireNewTarget()
         {
+            lastNewTargetCheckTime = entity.World.ElapsedMilliseconds;
             float range = pursueRange;
             potentialTargets.Clear();
             potentialRoutingTargets.Clear();
@@ -845,6 +1049,9 @@ namespace ExpandedAiTasks
         private bool BucketTargetBasedOnCombatState( Entity ent, float range )
         {
             if (!IsEntityTargetableByPack(ent, range))
+                return true;
+
+            if (!AiUtility.IsAwareOfTarget(entity, ent, pursueRange, pursueRange))
                 return true;
 
             //Don't Chase Ai that are already routing.

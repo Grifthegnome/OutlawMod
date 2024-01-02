@@ -37,6 +37,7 @@ namespace ExpandedAiTasks
 
         protected Vec3d targetOffset = new Vec3d();
 
+        float stepHeight;
         public AiTaskStayCloseToHerd(EntityAgent entity) : base(entity)
         {
         }
@@ -209,6 +210,9 @@ namespace ExpandedAiTasks
         {
             base.StartExecute();
 
+            var bh = entity.GetBehavior<EntityBehaviorControlledPhysics>();
+            stepHeight = bh == null ? 0.6f : bh.stepHeight;
+
             float size = herdLeaderEntity.SelectionBox.XSize;
            
             pathTraverser.WalkTowards(herdLeaderEntity.ServerPos.XYZ, moveSpeed, size + 0.2f, OnGoalReached, OnStuck);
@@ -219,7 +223,7 @@ namespace ExpandedAiTasks
             stopNow = false;
         }
 
-
+        Vec3d steeringVec = new Vec3d();
         public override bool ContinueExecute(float dt)
         {
             if (herdLeaderEntity == null)
@@ -229,9 +233,15 @@ namespace ExpandedAiTasks
             double y = herdLeaderEntity.ServerPos.Y;
             double z = herdLeaderEntity.ServerPos.Z + targetOffset.Z;
 
-            pathTraverser.CurrentTarget.X = x;
-            pathTraverser.CurrentTarget.Y = y;
-            pathTraverser.CurrentTarget.Z = z;
+            steeringVec.X = x;
+            steeringVec.Y = y;
+            steeringVec.Z = z;
+
+            steeringVec = UpdateSteering(steeringVec);
+
+            pathTraverser.CurrentTarget.X = steeringVec.X;
+            pathTraverser.CurrentTarget.Y = steeringVec.Y;
+            pathTraverser.CurrentTarget.Z = steeringVec.Z;
 
             float distSqr = entity.ServerPos.SquareDistanceTo(x, y, z);
 
@@ -301,6 +311,57 @@ namespace ExpandedAiTasks
         protected void OnGoalReached()
         {
             pathTraverser.Stop();
+        }
+
+        Vec3d tmpVec = new Vec3d();
+        Vec3d collTmpVec = new Vec3d();
+        private Vec3d UpdateSteering(Vec3d steerTarget)
+        {
+            float yaw = (float)Math.Atan2(entity.ServerPos.X - steerTarget.X, entity.ServerPos.Z - steerTarget.Z);
+
+            // Simple steering behavior
+            tmpVec = tmpVec.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z);
+            tmpVec.Ahead(0.9, 0, yaw - GameMath.PI / 2);
+
+            // Running into wall?
+            if (Traversable(tmpVec))
+            {
+                steerTarget.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z).Ahead(10, 0, yaw - GameMath.PI / 2);
+                return steerTarget;
+            }
+
+            // Try 90 degrees left
+            tmpVec = tmpVec.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z);
+            tmpVec.Ahead(0.9, 0, yaw - GameMath.PI);
+            if (Traversable(tmpVec))
+            {
+                steerTarget.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z).Ahead(10, 0, yaw - GameMath.PI);
+                return steerTarget;
+            }
+
+            // Try 90 degrees right
+            tmpVec = tmpVec.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z);
+            tmpVec.Ahead(0.9, 0, yaw);
+            if (Traversable(tmpVec))
+            {
+                steerTarget.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z).Ahead(10, 0, yaw);
+                return steerTarget;
+            }
+
+            // Run towards target o.O
+            tmpVec = tmpVec.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z);
+            tmpVec.Ahead(0.9, 0, -yaw);
+            steerTarget.Set(entity.ServerPos.X, entity.ServerPos.Y, entity.ServerPos.Z).Ahead(10, 0, -yaw);
+
+            return steerTarget;
+        }
+
+        bool Traversable(Vec3d pos)
+        {
+            return
+                !world.CollisionTester.IsColliding(world.BlockAccessor, entity.SelectionBox, pos, false) ||
+                !world.CollisionTester.IsColliding(world.BlockAccessor, entity.SelectionBox, collTmpVec.Set(pos).Add(0, Math.Min(1, stepHeight), 0), false)
+            ;
         }
 
         public override bool Notify(string key, object data)

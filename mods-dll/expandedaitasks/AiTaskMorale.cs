@@ -26,22 +26,23 @@ namespace ExpandedAiTasks
         float moraleRange = 15f;
 
         //Data for fear caused by entities in morale range.
-        TreeAttribute[] entitySourcesOfFear = new TreeAttribute[0];
-        Dictionary<string, double> entitySourcesOfFearWeightsByCodeExact = new Dictionary<string, double>();
-        Dictionary<string, double> entitySourcesOfFearWeightsByCodePartial = new Dictionary<string, double>();
+        TreeAttribute[] entitySourcesOfFear = null;
+        Dictionary<string, double> entitySourcesOfFearWeightsByCodeExact = null;//new Dictionary<string, double>();
+        Dictionary<string, double> entitySourcesOfFearWeightsByCodePartial = null;// new Dictionary<string, double>();
 
         //Data for fear caused by item and block stacks in morale range.
-        TreeAttribute[] itemStackSourcesOfFear = new TreeAttribute[0];
-        Dictionary<string, double> itemStackSourcesOfFearWeightsByCodeExact = new Dictionary<string, double>();
-        Dictionary<string, double> itemStackSourcesOfFearWeightsByCodePartial = new Dictionary<string, double>();
+        TreeAttribute[] itemStackSourcesOfFear = null;
+        Dictionary<string, double> itemStackSourcesOfFearWeightsByCodeExact = null;// new Dictionary<string, double>();
+        Dictionary<string, double> itemStackSourcesOfFearWeightsByCodePartial = null;// new Dictionary<string, double>();
 
         //Data for points of intrest in morale range.
-        TreeAttribute[] poiSourcesOfFear = new TreeAttribute[0];
-        Dictionary<string,double> poiSourcesOfFearWeightsByType = new Dictionary<string,double>();
+        TreeAttribute[] poiSourcesOfFear = null;
+        Dictionary<string, double> poiSourcesOfFearWeightsByType = null;// new Dictionary<string,double>();
 
         bool useGroupMorale = false;
         bool deathsImpactMorale = false;
         bool canRoutFromAnyEnemy = false;
+        bool tacticalRetreat = false; //This means if we fallback, we didn't fail morale.
 
         double moraleLevel = 0.0f;
         double fearLevel = 0.0f;
@@ -57,8 +58,13 @@ namespace ExpandedAiTasks
 
         float stepHeight;
 
-        //EntityPartitioning partitionUtil;
+        double lastMoraleCheckMs = 0;
+        const double MORALE_CHECK_INTERVAL_MS = 1000;
 
+        const float AUTO_FAIL_MORALE_AFTER_FLEE_DURATION_MS = 30000;
+
+        const float SKIP_MORALE_WHEN_PLAYER_BEYOND_DIST = 50;
+        
         Vec3d tmpVec = new Vec3d();
         Vec3d collTmpVec = new Vec3d();
 
@@ -88,6 +94,7 @@ namespace ExpandedAiTasks
             useGroupMorale = taskConfig["useGroupMorale"].AsBool(false);
             deathsImpactMorale = taskConfig["deathsImpactMorale"].AsBool(false);
             canRoutFromAnyEnemy = taskConfig["canRoutFromAnyEnemy"].AsBool(false);
+            tacticalRetreat = taskConfig["tacticalRetreat"].AsBool(false);
 
             //To Do: Once we build our data dictionaries from these trees, do we really need to save them on the entity?
             //To Do: Do we want to build and store these tables unqiuely for every entity, or do we want to store them statically per entity type?
@@ -139,12 +146,22 @@ namespace ExpandedAiTasks
             if (whenNotInEmotionState != null && bhEmo?.IsInEmotionState(whenNotInEmotionState) == true) 
                 return false;
 
+            bool recentlyFailedMorale = AiUtility.GetLastTimeEntityFailedMoraleMs(entity) + AUTO_FAIL_MORALE_AFTER_FLEE_DURATION_MS > entity.World.ElapsedMilliseconds;
+
+            if (lastMoraleCheckMs + MORALE_CHECK_INTERVAL_MS > entity.World.ElapsedMilliseconds && !recentlyFailedMorale)
+                return false;
+
+            //Morale if performative for players, don't do it if they aren't around to see it or have a route run by them.
+            if (entity.minRangeToClient > SKIP_MORALE_WHEN_PLAYER_BEYOND_DIST)
+                return false;
+
             if (useGroupMorale)
             {
                 UpdateHerdCount();
             }
 
             fearLevel = 0;
+            lastMoraleCheckMs = entity.World.ElapsedMilliseconds;
 
             //We need to calculate the Ai's fear level and route if we are too scared.
             double injuryRatio = 0.0;
@@ -159,19 +176,27 @@ namespace ExpandedAiTasks
             itemStackSourceOfFearTotalWeight = 0;
             poiSourceOfFearTotalWeight = 0;
 
-            //targetEntity = partitionUtil.GetNearestInteractableEntity(ownPos, moraleRange, (e) => IsValidMoraleTarget(e, moraleRange, canRoutFromAnyEnemy));
-            targetEntity = entity.World.GetNearestEntity(ownPos, moraleRange, moraleRange, IsValidMoraleTarget);
+            //To Do: See if there is a way to imediately stop searching entities as soon as our fear exceeds our morale.
+
+            //Only search all entities in the world if we are afraid of items, otherwise, only search entity agents.
+            if (itemStackSourcesOfFear == null || recentlyFailedMorale)
+                targetEntity = partitionUtil.GetNearestInteractableEntity(ownPos, moraleRange, (e) => IsValidMoraleTarget(e));
+            else
+                targetEntity = entity.World.GetNearestEntity(ownPos, moraleRange, moraleRange, IsValidMoraleTarget);
 
             if (targetEntity != null)
             {
-                //Take the target's injury ratio into account.
-                double targetInjuryRatio = AiUtility.CalculateInjuryRatio(targetEntity);
-                double poiSourcesOfFearWeight = GetTotalPoiSourceOfFearWeight();
+                if( !recentlyFailedMorale )
+                {
+                    //Take the target's injury ratio into account.
+                    double targetInjuryRatio = AiUtility.CalculateInjuryRatio(targetEntity);
+                    double poiSourcesOfFearWeight = GetTotalPoiSourceOfFearWeight();
 
-                //We should be less scared if we're winning.
-                fearLevel = Math.Max(injuryRatio - targetInjuryRatio, 0) + entitySourceOfFearTotalWeight + itemStackSourceOfFearTotalWeight + poiSourcesOfFearWeight;
-
-                if ( fearLevel >= moraleLevel)
+                    //We should be less scared if we're winning.
+                    fearLevel = Math.Max(injuryRatio - targetInjuryRatio, 0) + entitySourceOfFearTotalWeight + itemStackSourceOfFearTotalWeight + poiSourcesOfFearWeight;
+                }
+                
+                if ( fearLevel >= moraleLevel || recentlyFailedMorale)
                 {
                     targetEntity.Notify("entityRouted", entity);
                     UpdateTargetPos();
@@ -219,23 +244,38 @@ namespace ExpandedAiTasks
         private bool IsValidMoraleTarget(Entity ent)
         {
 
+            //Currently, projectiles cannot scare us.
+            if (ent is EntityProjectile)
+                return false;
+
             //Handle case where our target is an enemy entity.
             if ( ent is EntityAgent )
             {
-                EntityAgent agent = ent as EntityAgent;
-                if (entitySourcesOfFearWeightsByCodeExact.Count > 0 || entitySourcesOfFearWeightsByCodePartial.Count > 0 || ent.Code.Path == "player")
-                    entitySourceOfFearTotalWeight += GetEntitySourceOfFearWeight(ent);
+                bool ignoreEntityCode = canRoutFromAnyEnemy;
+
+                if (entitySourcesOfFear != null)
+                {
+                    if (entitySourcesOfFearWeightsByCodeExact.Count > 0 || entitySourcesOfFearWeightsByCodePartial.Count > 0 || ent.Code.Path == "player")
+                    {
+                        entitySourceOfFearTotalWeight += GetEntitySourceOfFearWeight(ent);
+                        ignoreEntityCode = true;
+                    }
+                        
+                }
+
+                if (entitySourcesOfFear == null && !canRoutFromAnyEnemy)
+                    return false;
 
                 //Dead things can contribute to morale but not be the cause of a route.
                 if (!ent.Alive)
                     return false;
 
-                bool ignoreEntityCode = canRoutFromAnyEnemy;
-                if (!IsTargetableEntity(ent, moraleRange, ignoreEntityCode) || !AiUtility.IsAwareOfTarget(entity, ent, moraleRange, moraleRange))
+                //Don't be scared of our friends.
+                EntityAgent agent = ent as EntityAgent;
+                if (agent.HerdId == entity.HerdId)
                     return false;
 
-                //Don't be scared of our friends.
-                if (agent.HerdId == entity.HerdId)
+                if (!IsTargetableEntity(ent, moraleRange, ignoreEntityCode) || !AiUtility.IsAwareOfTarget(entity, ent, moraleRange, moraleRange))
                     return false;
             }
             else
@@ -243,6 +283,9 @@ namespace ExpandedAiTasks
                 //Handle case where our target could be an item or block.
                 if ( ent is EntityItem )
                 {
+                    if (itemStackSourcesOfFear == null)
+                        return false;
+
                     EntityItem item = ent as EntityItem;
                     if ( itemStackSourcesOfFearWeightsByCodeExact.Count > 0 || itemStackSourcesOfFearWeightsByCodePartial.Count > 0 )
                         itemStackSourceOfFearTotalWeight += item.Itemstack != null ? GetItemStackSourceOfFearWeight(item.Itemstack) : 0;
@@ -252,10 +295,6 @@ namespace ExpandedAiTasks
                         return false;
                 }
             }
-
-            //Currently, projectiles cannot scare us.
-            if (ent is EntityProjectile)
-                return false;
 
             return true;
 
@@ -311,6 +350,11 @@ namespace ExpandedAiTasks
         public override bool ContinueExecute(float dt)
         {
             AiUtility.UpdateLastTimeEntityInCombatMs(entity);
+
+            //If we are engaging a tactical retreat, we are falling back without failing morale.
+            //This prevents us from routing on future frames.
+            if ( !tacticalRetreat)
+                AiUtility.UpdateLastTimeEntityFailedMoraleMs(entity);
 
             if (targetEntity == null)
                 return false;
@@ -398,7 +442,8 @@ namespace ExpandedAiTasks
 
             //Clear are whole target history, so we don't attempt to re-engage pre-rout targets.
             //To Do: Right now, we are using morale to make archers withdraw to a safe-firing distance, we do not want them to reset their target in this case.
-            entity.Notify("clearTargetHistory", entity);
+            if ( !tacticalRetreat )
+                entity.Notify("clearTargetHistory", entity);
         }
 
 
@@ -418,6 +463,9 @@ namespace ExpandedAiTasks
             //Build dictionaries for entities that scare the Ai from our tree.
             if (entitySourcesOfFear != null)
             {
+                entitySourcesOfFearWeightsByCodePartial = new Dictionary<string, double>();
+                entitySourcesOfFearWeightsByCodeExact = new Dictionary<string, double>();
+
                 for (int i = 0; i < entitySourcesOfFear.Length; i++)
                 {
                     Debug.Assert(entitySourcesOfFear[i].HasAttribute("code"), "entitySourcesOfFear for " + entity.Code.Path + " is missing code: at entry " + i);
@@ -442,6 +490,10 @@ namespace ExpandedAiTasks
             //Build dictionaries for item stacks that scare the Ai from our tree.
             if (itemStackSourcesOfFear != null)
             {
+
+                itemStackSourcesOfFearWeightsByCodePartial = new Dictionary<string, double>();
+                itemStackSourcesOfFearWeightsByCodeExact = new Dictionary<string, double>();
+
                 for (int i = 0; i < itemStackSourcesOfFear.Length; i++)
                 {
                     Debug.Assert(itemStackSourcesOfFear[i].HasAttribute("code"), "itemStackSourcesOfFear for " + entity.Code.Path + " is missing code: at entry " + i);
@@ -466,6 +518,8 @@ namespace ExpandedAiTasks
             //Build table for pois that scare the Ai.
             if ( poiSourcesOfFear != null)
             {
+                poiSourcesOfFearWeightsByType = new Dictionary<string, double>();
+
                 for (int i = 0; i < poiSourcesOfFear.Length; i++)
                 {
                     Debug.Assert(poiSourcesOfFear[i].HasAttribute("poiType"), "poiSourcesOfFear for " + entity.Code.Path + " is missing poiType: at entry " + i);
@@ -481,6 +535,9 @@ namespace ExpandedAiTasks
         private double GetTotalPoiSourceOfFearWeight()
         {
             poiSourceOfFearTotalWeight = 0;
+
+            if (poiSourcesOfFear == null)
+                return poiSourceOfFearTotalWeight;
 
             //We have to overshoot our morale bounds so that we can enclude all the chunks that might fall anywhere within our search.
             poiregistry.WalkPois(entity.ServerPos.XYZ, moraleRange + entity.World.BlockAccessor.ChunkSize, PoiSourceOfFearMatcher);
@@ -519,16 +576,22 @@ namespace ExpandedAiTasks
             //If the entity is a player, see if they have anything in their active hand slots we're scared of.
             if (ent is EntityPlayer)
             {
-                EntityPlayer player = ent as EntityPlayer;
-                ItemSlot rightSlot = player.RightHandItemSlot;
-                if (rightSlot.Itemstack != null)
-                    itemStackSourceOfFearTotalWeight += GetItemStackSourceOfFearWeight(rightSlot.Itemstack);
+                if ( itemStackSourcesOfFear != null )
+                {
+                    EntityPlayer player = ent as EntityPlayer;
+                    ItemSlot rightSlot = player.RightHandItemSlot;
+                    if (rightSlot.Itemstack != null)
+                        itemStackSourceOfFearTotalWeight += GetItemStackSourceOfFearWeight(rightSlot.Itemstack);
 
-                ItemSlot leftSlot = player.LeftHandItemSlot;
-                if ( leftSlot.Itemstack != null )
-                    itemStackSourceOfFearTotalWeight += GetItemStackSourceOfFearWeight(leftSlot.Itemstack);
+                    ItemSlot leftSlot = player.LeftHandItemSlot;
+                    if ( leftSlot.Itemstack != null )
+                        itemStackSourceOfFearTotalWeight += GetItemStackSourceOfFearWeight(leftSlot.Itemstack);
+                }
             }
-               
+
+            if (entitySourcesOfFear == null)
+                return 0;
+
             //Try to match exact.
             if (entitySourcesOfFearWeightsByCodeExact.ContainsKey(ent.Code.Path))
             {
@@ -566,6 +629,9 @@ namespace ExpandedAiTasks
             else if (itemStack.Block != null)
                 path = itemStack.Block.Code.Path;
             else
+                return 0;
+
+            if ( itemStackSourcesOfFear == null )
                 return 0;
 
             //Try to match exact entity codes.

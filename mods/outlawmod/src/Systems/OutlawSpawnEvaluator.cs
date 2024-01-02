@@ -74,6 +74,12 @@ namespace OutlawMod
             //Make it so outlaws only get blocked if any players are in survival mode.
             if (!OMGlobalConstants.devMode)
             {
+                ////////////////////////////////////////////
+                ///BLOCKED BY START SPAWN SAFE ZONE CHECK///
+                ////////////////////////////////////////////
+                if (SpawnExcludedBySafeZone(position, code))
+                    return false;
+
                 /////////////////////////////////
                 ///BLOCKED BY LAND CLAIM CHECK///
                 /////////////////////////////////             

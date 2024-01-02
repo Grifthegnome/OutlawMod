@@ -52,12 +52,9 @@
 			"looter": { base: "entity/bandit/looter", alternates: [ { base: "entity/bandit/looter2" }, { base: "entity/bandit/looter3" }, { base: "entity/bandit/looter4" } ] },
 		},
 		behaviors: [
-			{ code: "nametag", selectFromRandomName: ["Looter"], "showtagonlywhentargeted": true }, 
-			{ code: "nametag", "showtagonlywhentargeted": true }, 
-			{ code: "repulseagents" }, 
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
 			{ code: "controlledphysics", stepHeight: 1.1251 }, 
-			{ code: "despawn", minPlayerDistance: 32, belowLightLevel: 1, minSeconds: 900 },
 			{ code: "harvestable"},
 			{ code: "interpolateposition" }
 		],
@@ -112,9 +109,8 @@
 			}
 		},
 		behaviors: [
-			{ code: "nametag", selectFromRandomName: ["Looter"], "showtagonlywhentargeted": true }, 
-			{ code: "repulseagents" }, 
-			{ code: "despawn", minPlayerDistance: 64, belowLightLevel: 8, minSeconds: 300 },
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
+			{ code: "despawn", minPlayerDistance: 8, belowLightLevel: 8, minSeconds: 300 },
 			{ code: "controlledphysics", stepHeight: 1.1251 }, 
 			{ code: "deaddecay", hoursToDecay: 96, decayedBlock: "carcass-human" },
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
@@ -128,6 +124,7 @@
 
 				]
 			},
+			{ code: "breathe" },
 			{ 
 				code: "emotionstates",
 				states: [
@@ -229,22 +226,17 @@
         				withdrawDistDamaged: 40.0,
 						withdrawAnimation: "idle",
 
+						swimAnimation: "swim",
+
 						animationSpeed: 1.0,
 						alarmHerd: true,
 						whenInEmotionState: "aggressiveondamage"
-					},
-					{
-						code: "getoutofwater",
-						priority: 2,
-						movespeed: 0.040,
-						animation: "swim",
-						animationSpeed: 0.3
 					},
 					//Close the distance to enemy target.
 					{
 						code: "engageentity",
 						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "humanoid-villager-*" ],
-						priority: 1.5,
+						priority: 2.25,
 						priorityForCancel: 2.5,
 						mincooldown: 0, 
 						maxcooldown: 0, 
@@ -260,9 +252,18 @@
 					 	withdrawDistDamaged: 40.0,
 						withdrawAnimation: "idle",
 
+						swimAnimation: "swim",
+
 						animationSpeed: 1.0,
 						alarmHerd: true,
 						soundStartMs: 950
+					},
+					{
+						code: "getoutofwater",
+						priority: 2,
+						movespeed: 0.040,
+						animation: "swim",
+						animationSpeed: 0.3
 					},
 					{
 						code: "stayclosetoherd",
@@ -321,6 +322,8 @@
 				tryOnlySurface: true,
 				chance: 0.0022,
 				maxQuantity: 16,
+				maxQuantityByGroup: { code: "looter", maxQuantity: 16 },
+				spawnCapPlayerScaling: 0.05,
 				"__comment": "Make them spawn away from artifical light, at night",
 				maxLightLevel: 3,
 				lightLevelType: "MaxTimeOfDayLight",					

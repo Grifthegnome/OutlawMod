@@ -24,6 +24,7 @@ namespace OutlawMod
             this.sapi = api;
 
             sapi.Event.OnTrySpawnEntity += Event_OnTrySpawnEntity;
+            sapi.Event.OnEntityDespawn += Event_OnEntityDespawn;
         }
 
         private bool Event_OnTrySpawnEntity(IBlockAccessor blockAccessor, ref EntityProperties properties, Vec3d spawnPosition, long herdId)
@@ -61,6 +62,31 @@ namespace OutlawMod
             }
 
             return true;
+        }
+
+        private void Event_OnEntityDespawn(Entity ent, EntityDespawnData despawnData)
+        {
+            if (OMGlobalConstants.devMode)
+            {
+                string type = ent.Code.FirstPathPart();
+
+                //This is here so we can debug despawning.
+                switch (type)
+                {
+                    case "looter":
+                    case "poacher-spear":
+                    case "poacher-archer":
+                    case "bandit-axe":
+                    case "bandit-spear":
+                    case "bandit-knife":
+                    case "yeoman-archer":
+                    case "hound-feral":
+                    case "hound-hunting":
+                        string message = "[Outlaw Mod Debug] Despawning entity " + ent.Code.Path;
+                        sapi.Logger.Debug(message);
+                        break;
+                }
+            }
         }
 
         private bool ShouldSpawnOutlawOfType( ref EntityProperties properties, Vec3d spawnPosition )

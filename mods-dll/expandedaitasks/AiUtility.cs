@@ -9,6 +9,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Datastructures;
 using Vintagestory.GameContent;
 using System.Threading.Tasks;
+using System.Security.Cryptography.X509Certificates;
 
 namespace ExpandedAiTasks
 {
@@ -44,6 +45,7 @@ namespace ExpandedAiTasks
         private const double AI_HEARING_AWARENESS_STANDNG_MODIFIER = 1.0;
         private const double AI_HEARING_AWARENESS_WALK_MODIFIER = 1.2;
         private const double AI_HEARING_AWARENESS_SPRINT_MODIFIER = 2.0;
+        private const double AI_HEARING_AWARENESS_SWIMMING_MODIFIER = 0.0;
 
         private const double AI_VISION_AWARENESS_SNEAK_MODIFIER = 0.20;
         private const double AI_VISION_AWARENESS_STANDNG_MODIFIER = 0.5;
@@ -52,21 +54,30 @@ namespace ExpandedAiTasks
 
         //To Do: Consider adding smell. (See if there is a concept of wind direction.)
 
-        private const double AI_HEARING_RANGE = 7.5;
+        private const double AI_HEARING_RANGE = 3.5;
 
         private const double MAX_LIGHT_LEVEL = 22;//12;
         private const double MIN_LIGHT_LEVEL = 4;
         private const double MAX_LIGHT_LEVEL_DETECTION_DIST = 60;
         private const double MIN_LIGHT_LEVEL_DETECTION_DIST = 2;
 
-        private const float HERD_ALERT_RANGE = 30;
+        private const float HERD_ALERT_RANGE = 15;
 
         //To Do: Consider narrowing AI FOV at night.
         private const float AI_VISION_FOV = 120;
 
         private const float ALWAYS_ALLOW_TELEPORT_BEYOND_RANGE_FROM_PLAYER = 80;
-        private const float BLOCK_TELEPORT_WHEN_PLAYER_CLOSER_THAN = 60;
-        private const float BLOCK_TELEPORT_AFTER_COMBAT_DURATION = 45;
+        private const float BLOCK_TELEPORT_WHEN_PLAYER_CLOSER_THAN = 30;
+        private const float BLOCK_TELEPORT_AFTER_COMBAT_DURATION = 30000;
+
+        private const string BUTTERFLY_CODE = "butterfly";
+
+        private static List<string> alwaysIgnoreEntityCodes = new List<string>();
+
+        public static void Init()
+        {
+            alwaysIgnoreEntityCodes.Add(BUTTERFLY_CODE);
+        }
 
         public static string GetAiTaskName( AiTaskBase task )
         {
@@ -166,6 +177,26 @@ namespace ExpandedAiTasks
             }
 
             return lastInCombatMs;
+        }
+
+        public static void UpdateLastTimeEntityFailedMoraleMs( Entity ent )
+        {
+            ent.Attributes.SetDouble("lastTimeFailedMoraleMs", ent.World.ElapsedMilliseconds);
+        }
+
+        public static double GetLastTimeEntityFailedMoraleMs(Entity ent)
+        {
+            //There's an issue where where lastTimeFailedMoraleMs this is saved on the ent, which we don't want.
+            //Until we can find a way to store and update this at runtime without native behavior saving it,
+            //we have to manually zero out the loaded bad value. 
+            double lastFailedMoraleMs = ent.Attributes.GetDouble("lastTimeFailedMoraleMs");
+            if (lastFailedMoraleMs > ent.World.ElapsedMilliseconds)
+            {
+                ent.Attributes.SetDouble("lastTimeFailedMoraleMs", 0);
+                lastFailedMoraleMs = 0;
+            }
+
+            return lastFailedMoraleMs;
         }
 
         public static void SetMasterHerdList( Entity ent, List<Entity> herdList )
@@ -459,7 +490,7 @@ namespace ExpandedAiTasks
         private static Entity losTraceSourceEnt = null;
         private static Entity[] ignoreEnts = null;
 
-        public static bool CanEntSeePos( Entity ent, Vec3d pos, float fov, Entity[] entsToIgnore = null)
+        public static bool CanEntSeePos( Entity ent, Vec3d pos, float fov = AI_VISION_FOV, Entity[] entsToIgnore = null)
         {
             blockSel = null;
             entitySel = null;
@@ -496,10 +527,6 @@ namespace ExpandedAiTasks
             if (block.BlockMaterial == EnumBlockMaterial.Plant)
                 return false;
 
-            //Liquid Blocks visability
-            if (block.BlockMaterial == EnumBlockMaterial.Liquid)
-                return false;
-
             return true;
         }
 
@@ -512,6 +539,12 @@ namespace ExpandedAiTasks
             {
                 if (ignoreEnts.Contains(ent))
                     return false;
+            }
+
+            //AI can see through other AI.
+            if ( ent is EntityAgent )
+            {
+                return false;
             }
 
             return true;
@@ -576,7 +609,11 @@ namespace ExpandedAiTasks
 
         public static double GetAiHearingAwarenessScalarForPlayerMovementType(EntityPlayer playerEnt)
         {
-            if (playerEnt.Controls.Sneak && playerEnt.OnGround)
+            if ( playerEnt.Swimming )
+            {
+                return AI_HEARING_AWARENESS_SWIMMING_MODIFIER;
+            }
+            else if (playerEnt.Controls.Sneak && playerEnt.OnGround)
             {
                 return AI_HEARING_AWARENESS_SNEAK_MODIFIER;
             }
@@ -626,6 +663,9 @@ namespace ExpandedAiTasks
         //3. This function does many similar things to CanSense, but gets called seperately, we need to determine whether the two should remain seperate.
         public static bool IsAwareOfTarget(Entity searchingEntity, Entity targetEntity, float maxDist, float maxVerDist)
         {
+            //Bulk ignore entities that we just don't care about, like butterflies.
+            if (EntityCodeInList(targetEntity, alwaysIgnoreEntityCodes))
+                return false;
 
             //We cannot percieve ourself as a target.
             if (searchingEntity == targetEntity)
@@ -634,6 +674,19 @@ namespace ExpandedAiTasks
             //If no players are within a reasonable range, don't spot anything just return true to save overhead.
             if (!AiUtility.IsAnyPlayerWithinRangeOfPos(targetEntity.ServerPos.XYZ, 250, targetEntity.World))
                 return false;
+
+            //Because traces and light checks are expensive, see if we have already run this calculation this frame and
+            //if we have, use the saved value for the entity. This will prevent redundant calls to get the same data.
+            if (AwarenessManager.EntityHasAwarenessEntry(searchingEntity))
+            {
+                if (AwarenessManager.EntityHasAwarenessEntryForTargetEntity(searchingEntity, targetEntity) )
+                {
+                    if (!AwarenessManager.EntityAwarenessEntryForTargetEntityIsStale(searchingEntity, targetEntity))
+                    {
+                        return AwarenessManager.GetEntityAwarenessForTargetEntity(searchingEntity, targetEntity);
+                    }
+                }
+            }
 
             Cuboidd cuboidd = targetEntity.SelectionBox.ToDouble().Translate(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
             Vec3d selectionBoxMidPoint = searchingEntity.ServerPos.XYZ.Add(0.0, searchingEntity.SelectionBox.Y2 / 2f, 0.0).Ahead(searchingEntity.SelectionBox.XSize / 2f, 0f, searchingEntity.ServerPos.Yaw);
@@ -660,7 +713,11 @@ namespace ExpandedAiTasks
             double shortestVisionVertDist = shortestVertDist * aiAwarenessVisionScalar;
 
             if (shortestDist >= (double)maxDist || shortestVertDist >= (double)maxVerDist)
+            {
+                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, false);
                 return false;
+            }
+                
 
             ///////////////////
             ///HEARING CHECK///
@@ -669,7 +726,11 @@ namespace ExpandedAiTasks
             //if we can hear the target moving, enage 
             double aiHearingRange = AI_HEARING_RANGE * aiAwarenessHearingScalar;
             if (shortestDist <= aiHearingRange && targetEntity.ServerPos.Motion.LengthSq() > 0)
+            {
+                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, true);
                 return true;
+            }
+                
 
             //////////////////////////
             ///EYE-TO-EYE LOS CHECK///
@@ -677,7 +738,11 @@ namespace ExpandedAiTasks
             //If we don't have direct line of sight to the target's eyes.
             Entity[] ignoreEnts = { targetEntity };
             if (!AiUtility.CanEntSeePos(searchingEntity, targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0), AI_VISION_FOV, ignoreEnts))
+            {
+                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, false);
                 return false;
+            }
+                
 
             /////////////////
             ///LIGHT CHECK///
@@ -685,11 +750,19 @@ namespace ExpandedAiTasks
 
             //If this Ai can see in the dark, we don't need to check lights.
             if (EntityHasNightVison( searchingEntity ) )
+            {
+                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, true);
                 return true;
+            }
+                
 
             //If no players are within a close range, don't bother with illumination checks.
             if (!AiUtility.IsAnyPlayerWithinRangeOfPos(targetEntity.ServerPos.XYZ, 60, targetEntity.World))
+            {
+                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, true);
                 return true;
+            }
+                
 
             //This ensures we only run one full illumination update every 500ms.
             int lightLevel = IlluminationManager.GetIlluminationLevelForEntity(targetEntity);
@@ -697,8 +770,12 @@ namespace ExpandedAiTasks
             double lightLevelVisualAwarenessDist = lightLevelDist * aiAwarenessVisionScalar;
 
             if (shortestDist <= lightLevelVisualAwarenessDist)
+            {
+                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, true);
                 return true;
+            }
 
+            AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, false);
             return false;
         }
 
@@ -769,5 +846,171 @@ namespace ExpandedAiTasks
 
             return null;
         }
+
+        public static bool LocationInLiquid(IWorldAccessor world, Vec3d pos)
+        {
+            BlockPos blockPos = pos.AsBlockPos;
+            Block block = world.BlockAccessor.GetBlock(blockPos);
+
+            if (block != null)
+            {
+                return block.BlockMaterial == EnumBlockMaterial.Liquid;
+            }
+
+            return false;
+        }
+
+        public static Vec3d ClampPositionToGround(IWorldAccessor world, Vec3d startingPos, int maxBlockDistance)
+        {
+            BlockPos posAsBlockPos = startingPos.AsBlockPos;
+            BlockPos previousCheckPos = posAsBlockPos.Copy();
+            BlockPos currentCheckPos = posAsBlockPos.Copy();
+
+            Block currentBlock = world.BlockAccessor.GetBlock(currentCheckPos);
+
+            if (currentBlock == null)
+            {
+                return startingPos;
+            }
+            else
+            {
+                //our starting point is in solid
+                if (IsPositionInSolid( world, startingPos ))
+                    return PopPositionAboveGround(world, startingPos, maxBlockDistance);
+            }
+
+            int groundCheckTries = 0;
+            while (maxBlockDistance > groundCheckTries)
+            {
+                currentCheckPos = previousCheckPos.DownCopy();
+                currentBlock = world.BlockAccessor.GetBlock(currentCheckPos);
+
+                //Check Block Below us.
+                if (currentBlock != null)
+                {
+                    if (IsPositionInSolid(world, currentCheckPos) )
+                    {
+                        return new Vec3d( previousCheckPos.X, previousCheckPos.Y, previousCheckPos.Z);
+                    }
+
+                }
+
+                previousCheckPos = currentCheckPos;
+                groundCheckTries++;
+            }
+            
+            return startingPos;
+
+        }
+
+        public static Vec3d PopPositionAboveGround(IWorldAccessor world, Vec3d startingPos, int maxBlockDistance)
+        {
+            BlockPos posAsBlockPos = startingPos.AsBlockPos;
+            BlockPos previousCheckPos = posAsBlockPos.Copy();
+            BlockPos currentCheckPos = posAsBlockPos.Copy();
+
+            Block currentBlock = world.BlockAccessor.GetBlock(currentCheckPos);
+
+            if (currentBlock == null)
+            {
+                return startingPos;
+            }
+            else
+            {
+                //our starting point is in solid
+                if (!IsPositionInSolid(world, startingPos))
+                    return startingPos;
+            }
+
+            int groundCheckTries = 0;
+            while (maxBlockDistance > groundCheckTries)
+            {
+                currentCheckPos = previousCheckPos.UpCopy();
+                currentBlock = world.BlockAccessor.GetBlock(currentCheckPos);
+
+                //Check Block Below us.
+                if (currentBlock != null)
+                {
+                    if (!IsPositionInSolid(world, currentCheckPos))
+                    {
+                        return new Vec3d(currentCheckPos.X, currentCheckPos.Y, currentCheckPos.Z);
+                    }
+
+                }
+
+                previousCheckPos = currentCheckPos;
+                groundCheckTries++;
+            }
+
+            return startingPos;
+        }
+
+        public static Vec3d MovePositionByBlockInDirectionOfVector( Vec3d positionToMove, Vec3d directionToMove )
+        {
+            BlockPos endBlockPos = (positionToMove + directionToMove).AsBlockPos;
+            return new Vec3d(endBlockPos.X, endBlockPos.Y, endBlockPos.Z);
+        }
+
+        public static bool IsPositionInSolid(IWorldAccessor world, Vec3d pos)
+        {
+            BlockPos blockPos = pos.AsBlockPos;
+            return IsPositionInSolid(world, blockPos);
+        }
+
+        public static bool IsPositionInSolid(IWorldAccessor world, BlockPos blockPos )
+        {
+            IBlockAccessor blockAccessor = world.BlockAccessor;
+            Block blockAtPos = blockAccessor.GetBlock(blockPos);
+
+            bool solid = blockAtPos.BlockMaterial != EnumBlockMaterial.Air && blockAtPos.BlockMaterial != EnumBlockMaterial.Liquid && blockAtPos.BlockMaterial != EnumBlockMaterial.Snow &&
+                blockAtPos.BlockMaterial != EnumBlockMaterial.Plant && blockAtPos.BlockMaterial != EnumBlockMaterial.Leaves;
+
+            if (solid)
+            {
+                bool confirmedSolid = false;
+                foreach (BlockFacing facing in BlockFacing.ALLFACES)
+                {
+                    if (blockAtPos.SideSolid[facing.Index] == true)
+                    {
+                        confirmedSolid = true;
+                        break;
+                    }
+
+                    BlockEntity blockEnt = blockAccessor.GetBlockEntity(blockPos);
+                    if (blockAtPos is BlockMicroBlock)
+                    {
+                        if (blockAccessor.GetBlockEntity(blockPos) is BlockEntityMicroBlock)
+                        {
+                            BlockEntityMicroBlock microBlockEnt = blockAccessor.GetBlockEntity(blockPos) as BlockEntityMicroBlock;
+                            if (microBlockEnt.sideAlmostSolid[facing.Index] == true)
+                            {
+                                confirmedSolid = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                solid = confirmedSolid;
+            }
+
+            return solid;
+        }
+
+        public static bool EntityCodeInList( Entity ent, List<string> codes )
+        {
+            foreach ( string code in codes ) 
+            {
+                if (ent.Code.Path == code)
+                    return true;
+
+                if (ent.Code.Path.StartsWithFast(code))
+                    return true;
+            }
+
+            return false;
+        }
+
     }
+
 }

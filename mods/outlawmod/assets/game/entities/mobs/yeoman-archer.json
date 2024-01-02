@@ -51,12 +51,9 @@
 			"yeoman": { base: "entity/bandit/yeoman1", alternates: [ { base: "entity/bandit/yeoman2" }, { base: "entity/bandit/yeoman3" }, { base: "entity/bandit/yeoman4" } ] },
 		},
 		behaviors: [
-			{ code: "nametag", selectFromRandomName: ["Yeoman Archer"], "showtagonlywhentargeted": true }, 
-			{ code: "nametag", "showtagonlywhentargeted": true }, 
-			{ code: "repulseagents" }, 
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
 			{ code: "controlledphysics", stepHeight: 1.1251 }, 
-			{ code: "despawn", minPlayerDistance: 64, belowLightLevel: 8, minSeconds: 300 },
 			{ code: "harvestable"},
 			{ code: "interpolateposition" }
 		],
@@ -134,9 +131,8 @@
 			}
 		},
 		behaviors: [
-			{ code: "nametag", selectFromRandomName: ["Yeoman Archer"], "showtagonlywhentargeted": true }, 
-			{ code: "repulseagents" }, 
-			{ code: "despawn", minPlayerDistance: 64, belowLightLevel: 8, minSeconds: 300 },
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
+			{ code: "despawn", minPlayerDistance: 8, belowLightLevel: 8, minSeconds: 300 },
 			{ code: "controlledphysics", stepHeight: 1.1251 }, 
 			{ code: "deaddecay", hoursToDecay: 96, decayedBlock: "carcass-human" },
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
@@ -150,6 +146,7 @@
 
 				]
 			},
+			{ code: "breathe" },
 			{ 
 				code: "emotionstates",
 				states: [
@@ -167,7 +164,6 @@
 					},
 					{
 						code: "morale",
-						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-feral" ],
 						priority: 5.0,
 						movespeed: 0.040,
 						cancelOnHurt: false,
@@ -217,17 +213,32 @@
 					//Flee to arrow range.
 					{
 						code: "morale",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "hound-feral", "humanoid-villager-*"],
 						priority: 4.9,
 						movespeed: 0.040,
 						cancelOnHurt: false,
 						routDistance: 15,
 						rallyTimeAfterRoutMs: 10000,
-						minMorale: 0.0,
-						maxMorale: 0.0,
+						minMorale: -100.0,
+						maxMorale: -100.0,
 						moraleRange: 5,
 						useGroupMorale: true,
 						canRoutFromAnyEnemy: false,
+						tacticalRetreat: true,
+						
+						entitySourcesOfFear: [
+							{ code: "player", fearWeight: 1.0},
+							{ code: "looter", fearWeight: 1.0},
+							{ code: "hound-feral", fearWeight: 1.0},
+							{ code: "drifter-*", fearWeight: 1.0},
+							{ code: "humanoid-villager-*", fearWeight: 1.0},
+							{ code: "wolf-male", fearWeight: 1.0},
+							{ code: "wolf-female", fearWeight: 1.0},
+							{ code: "hyena-male", fearWeight: 1.0},
+							{ code: "hyena-female", fearWeight: 1.0},
+							{ code: "locust-*", fearWeight: 1.0},
+							{ code: "bear-*", fearWeight: 1.0},
+						],
+						
 						animation: "sprint",
 						animationSpeed: 1,
 					},
@@ -287,6 +298,7 @@
 						engageSpeed: 0.026,
 						engageRange: 4,
 						engageAnimation: "walkbowready",
+						swimAnimation: "swim",
 						arriveRange: 4,
 						arriveVerticalRange: 4,
 
@@ -364,6 +376,8 @@
 				tryOnlySurface: true,
 				chance: 0.0008,
 				maxQuantity: 8,
+				maxQuantityByGroup: { code: "yeoman-archer", maxQuantity: 8 },
+				spawnCapPlayerScaling: 0.05,
 				"__comment": "Make them spawn away from artifical light and only at night/as the sun sets",
 				maxLightLevel: 3,
 				lightLevelType: "MaxTimeOfDayLight",					

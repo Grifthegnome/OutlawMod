@@ -43,11 +43,9 @@
 		renderer: "Shape",
 		shape: { base: "entity/land/bandit-axe" },
 		behaviors: [
-			{ code: "nametag", selectFromRandomName: ["Brigand"], "showtagonlywhentargeted": true }, 
-			{ code: "repulseagents" }, 
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
 			{ code: "controlledphysics", stepHeight: 1.1251 }, 
-			{ code: "despawn", minPlayerDistance: 64, belowLightLevel: 8, minSeconds: 300 },
 			{ code: "harvestable"},
 			{ code: "interpolateposition" }
 		],
@@ -89,9 +87,8 @@
 	},
 	server: {
 		behaviors: [
-			{ code: "nametag", selectFromRandomName: ["Brigand"], "showtagonlywhentargeted": true }, 
-			{ code: "repulseagents" }, 
-			{ code: "despawn", minPlayerDistance: 32, belowLightLevel: 1, minSeconds: 900 },
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
+			{ code: "despawn", minPlayerDistance: 8, belowLightLevel: 8, minSeconds: 300 },
 			{ code: "controlledphysics", stepHeight: 1.1251 }, 
 			{ code: "deaddecay", hoursToDecay: 96, decayedBlock: "carcass-human" },
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
@@ -104,6 +101,7 @@
 				},
 				]
 			},
+			{ code: "breathe" },
 			{ 
 				code: "emotionstates",
 				states: [
@@ -182,6 +180,8 @@
 						engageRange: 4,
 						engageAnimation: "walk",
 
+						swimAnimation: "swim",
+
 						withdrawIfNoPath: true,
 						withdrawDist: 15.0,
         				withdrawDistDamaged: 40.0,
@@ -191,18 +191,11 @@
 						alarmHerd: true,
 						whenInEmotionState: "aggressiveondamage"
 					},
-					{
-						code: "getoutofwater",
-						priority: 2.2,
-						movespeed: 0.040,
-						animation: "swim",
-						animationSpeed: 0.3
-					},
 					//Close the distance to enemy target.
 					{
 						code: "engageentity",
 						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "humanoid-villager-*" ],
-						priority: 1.5,
+						priority: 2.25,
 						priorityForCancel: 2.5,
 						mincooldown: 0, 
 						maxcooldown: 0, 
@@ -218,8 +211,17 @@
         				withdrawDistDamaged: 40.0,
 						withdrawAnimation: "idle",
 
+						swimAnimation: "swim",
+
 						animationSpeed: 1.0,
 						alarmHerd: true,
+					},
+					{
+						code: "getoutofwater",
+						priority: 2.0,
+						movespeed: 0.040,
+						animation: "swim",
+						animationSpeed: 0.3
 					},
 					{
 						code: "stayclosetoherd",
@@ -279,6 +281,8 @@
 				tryOnlySurface: true,
 				chance: 0.0008,
 				maxQuantity: 4,
+				maxQuantityByGroup: { code: "bandit-*", maxQuantity: 5 },
+				spawnCapPlayerScaling: 0.05,
 				"__comment": "Make them spawn away from artifical light and only at night/as the sun sets",
 				maxLightLevel: 3,
 				lightLevelType: "MaxTimeOfDayLight",					

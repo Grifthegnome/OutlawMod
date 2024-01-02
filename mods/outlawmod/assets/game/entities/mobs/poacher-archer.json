@@ -61,12 +61,9 @@
 			"poacher1": { base: "entity/bandit/poacher1", alternates: [ { base: "entity/bandit/poacher2" }, { base: "entity/bandit/poacher3" }, { base: "entity/bandit/poacher4" } ] },
 		},
 		behaviors: [
-			{ code: "nametag", selectFromRandomName: ["Poacher"], "showtagonlywhentargeted": true }, 
-			{ code: "nametag", "showtagonlywhentargeted": true }, 
-			{ code: "repulseagents" }, 
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
 			{ code: "controlledphysics", stepHeight: 1.1251 }, 
-			{ code: "despawn", minPlayerDistance: 32, belowLightLevel: 1, minSeconds: 900 },
 			{ code: "harvestable" },
 			{ code: "interpolateposition" }
 		],
@@ -144,9 +141,8 @@
 			}
 		},
 		behaviors: [
-			{ code: "nametag", selectFromRandomName: ["Poacher"], "showtagonlywhentargeted": true }, 
-			{ code: "repulseagents" }, 
-			{ code: "despawn", minPlayerDistance: 64, belowLightLevel: 8, minSeconds: 300 },
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
+			{ code: "despawn", minPlayerDistance: 8, belowLightLevel: 8, minSeconds: 300 },
 			{ code: "controlledphysics", stepHeight: 1.1251 }, 
 			{ code: "deaddecay", hoursToDecay: 96, decayedBlock: "carcass-human" },
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
@@ -160,6 +156,7 @@
 
 				]
 			},
+			{ code: "breathe" },
 			{ 
 				code: "emotionstates",
 				states: [
@@ -336,6 +333,8 @@
 						withdrawDistDamaged: 40.0,
 						withdrawAnimation: "sneakidle",
 
+						swimAnimation: "swim",
+
 						animationSpeed: 1.0,
 						alarmHerd: true,
 						soundStartMs: 950,
@@ -406,10 +405,12 @@
 		],
 		spawnconditions: {
 			runtime: {
-				group: "neutral",
+				group: "hostile",
 				tryOnlySurface: true,
 				chance: 0.0012,
 				maxQuantity: 1,
+				maxQuantityByGroup: { code: "poacher-*", maxQuantity: 1 },
+				spawnCapPlayerScaling: 0.05,
 				"__comment": "Make them spawn away from artifical light",
 				maxLightLevel: 7,
 				lightLevelType: "onlyBlockLight",					

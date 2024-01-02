@@ -15,13 +15,11 @@
 		},
 		
 		behaviors: [
-			{ code: "nametag", selectFromRandomName: ["Hunting Hound"], "showtagonlywhentargeted": true }, 
-			{ code: "repulseagents" }, 
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
 			{ code: "controlledphysics", stepHeight: 1.5 }, 
 			{ code: "floatupwhenstuck", onlyWhenDead: true },
 			{ code: "interpolateposition" },
-			{ code: "harvestable" },
-			{ code: "despawn", minPlayerDistance: 8, belowLightLevel: 8, minSeconds: 300 }
+			{ code: "harvestable" }
 		],
 		animations: [
 			{
@@ -64,8 +62,7 @@
 	},
 	server: {
 		behaviors: [
-			{ code: "nametag", selectFromRandomName: ["Hunting Hound"], "showtagonlywhentargeted": true }, 
-			{ code: "repulseagents" }, 
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
 			{ code: "controlledphysics", stepHeight: 1.5 },
 			{ code: "despawn", minPlayerDistance: 8, belowLightLevel: 8, minSeconds: 300 },
 			{ code: "health", currenthealth: 12, maxhealth: 12, },
@@ -145,7 +142,8 @@
 						detectionDistance: 40,
            				maxDistance: 6,
             			arriveDistance: 4,
-            			moveSpeed: 0.048,
+            			moveSpeedNear: 0.006,
+						moveSpeedFarAway: 0.048,
 						guardAgroDurationMs: 30000,
 						guardAgroChaseDist: 40,
 
@@ -153,7 +151,8 @@
             			aggroOnProximity: true,
             			aggroProximity: 6,
 
-						animation: "Run",
+						moveNearAnimation: "Walk",
+						moveFarAnimation: "Run",
 						animationSpeed: 1.5,
 					},
 					{
@@ -184,6 +183,7 @@
 						engageSpeed: 0.035,
 						engageRange: 4,
 						engageAnimation: "Run",
+						swimAnimation: "walk",
 
 						//This currently breaks because of the hound's collision box. 
 						withdrawIfNoPath: false,
