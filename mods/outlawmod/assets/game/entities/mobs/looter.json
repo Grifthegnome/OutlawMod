@@ -207,6 +207,47 @@
 						animation: "throwlefthanded"
 					},
 					*/
+					{
+						code: "shootatentity",
+						entityCodes: ["player","test-dummy", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "hound-feral", "humanoid-villager-*"],
+						priority: 3.5,
+						priorityForCancel: 4,
+						mincooldown: 5000, 
+						maxcooldown: 7000, 
+						minDist: 6,
+						maxDist: 10,
+						maxVertDist: 10,
+						minRangeDistOffTarget: 0.35,
+						maxRangeDistOffTarget: 0.50,
+						maxVelocity: 0.6,
+						newTargetDistOffTarget: 0.75,
+						newTargetZeroingTime: 5.0,
+						damage: 1.0,
+						damageFalloffPercent: 0.75,
+						damageFalloffStartDist: 4,
+						damageFalloffEndDist: 15,
+						projectileItem: "stone-basalt",
+						dummyProjectile: "dummyrock-meteorite-iron",
+						projectileRemainsInWorld: false,
+						projectileBreakOnImpactChance: 0.0,
+						stopIfPredictFriendlyFire: true,
+
+						leadTarget: true,
+            			arcShots: true,
+						fireOnLastKnownPosition: false,
+						lastKnownPositionTimeoutMs: 5000,
+
+						hasLimitedAmmo: true,
+						ammoRegenDuringCombat: true,
+						ammoRegenIntervalMs: 10000,
+						maxAmmo: 3,
+
+						durationMs: 500,
+						releaseAtMs: 250,
+						animationSpeed: 1.0,
+						animation: "throwlefthanded"
+					},
+
 					//Agro When Damaged
 					{
 						code: "engageentity",

@@ -359,6 +359,10 @@ namespace ExpandedAiTasks
             if (targetEntity == null)
                 return false;
 
+            //This covers the case where we are afraid of someone who is then auto-merged into our herd.
+            if (AiUtility.AreMembersOfSameHerd(entity, targetEntity))
+                return false;
+
             if (world.Rand.NextDouble() < 0.2)
             {
                 UpdateTargetPos();

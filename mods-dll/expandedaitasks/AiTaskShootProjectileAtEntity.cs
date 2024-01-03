@@ -51,12 +51,19 @@ namespace ExpandedAiTasks
         bool fireOnLastKnownPosition = true;
         float lastKnownPositionTimeoutMs = 5000f;
 
+        bool hasLimitedAmmo = false;
+        bool ammoRegenDuringCombat = false;
+        int ammoRegenIntervalMs = 0;
+        int maxAmmo = 0;
+        int ammo = 0;
+
         Entity targetLastFrame = null;
         double dtSinceTargetAquired = 0.0f;
         Vec3d targetLKP = null;
         double lastTimeSeenTarget = 0;
 
-        //EntityPartitioning partitionUtil;
+        double lastShotTime = 0;
+        double lastAmmoRegenTime = 0;
 
         float accum = 0;
         bool didShoot;
@@ -84,6 +91,8 @@ namespace ExpandedAiTasks
 
             this.durationMs = taskConfig["durationMs"].AsInt(1500);
             this.releaseAtMs = taskConfig["releaseAtMs"].AsInt(1000);
+            this.mincooldown = taskConfig["mincooldown"].AsInt(0);
+            this.maxcooldown = taskConfig["maxcooldown"].AsInt(0);
             this.minDist = taskConfig["minDist"].AsFloat(3f);
             this.maxDist = taskConfig["maxDist"].AsFloat(15f);
             this.maxVertDist = taskConfig["maxVertDist"].AsFloat(this.maxDist * 0.75f);
@@ -106,6 +115,12 @@ namespace ExpandedAiTasks
             this.fireOnLastKnownPosition = taskConfig["fireOnLastKnownPosition"].AsBool(true);
             this.lastKnownPositionTimeoutMs = taskConfig["lastKnownPositionTimeoutMs"].AsFloat(5000f);
 
+            this.hasLimitedAmmo = taskConfig["hasLimitedAmmo"].AsBool(false);
+            this.ammoRegenDuringCombat = taskConfig["ammoRegenDuringCombat"].AsBool(false);
+            this.ammoRegenIntervalMs = taskConfig["ammoRegenIntervalMs"].AsInt(0);
+            this.maxAmmo = taskConfig["maxAmmo"].AsInt(0);
+
+            ammo = maxAmmo;
 
             //Error checking for bad json values.
             Debug.Assert(damageFalloffPercent >= 0.0f && damageFalloffPercent <= 1.0f, "AiTaskValue damageFalloffPercent must be a 0.0 to 1.0 value.");
@@ -129,6 +144,17 @@ namespace ExpandedAiTasks
 
             if (entity.Swimming)
                 return false;
+
+            //If we have limited ammo check to see if we have enough to fire.
+            if ( hasLimitedAmmo )
+            {
+                HandleAmmoRegen();
+
+                //We don't have enough ammo to shoot.
+                if (ammo < 1)
+                    return false;
+            }
+                
 
             float range = maxDist;
             float vertRange = maxVertDist;
@@ -258,8 +284,12 @@ namespace ExpandedAiTasks
             if (fireOnLastKnownPosition && targetLKP == null)
                 return false;
 
-            //to do: Make this work with lkp. Right now it rotates to face the current target position.
-            //I think we have done the above, confirm and remove comment if true.
+            if ( hasLimitedAmmo )
+            {
+                //We don't have enough ammo to shoot.
+                if (ammo < 1 && !didShoot)
+                    return false;
+            }
 
             Vec3f targetVec = new Vec3f();
 
@@ -292,8 +322,8 @@ namespace ExpandedAiTasks
 
             if (animMeta != null)
             {
-                animMeta.EaseInSpeed = 1f;
-                animMeta.EaseOutSpeed = 1f;
+                //animMeta.EaseInSpeed = 1f;
+               // animMeta.EaseOutSpeed = 1f;
                 entity.AnimManager.StartAnimation(animMeta);
             }
 
@@ -319,7 +349,7 @@ namespace ExpandedAiTasks
                 if (pitchCoinToss > 0.5f)
                     pitchDir = -1.0f;
 
-                if ( yawCoinToss > 0.5f )
+                if (yawCoinToss > 0.5f)
                     yawDir = -1.0f;
 
                 //Bug Potential: if the BehindCopy is not set far enought from the shooter, the arrow will collide with the shooter and result in weird behaviors.
@@ -330,7 +360,7 @@ namespace ExpandedAiTasks
                     shotTargetPos = CalculateInterceptLocation(shotStartPosition, entity.ServerPos.Motion, maxVelocity * 2, shotTargetPos, targetEntity.ServerPos.Motion);
 
                 //Arc Shots When Our Velocity Is Not Enough For A Straight Shot.
-                double gravityStrength  = (GlobalConstants.GravityPerSecond) / (2.0 / GlobalConstants.PhysicsFrameTime);
+                double gravityStrength = (GlobalConstants.GravityPerSecond) / (2.0 / GlobalConstants.PhysicsFrameTime);
                 double distanceToTarget = shotTargetPos.DistanceTo(shotStartPosition);
 
                 double trajectoryAngle;
@@ -352,7 +382,7 @@ namespace ExpandedAiTasks
                 double rndYaw = ((rnd.NextDouble() * distanceOffTarget) + accuracyDistOffTarget) * yawDir;
 
                 Vec3d shotDriftDirection = new Vec3d(0.0f, rndPitch, rndYaw);
-                Vec3d shotTargetPosWithDrift = shotTargetPos.Add( shotDriftDirection.X, shotDriftDirection.Y, shotDriftDirection.Z );
+                Vec3d shotTargetPosWithDrift = shotTargetPos.Add(shotDriftDirection.X, shotDriftDirection.Y, shotDriftDirection.Z);
 
                 Vec3d velocity = (shotTargetPosWithDrift - shotStartPosition).Normalize() * maxVelocity;
 
@@ -360,47 +390,21 @@ namespace ExpandedAiTasks
                 if (stopIfPredictFriendlyFire && WillFriendlyFire(shotStartPosition.Clone(), shotTargetPosWithDrift.Clone()))
                     return false;
 
-                float projectileDamage = GetProjectileDamageAfterFalloff( distToTargetSqr );
+                float projectileDamage = GetProjectileDamageAfterFalloff(distToTargetSqr);
 
                 int durability = 0;
                 bool survivedImpact = true;
-                    
-                if ( projectileBreakOnImpactChance < 1.0 )
+
+                if (projectileBreakOnImpactChance < 1.0)
                 {
                     double breakChance = rand.NextDouble();
-                    survivedImpact = breakChance > projectileBreakOnImpactChance; 
+                    survivedImpact = breakChance > projectileBreakOnImpactChance;
                 }
-                                       
+
                 if (projectileRemainsInWorld && survivedImpact)
                     durability = 1;
 
-                //Implementation Note: Since Vintage Story can have per-entity gravity diffrences and they also have air drag, I decided to make a dummy projectile entity that has physics settings ideal for the simplest version of the trajectory calculation.
-                //This dummy projectile sets its shape and materials to match the assets of a real projectile item that the ai is "fireing." The dummy projectile uses the real projectile item type for its item stack, so that the player picks up the real projectile,
-                //and not the dummy when it lands in the world.
-
-                EntityProperties dummyType  = entity.World.GetEntityType(new AssetLocation(dummyProjectile));
-                EntityProjectile projectile = entity.World.ClassRegistry.CreateEntity(dummyType) as EntityProjectile;
-                projectile.FiredBy = entity;
-                projectile.Damage = projectileDamage;
-                projectile.ProjectileStack = new ItemStack(entity.World.GetItem(new AssetLocation(projectileItem)));
-
-                if ( durability == 0 )
-                    projectile.ProjectileStack.Attributes.SetInt("durability", durability);
-
-                projectile.DropOnImpactChance = survivedImpact ? 1.0f : 0.0f;
-                //projectile.Weight = 0.0f;
-
-                projectile.ServerPos.SetPos(shotStartPosition);
-                projectile.ServerPos.Motion.Set(velocity);
-                projectile.Pos.SetFrom(projectile.ServerPos);
-
-                projectile.World = entity.World;
-                projectile.SetRotation();
-
-                entity.World.SpawnEntity(projectile);
-
-                entity.PlayEntitySound("shootSound", null, true, maxDist);
-
+                ShootProjectile(shotStartPosition, velocity, projectileDamage, durability, survivedImpact);
             }
 
             return accum < durationMs / 1000f && !stopNow;
@@ -491,6 +495,17 @@ namespace ExpandedAiTasks
         public override void FinishExecute(bool cancelled)
         {
             base.FinishExecute(cancelled);
+
+            if ( didShoot )
+                cooldownUntilMs = entity.World.ElapsedMilliseconds + mincooldown + entity.World.Rand.Next(maxcooldown - mincooldown);
+
+            if (animMeta != null)
+            {
+                //animMeta.EaseInSpeed = 1f;
+                //animMeta.EaseOutSpeed = 1f;
+                entity.AnimManager.StopAnimation(animMeta.Code);
+            }
+
             targetEntity = null;
         }
 
@@ -535,6 +550,85 @@ namespace ExpandedAiTasks
             return false;
         }
 
+        protected void ShootProjectile( Vec3d shotStartPosition, Vec3d velocity, float projectileDamage, int durability, bool survivedImpact )
+        {
+            //Implementation Note: Since Vintage Story can have per-entity gravity diffrences and they also have air drag, I decided to make a dummy projectile entity that has physics settings ideal for the simplest version of the trajectory calculation.
+            //This dummy projectile sets its shape and materials to match the assets of a real projectile item that the ai is "fireing." The dummy projectile uses the real projectile item type for its item stack, so that the player picks up the real projectile,
+            //and not the dummy when it lands in the world.
+
+            EntityProperties dummyType = entity.World.GetEntityType(new AssetLocation(dummyProjectile));
+            EntityProjectile projectile = entity.World.ClassRegistry.CreateEntity(dummyType) as EntityProjectile;
+            projectile.FiredBy = entity;
+            projectile.Damage = projectileDamage;
+            projectile.ProjectileStack = new ItemStack(entity.World.GetItem(new AssetLocation(projectileItem)));
+
+            if (durability == 0)
+                projectile.ProjectileStack.Attributes.SetFloat("durability", durability);
+
+            int testDuribility = projectile.ProjectileStack.Collectible.GetRemainingDurability(projectile.ProjectileStack);
+
+            projectile.DropOnImpactChance = survivedImpact && projectileRemainsInWorld ? 1.0f : 0.0f;
+            //projectile.Weight = 0.0f;
+
+            projectile.ServerPos.SetPos(shotStartPosition);
+            projectile.ServerPos.Motion.Set(velocity);
+            projectile.Pos.SetFrom(projectile.ServerPos);
+
+            projectile.World = entity.World;
+            projectile.SetRotation();
+
+            entity.World.SpawnEntity(projectile);
+
+            entity.PlayEntitySound("shootSound", null, true, maxDist);
+
+            lastShotTime = world.ElapsedMilliseconds;
+
+            if (hasLimitedAmmo)
+            {
+                ammo--;
+                Debug.Assert(ammo >= 0);
+            }
+        }
+        protected void HandleAmmoRegen()
+        {
+            //Calculate ammo regen.
+            if (ammoRegenDuringCombat)
+            {
+                if (ammoRegenIntervalMs > 0 && ammo < maxAmmo)
+                {
+                    if (world.ElapsedMilliseconds >= lastAmmoRegenTime + ammoRegenIntervalMs)
+                    {
+                        int ammoRegained = (int)((world.ElapsedMilliseconds - lastShotTime) / ammoRegenIntervalMs);
+                        ammo = Math.Min(ammoRegained, maxAmmo);
+                        lastAmmoRegenTime = world.ElapsedMilliseconds;
+                    } 
+                }
+                else
+                {
+                    ammo = maxAmmo;
+                }
+            }
+            else
+            {
+                if (!AiUtility.IsInCombat(entity))
+                {
+                    if (ammoRegenIntervalMs > 0 && ammo < maxAmmo)
+                    {
+                        if (world.ElapsedMilliseconds >= lastAmmoRegenTime + ammoRegenIntervalMs)
+                        {
+                            int ammoRegained = (int)((world.ElapsedMilliseconds - AiUtility.GetLastTimeEntityInCombatMs(entity)) / ammoRegenIntervalMs);
+                            ammo = Math.Min(ammoRegained, maxAmmo);
+                            lastAmmoRegenTime = world.ElapsedMilliseconds;
+                        }    
+                    }
+                    else
+                    {
+                        ammo = maxAmmo;
+                    }
+                }
+            }
+        }
+
         public override bool Notify(string key, object data)
         {
 
@@ -550,6 +644,11 @@ namespace ExpandedAiTasks
 
                     if (newTarget == null || !IsTargetableEntity(newTarget, maxDist, true) || !AiUtility.IsAwareOfTarget(entity, newTarget, maxDist, maxVertDist))
                         return false;
+
+                    //Handle case where a teammate asks us to attack a target, but we have no ammo.
+                    if (hasLimitedAmmo && ammo < 1)
+                        return false;
+
 
                     double distSqr = entity.ServerPos.XYZ.SquareDistanceTo(herdMember.ServerPos.XYZ);
                     if (distSqr <= maxDist * maxDist)

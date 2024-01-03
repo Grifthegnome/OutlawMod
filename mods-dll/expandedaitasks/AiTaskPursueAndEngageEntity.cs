@@ -203,7 +203,7 @@ namespace ExpandedAiTasks
 
             lastSearchTotalMs = entity.World.ElapsedMilliseconds;
 
-            if (entity.World.ElapsedMilliseconds - attackedByEntityMs > 30000 )
+            if (entity.World.ElapsedMilliseconds - attackedByEntityMs > 5000 )
             {
                 attackedByEntity = null;
             }
@@ -363,6 +363,10 @@ namespace ExpandedAiTasks
                 return false;
 
             if (!targetEntity.Alive)
+                return false;
+
+            //This covers the case where we get hit by a projectile and then the shooter is auto-merged into our herd.
+            if ( AiUtility.AreMembersOfSameHerd( entity, targetEntity ) )
                 return false;
 
             currentFollowTime += dt;

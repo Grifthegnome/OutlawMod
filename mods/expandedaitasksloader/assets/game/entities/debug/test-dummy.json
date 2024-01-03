@@ -1,0 +1,67 @@
+{
+	code: "test-dummy",
+	class: "EntityAgent",
+	canClimb: true,
+	hitboxSize: { x: 0.6, y: 1.75 },
+	deadHitboxSize: { x: 0.75, y: 0.5 },
+	eyeHeight: 1.7,
+	attributes: { reckless: false, classicVoice: "sounds/voice/harmonica" },
+
+	client: {
+		renderer: "Shape",
+		shape: { base: "entity/land/armorstand" },
+		//textures: {
+		//	"looter": { base: "entity/bandit/looter", alternates: [ { base: "entity/bandit/looter2" }, { base: "entity/bandit/looter3" }, { base: "entity/bandit/looter4" } ] },
+		//},
+		behaviors: [
+			{ code: "nametag", selectFromRandomName: ["TEST DUMMY"] }, 
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
+			{ code: "floatupwhenstuck", onlyWhenDead: true },
+			{ code: "controlledphysics", stepHeight: 1.1251 }, 
+			{ code: "interpolateposition" }
+		],
+		animations: [
+			
+		]
+	},
+	server: {
+		attributes: {
+			pathfinder: {
+				minTurnAnglePerSec: 960,
+				maxTurnAnglePerSec: 1920
+			}
+		},
+		behaviors: [
+			{ code: "nametag", selectFromRandomName: ["TEST DUMMY"] }, 
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
+			{ code: "despawn", minPlayerDistance: 8, belowLightLevel: 8, minSeconds: 300 },
+			{ code: "controlledphysics", stepHeight: 1.1251 }, 
+			{ code: "deaddecay", hoursToDecay: 96, decayedBlock: "carcass-human" },
+			{ code: "floatupwhenstuck", onlyWhenDead: true },
+			{ 
+				code: "emotionstates",
+				states: [
+					{ code: "aggressiveondamage", duration: 4, chance: 0.2, slot: 0, priority: 2, accumType: "noaccum" },
+					{ code: "fleeondamage", duration: 14, chance: 0.50, slot: 2, priority: 4, accumType: "max", whenHealthRelBelow: 0.50 }
+				],
+			},
+			{ 
+				code: "taskai",
+				aitasks: [
+					
+				]
+			}
+		],
+	},
+	sounds: {
+		idle: "creature/bandit/idle1",
+		hurt: "creature/bandit/hurt",
+		death: "creature/bandit/die",
+		melee: "creature/bandit/attack",
+		fleeentity: "creature/bandit/flee",
+		morale: "creature/bandit/flee",
+		seekentity: "creature/bandit/givemegold",
+		engageentity: "creature/bandit/givemegold",
+	},
+	idleSoundChance: 0.08
+}

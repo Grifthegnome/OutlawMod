@@ -2,3 +2,6 @@ bin
 obj
 releases
 .vs
+*.dll
+*.pdb
+*.zip

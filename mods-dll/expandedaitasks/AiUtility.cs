@@ -309,15 +309,18 @@ namespace ExpandedAiTasks
 
                 if (taskManager != null)
                 {
-                    List<IAiTask> tasks = taskManager.AllTasks;
-                    foreach (IAiTask task in tasks)
+                    IAiTask[] activeTasks = taskManager.ActiveTasksBySlot;
+                    foreach (IAiTask task in activeTasks)
                     {
+                        if (task is null)
+                            continue;
+
                         if (task is AiTaskBaseTargetable)
                         {
                             AiTaskBaseTargetable baseTargetable = (AiTaskBaseTargetable)task;
 
                             //If we are fleeing, we are in combat. (Not the same as morale)
-                            if (task is AiTaskFleeEntity && taskManager.IsTaskActive( task.Id ) )
+                            if (task is AiTaskFleeEntity)
                                 return true;
 
                             //If not an agressive action.
