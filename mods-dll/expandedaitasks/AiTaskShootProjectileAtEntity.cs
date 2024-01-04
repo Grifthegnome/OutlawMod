@@ -405,6 +405,14 @@ namespace ExpandedAiTasks
                     durability = 1;
 
                 ShootProjectile(shotStartPosition, velocity, projectileDamage, durability, survivedImpact);
+
+                lastShotTime = world.ElapsedMilliseconds;
+
+                if (hasLimitedAmmo)
+                {
+                    ammo--;
+                    Debug.Assert(ammo >= 0);
+                }
             }
 
             return accum < durationMs / 1000f && !stopNow;
@@ -580,14 +588,6 @@ namespace ExpandedAiTasks
             entity.World.SpawnEntity(projectile);
 
             entity.PlayEntitySound("shootSound", null, true, maxDist);
-
-            lastShotTime = world.ElapsedMilliseconds;
-
-            if (hasLimitedAmmo)
-            {
-                ammo--;
-                Debug.Assert(ammo >= 0);
-            }
         }
         protected void HandleAmmoRegen()
         {

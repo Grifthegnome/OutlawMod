@@ -513,6 +513,8 @@ namespace ExpandedAiTasks
             {
                 ent.World.RayTraceForSelection(entEyePos, pos, ref blockSel, ref entitySel, CanEntSeePos_BlockFilter, CanEntSeePos_EntityFilter);
 
+                //DebugUtility.DebugDrawRayTrace(ent.World, entEyePos, pos, CanEntSeePos_BlockFilter, CanEntSeePos_EntityFilter);
+
                 if (blockSel == null && entitySel == null)
                     return true;
             }

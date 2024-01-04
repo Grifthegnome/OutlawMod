@@ -37,8 +37,6 @@ namespace ExpandedAiTasks
 
         protected long lastSearchTotalMs;
 
-        //protected EntityPartitioning partitionUtil;
-
         protected int searchWaitMs = 4000;
 
         protected float minTurnAnglePerSec;
@@ -142,7 +140,10 @@ namespace ExpandedAiTasks
 
             //Aquire a dead target if we don't have one.
             if (targetEntity == null || targetEntity.Alive)
-                targetEntity = partitionUtil.GetNearestInteractableEntity(entity.ServerPos.XYZ, range, (e) => IsEntityTargetableForEating(e, range, eatEveryting));
+            {
+                List<Entity> deadEntities = EntityManager.GetAllDeadEntitiesRangeOfPos(entity.ServerPos.XYZ, range);
+                targetEntity = EntityManager.GetNearestEntity(deadEntities, entity.ServerPos.XYZ, range, (e) => IsEntityTargetableForEating(e, range, eatEveryting));
+            }
 
             if (targetEntity != null)
             {
@@ -269,7 +270,7 @@ namespace ExpandedAiTasks
             curTurnRadPerSec *= GameMath.DEG2RAD * 50 * 0.02f;
 
             if ( !pathTraverser.WalkTowards(GetTargetPosWithPathOffset().Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck) )    
-            FindNextPathSearchOffsetForPos(targetPos);
+                FindNextPathSearchOffsetForPos(targetPos);
 
             currentEatingTime = 0.0f;
             nextEatAnimTime = 0.0f;
