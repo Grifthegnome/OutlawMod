@@ -191,22 +191,6 @@
 						animationSpeed: 2,
 					},					
 
-					//DISABLING THIS UNTIL WE CAN GET IT WORKING WITH EXPANDED AI TASKS PROJECTILES, IT DOESN't WORK WITH OUR NEW STEALTH SYSTEMS BY DEFAULT.
-					/*
-					{
-						code: "throwatentity",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*" ],
-						priority: 3.5,
-						priorityForCancel: 9,
-						mincooldown: 3000, 
-						maxcooldown: 10000, 
-						durationMs: 550,
-						releaseAtMs: 500,
-						seekingRange: 15,
-						animationSpeed: 0.5,
-						animation: "throwlefthanded"
-					},
-					*/
 					{
 						code: "shootatentity",
 						entityCodes: ["player","test-dummy", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "hound-feral", "humanoid-villager-*"],
@@ -214,18 +198,18 @@
 						priorityForCancel: 4,
 						mincooldown: 5000, 
 						maxcooldown: 7000, 
-						minDist: 6,
+						minDist: 5,
 						maxDist: 10,
 						maxVertDist: 10,
 						minRangeDistOffTarget: 0.35,
 						maxRangeDistOffTarget: 0.50,
-						maxVelocity: 0.6,
+						maxVelocity: 0.7,
 						newTargetDistOffTarget: 0.75,
 						newTargetZeroingTime: 5.0,
-						damage: 1.0,
-						damageFalloffPercent: 0.75,
-						damageFalloffStartDist: 4,
-						damageFalloffEndDist: 15,
+						damage: 2.0,
+						damageFalloffPercent: 0.25,
+						damageFalloffStartDist: 5,
+						damageFalloffEndDist: 10,
 						projectileItem: "stone-basalt",
 						dummyProjectile: "dummyrock-meteorite-iron",
 						projectileRemainsInWorld: false,
