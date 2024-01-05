@@ -26,6 +26,27 @@ namespace ExpandedAiTasks
         }
     }
 
+    //////////////////////////////////////////////////////////////////
+    ///PATCHING TO ADD ENTITIES INTO ENTITY LEDGER ON LOAD FROM DISK//
+    //////////////////////////////////////////////////////////////////
+    [HarmonyPatch(typeof(Entity))]
+    public class OnEntityLoadedOverride
+    {
+        [HarmonyPrepare]
+        static bool Prepare(MethodBase original, Harmony harmony)
+        {
+            return true;
+        }
+
+        [HarmonyPatch("OnEntityLoaded")]
+        [HarmonyPostfix]
+        static void OverrideOnEntityLoaded(Entity __instance)
+        {
+            EntityManager.RegisterEntityWithEntityLedger(__instance);
+        }
+    }
+
+
     //////////////////////////////////////////////////////////////////////////////////////
     ///PATCHING TO ADD A UNIVERAL SET LOCATION FOR LAST ENTITY TO ATTACK ON ENTITY AGENT//
     //////////////////////////////////////////////////////////////////////////////////////

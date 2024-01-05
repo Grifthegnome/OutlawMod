@@ -24,10 +24,12 @@ namespace ExpandedAiTasks
 
                 api.Event.OnEntityDeath += AwarenessManager.OnDeath;
 
-                //Tell Entity Manager to Track Projectile Spawns.
+                //Consolidate all of these into one call.
+                api.Event.OnEntitySpawn += EntityManager.RegisterEntityWithEntityLedger;
                 api.Event.OnEntitySpawn += EntityManager.OnEntityProjectileSpawn;
                 api.Event.OnEntityDeath += EntityManager.OnEntityDeath;
             }
+
 
             RegisterAiTasksShared();
             RegisterEntityBehaviors(api);

@@ -34,6 +34,7 @@ namespace ExpandedAiTasks
         TreeAttribute[] itemStackSourcesOfFear = null;
         Dictionary<string, double> itemStackSourcesOfFearWeightsByCodeExact = null;// new Dictionary<string, double>();
         Dictionary<string, double> itemStackSourcesOfFearWeightsByCodePartial = null;// new Dictionary<string, double>();
+        AssetLocation[] itemStackSourcesOfFearCodes = null;
 
         //Data for points of intrest in morale range.
         TreeAttribute[] poiSourcesOfFear = null;
@@ -179,10 +180,14 @@ namespace ExpandedAiTasks
             //To Do: See if there is a way to imediately stop searching entities as soon as our fear exceeds our morale.
 
             //Only search all entities in the world if we are afraid of items, otherwise, only search entity agents.
-            if (itemStackSourcesOfFear == null || recentlyFailedMorale)
+            if (itemStackSourcesOfFear == null)
                 targetEntity = partitionUtil.GetNearestInteractableEntity(ownPos, moraleRange, (e) => IsValidMoraleTarget(e));
             else
-                targetEntity = entity.World.GetNearestEntity(ownPos, moraleRange, moraleRange, IsValidMoraleTarget);
+            {
+                Entity nearestInteractableEntity = partitionUtil.GetNearestInteractableEntity(ownPos, moraleRange, (e) => IsValidMoraleTarget(e));
+                Entity nearestEntityItem = EntityManager.GetNearestEntityItemMatchingCodes(ownPos, moraleRange, itemStackSourcesOfFearCodes, (e) => IsValidMoraleTarget(e));
+                targetEntity = nearestInteractableEntity != null ? nearestInteractableEntity : nearestEntityItem;
+            }
 
             if (targetEntity != null)
             {
@@ -498,6 +503,7 @@ namespace ExpandedAiTasks
                 itemStackSourcesOfFearWeightsByCodePartial = new Dictionary<string, double>();
                 itemStackSourcesOfFearWeightsByCodeExact = new Dictionary<string, double>();
 
+                itemStackSourcesOfFearCodes = new AssetLocation[itemStackSourcesOfFear.Length];
                 for (int i = 0; i < itemStackSourcesOfFear.Length; i++)
                 {
                     Debug.Assert(itemStackSourcesOfFear[i].HasAttribute("code"), "itemStackSourcesOfFear for " + entity.Code.Path + " is missing code: at entry " + i);
@@ -516,6 +522,8 @@ namespace ExpandedAiTasks
                         //Handle Exact Entity Code
                         itemStackSourcesOfFearWeightsByCodeExact.Add(code, weight);
                     }
+
+                    itemStackSourcesOfFearCodes[i] = new AssetLocation(code);
                 }
             }
 
