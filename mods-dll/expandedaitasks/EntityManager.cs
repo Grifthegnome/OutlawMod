@@ -51,13 +51,9 @@ namespace ExpandedAiTasks
 
         public void AddEntityItemToLedger( Entity entity )
         {
-            //Hack: It appears that the Vintage Story API might be firing OnEntitySpawned twice on the server.
-            //Until I can talk to the VS Devs about why that might be happning, we have to early out if we encounter
-            //The same ent id twice in a row.
-            if (entity.EntityId == lastEntItemIDAdded)
-                return;
-
             Debug.Assert(entity is EntityItem);
+            Debug.Assert(entity.EntityId != lastEntItemIDAdded);
+
             EntityItem item = (EntityItem)entity;
             Debug.Assert(item.Itemstack != null);
 
@@ -325,11 +321,7 @@ namespace ExpandedAiTasks
         public static void RegisterEntityProjectile( Entity entity )
         {
             Debug.Assert(entity is EntityProjectile);
-            //Hack: It appears that the Vintage Story API might be firing OnEntitySpawned twice on the server.
-            //Until I can talk to the VS Devs about why that might be happning, we have to early out if we encounter
-            //The same ent id twice in a row.
-            if (entity.EntityId == lastProjectileEntIDAdded)
-                return;
+            Debug.Assert(entity.EntityId != lastProjectileEntIDAdded);
 
             _meaEntityProjectiles.AddEntity(entity);
             _meaEntityProjectilesInFlight.AddEntity(entity);
@@ -349,11 +341,7 @@ namespace ExpandedAiTasks
             if (entity.ShouldDespawn)
                 return;
 
-            //Hack: It appears that the Vintage Story API might be firing OnEntitySpawned twice on the server.
-            //Until I can talk to the VS Devs about why that might be happning, we have to early out if we encounter
-            //The same ent id twice in a row.
-            if (entity.EntityId == lastDeadEntIDAdded)
-                return;
+            Debug.Assert(entity.EntityId != lastDeadEntIDAdded);
 
             _meaEntityDead.AddEntity(entity);
             lastDeadEntIDAdded = entity.EntityId;

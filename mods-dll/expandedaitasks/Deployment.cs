@@ -8,8 +8,12 @@ namespace ExpandedAiTasks
 {
     public static class ExpandedAiTasksDeployment
     {
+        static bool hasDeployed = false;
         public static void Deploy( ICoreAPI api )
         {
+            if (hasDeployed)
+                return;
+
             //Apply AiExpandedTask Patches if they haven't already been applied.
             if (ExpandedAiTasksHarmonyPatcher.ShouldPatch())
                 ExpandedAiTasksHarmonyPatcher.ApplyPatches();
@@ -33,6 +37,8 @@ namespace ExpandedAiTasks
 
             RegisterAiTasksShared();
             RegisterEntityBehaviors(api);
+
+            hasDeployed = true;
         }
         private static void RegisterAiTasksOnServer()
         {
