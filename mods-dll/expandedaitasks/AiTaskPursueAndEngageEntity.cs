@@ -82,6 +82,9 @@ namespace ExpandedAiTasks
         private eInternalMovementState internalMovementState = eInternalMovementState.Pursuing;
 
         const float NO_AGRESSIVE_PERSUIT_AFTER_ROUTE_MS = 30000;
+        const int AGGRO_SOUND_DBOUNCE_MS = 5000;
+
+        protected long nextAggroSoundTime = 0;
 
         private enum eInternalMovementState
         {
@@ -339,10 +342,11 @@ namespace ExpandedAiTasks
             currentWithdrawTime = 0;
             consecutivePathFailCount = 0;
 
-            if ( !stopNow )
+            if ( !stopNow && world.ElapsedMilliseconds > nextAggroSoundTime )
             {
                 //play a sound associated with this action.
                 entity.PlayEntitySound("engageentity", null, true);
+                nextAggroSoundTime = (world.ElapsedMilliseconds + AGGRO_SOUND_DBOUNCE_MS);
             }
             
         }

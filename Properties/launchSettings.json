@@ -1,7 +1,8 @@
 {
   "profiles": {
     "VSModLauncher": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": ""
     }
   }
 }

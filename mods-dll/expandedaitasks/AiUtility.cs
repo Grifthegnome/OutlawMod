@@ -65,6 +65,7 @@ namespace ExpandedAiTasks
 
         //To Do: Consider narrowing AI FOV at night.
         private const float AI_VISION_FOV = 120;
+        private const float AI_SCENT_WIND_FOV = 20;
 
         private const float ALWAYS_ALLOW_TELEPORT_BEYOND_RANGE_FROM_PLAYER = 80;
         private const float BLOCK_TELEPORT_WHEN_PLAYER_CLOSER_THAN = 30;
@@ -612,6 +613,40 @@ namespace ExpandedAiTasks
             return (aheadPos - eyePos).Normalize();
         }
 
+        public static float GetEntitySmellRange(Entity entity)
+        {
+            if (entity.Properties.Attributes.KeyExists("smellRange"))
+            {
+                return entity.Properties.Attributes["smellRange"].AsFloat();
+            }
+
+            return 0.0f;
+        }
+
+        public static bool CanEntitySmellPositionWithWind( Entity entity, Vec3d pos, float scentRange )
+        {
+            Vec3d posWindSpeed = entity.World.BlockAccessor.GetWindSpeedAt(pos);
+
+            double maxScentDot = Math.Cos((AI_SCENT_WIND_FOV / 2) * (Math.PI / 180));
+
+            Vec3d entityToTarget = entity.ServerPos.XYZ - pos;
+            entityToTarget.Normalize();
+
+            double dot = entityToTarget.Dot(posWindSpeed.Clone().Normalize());
+
+            //DebugUtility.DebugDrawScentSystem(entity.World, entity.ServerPos.XYZ, pos, entityToTarget, posWindSpeed);
+
+            if (dot > maxScentDot)
+            {
+                double windLength = posWindSpeed.Length();
+                double smellRange = (GetEntitySmellRange(entity) * windLength) + scentRange;
+                return entity.ServerPos.SquareDistanceTo(pos) <= smellRange * smellRange;
+            }
+
+            return false;
+        }
+
+
         public static double GetAiHearingAwarenessScalarForPlayerMovementType(EntityPlayer playerEnt)
         {
             if ( playerEnt.Swimming )
@@ -736,6 +771,17 @@ namespace ExpandedAiTasks
                 return true;
             }
                 
+            ///////////////
+            //SMELL CHECK//
+            ///////////////
+            if ( GetEntitySmellRange( searchingEntity ) > 0 )
+            {
+                if( CanEntitySmellPositionWithWind(searchingEntity, targetEntity.ServerPos.XYZ, 0) )
+                {
+                    AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, true);
+                    return true;
+                }
+            }
 
             //////////////////////////
             ///EYE-TO-EYE LOS CHECK///

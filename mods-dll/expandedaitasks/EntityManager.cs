@@ -317,23 +317,34 @@ namespace ExpandedAiTasks
         {
             if ( entity is EntityProjectile )
             {
-                //Hack: It appears that the Vintage Story API might be firing OnEntitySpawned twice on the server.
-                //Until I can talk to the VS Devs about why that might be happning, we have to early out if we encounter
-                //The same ent id twice in a row.
-                if (entity.EntityId == lastProjectileEntIDAdded)
-                    return;
-
-                _meaEntityProjectiles.AddEntity(entity);
-                _meaEntityProjectilesInFlight.AddEntity(entity);
-
-                lastProjectileEntIDAdded = entity.EntityId;
+                RegisterEntityProjectile(entity);
             }
                 
         }
 
+        public static void RegisterEntityProjectile( Entity entity )
+        {
+            Debug.Assert(entity is EntityProjectile);
+            //Hack: It appears that the Vintage Story API might be firing OnEntitySpawned twice on the server.
+            //Until I can talk to the VS Devs about why that might be happning, we have to early out if we encounter
+            //The same ent id twice in a row.
+            if (entity.EntityId == lastProjectileEntIDAdded)
+                return;
+
+            _meaEntityProjectiles.AddEntity(entity);
+            _meaEntityProjectilesInFlight.AddEntity(entity);
+
+            lastProjectileEntIDAdded = entity.EntityId;
+        }
+
         public static void OnEntityDeath(Entity entity, DamageSource damageSource)
         {
-            Debug.Assert( !entity.Alive );
+            RegisterDeadEntity(entity);
+        }
+
+        public static void RegisterDeadEntity( Entity entity)
+        {
+            Debug.Assert(!entity.Alive);
 
             if (entity.ShouldDespawn)
                 return;
@@ -341,7 +352,7 @@ namespace ExpandedAiTasks
             //Hack: It appears that the Vintage Story API might be firing OnEntitySpawned twice on the server.
             //Until I can talk to the VS Devs about why that might be happning, we have to early out if we encounter
             //The same ent id twice in a row.
-            if(entity.EntityId == lastDeadEntIDAdded)
+            if (entity.EntityId == lastDeadEntIDAdded)
                 return;
 
             _meaEntityDead.AddEntity(entity);

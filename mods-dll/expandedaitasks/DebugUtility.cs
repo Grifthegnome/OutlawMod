@@ -129,6 +129,35 @@ namespace ExpandedAiTasks
             return false;
         }
 
+        public static void DebugDrawScentSystem(IWorldAccessor world, Vec3d smellPos, Vec3d scentPos, Vec3d smellToScent, Vec3d windDir )
+        {
+            BlockPos smellPosBlockPos = smellPos.AsBlockPos;
+            BlockPos scentPosBlockPos = scentPos.AsBlockPos;
+            BlockPos smellToScentBlockPos = (smellPos + (smellToScent * 2)).AsBlockPos;
+            BlockPos windDirBlockPos = (scentPos + (windDir * 2)).AsBlockPos;
+
+
+            // Debug visualization
+            List<BlockPos> blockPositions = new List<BlockPos>();
+            blockPositions.Add(smellPosBlockPos);
+            blockPositions.Add(scentPosBlockPos);
+            blockPositions.Add(smellToScentBlockPos);
+            blockPositions.Add(windDirBlockPos);
+
+            int colorSmell = ColorUtil.ColorFromRgba(255, 136, 0, 150);
+            int colorScent = ColorUtil.ColorFromRgba(0, 255, 0, 150);
+            int colorSmellToScent = ColorUtil.ColorFromRgba(255, 0, 0, 150);
+            int colorWind = ColorUtil.ColorFromRgba(0, 0, 255, 150);
+            List<int> colors = new List<int>();
+            colors.Add(colorSmell);
+            colors.Add(colorScent);
+            colors.Add(colorSmellToScent);
+            colors.Add(colorWind);
+
+            IPlayer player = world.AllOnlinePlayers[0];
+            world.HighlightBlocks(player, 2, blockPositions, colors, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Arbitrary);
+        }
+
         public static void DebugDrawBlockPath(  )
         {
             /*

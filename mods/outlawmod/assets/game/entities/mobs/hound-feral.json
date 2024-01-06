@@ -5,7 +5,10 @@
 	deadHitboxSize: { x: 1, y: 0.75 },
 	eyeHeight: 0.9,
 	drops: [],
-	attributes:{ hasNightVision: true },
+	attributes:{ 
+		hasNightVision: true,
+		smellRange: 20.0,
+	},
 	client: {
 		renderer: "Shape",
 		shape: { base: "entity/land/hound" },
