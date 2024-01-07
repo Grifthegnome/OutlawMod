@@ -49,7 +49,7 @@
             }
         }
 	},
-	maxstacksize: 1,
+	maxstacksize: 4,
 	heldTpIdleAnimation: "holdbothhands",
 	variantgroups: [
 		{ code: "type", states: ["looter", "poacher", "brigand", "yeoman" ] }
