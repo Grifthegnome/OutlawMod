@@ -43,13 +43,16 @@ namespace ExpandedAiTasks
         [HarmonyPostfix]
         static void OverrideOnEntityLoaded(Entity __instance)
         {
-            EntityManager.RegisterEntityWithEntityLedger(__instance);
+            if( __instance.Api.Side == EnumAppSide.Server )
+            {
+                EntityManager.RegisterEntityWithEntityLedger(__instance);
 
-            if (!__instance.Alive && !__instance.ShouldDespawn)
-                EntityManager.RegisterDeadEntity(__instance);
+                if (!__instance.Alive && !__instance.ShouldDespawn)
+                    EntityManager.RegisterDeadEntity(__instance);
 
-            if (__instance is EntityProjectile)
-                EntityManager.RegisterEntityProjectile(__instance);
+                if (__instance is EntityProjectile)
+                    EntityManager.RegisterEntityProjectile(__instance);
+            }
         }
     }
 

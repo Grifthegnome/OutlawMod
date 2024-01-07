@@ -21,9 +21,16 @@ namespace ExpandedAiTasks.Managers
                         |___/                   |___/       
  */
 
+    //This is a data structure that builds a search tree out of every entity in game by path code.
+    //It can quickly and efficiently return lists of entites matching either a complete or wildcard code.
+    //It is recomended that you only use this system in cases where searching for a narrow set of entities by name
+    //will return a smaller number of objects than using EnitityPartitions to search all entities in a radius.
+    //In short, if you are doing massive radius searches to find specific entities, try using this instead.
+    //Small radius EntityPartion searchs are likely still cheaper than this in many cases.
     public struct EntityLedger
     {
         private Dictionary<string, EntityLedgerEntry> ledgerEntries;
+        private EntityLedgerEntrySearchData searchData;
         long lastEntIDAdded = -1;
         long lastEntItemIDAdded = -1;
 
@@ -34,11 +41,7 @@ namespace ExpandedAiTasks.Managers
 
         public void AddEntityToLedger( Entity entity )
         {
-            //Hack: It appears that the Vintage Story API might be firing OnEntitySpawned twice on the server.
-            //Until I can talk to the VS Devs about why that might be happning, we have to early out if we encounter
-            //The same ent id twice in a row.
-            if (entity.EntityId == lastEntIDAdded)
-                return;
+            Debug.Assert(entity.EntityId != lastEntIDAdded);
 
             string codeStart = entity.FirstCodePart();
             AssetLocation searchCode = entity.Code;
@@ -78,7 +81,7 @@ namespace ExpandedAiTasks.Managers
             lastEntItemIDAdded = entity.EntityId;
         }
 
-        public List<Entity> GetAllEntitiesMatchingCode( AssetLocation assetLocation, EntityLedgerEntrySearchData searchData )
+        public List<Entity> GetAllEntitiesMatchingCode(AssetLocation assetLocation)
         {
             string codeStart = assetLocation.FirstCodePart();
 
@@ -89,140 +92,140 @@ namespace ExpandedAiTasks.Managers
 
             return EntityManager.emptyList;
         }
-    }
 
-    public struct EntityLedgerEntry
-    {
-        private AssetLocation assetLocation;
-        private ManagedEntityArray meaEntityLedgerEntry;
-        private Dictionary<string, EntityLedgerEntry> subLedgers = new Dictionary<string, EntityLedgerEntry>();
-        private EntityLedgerEntrySearchData searchData = new EntityLedgerEntrySearchData();
-        public EntityLedgerEntry( AssetLocation assetLocation, Entity entity, int pathLimit = -1 ) 
+        private struct EntityLedgerEntry
         {
-            string[] codeVariants = GetAllCodeVariantsForAssetLocation(assetLocation, pathLimit);
-            int pathDepth = codeVariants.Length - 1;
-
-            //Create Our Ledger Entry
-            this.assetLocation = new AssetLocation(codeVariants[0]);
-            meaEntityLedgerEntry = new ManagedEntityArray();
-            meaEntityLedgerEntry.AddEntity(entity);
-
-            if ( codeVariants.Length > 1 ) 
+            private AssetLocation assetLocation;
+            private ManagedEntityArray meaEntityLedgerEntry;
+            private Dictionary<string, EntityLedgerEntry> subLedgers = new Dictionary<string, EntityLedgerEntry>();
+            private EntityLedgerEntrySearchData searchData = new EntityLedgerEntrySearchData();
+            public EntityLedgerEntry(AssetLocation assetLocation, Entity entity, int pathLimit = -1)
             {
-                subLedgers.Add(codeVariants[1], new EntityLedgerEntry(new AssetLocation(codeVariants[codeVariants.Length - 1]), entity, pathDepth - 1));
-            }
-        }
+                string[] codeVariants = GetAllCodeVariantsForAssetLocation(assetLocation, pathLimit);
+                int pathDepth = codeVariants.Length - 1;
 
-        public void AddEntity( AssetLocation assetLocation, Entity entity, int pathLimit = -1 )
-        {
-            string[] codeVariants = GetAllCodeVariantsForAssetLocation( assetLocation, pathLimit );
-            int pathDepth = codeVariants.Length - 1;
+                //Create Our Ledger Entry
+                this.assetLocation = new AssetLocation(codeVariants[0]);
+                meaEntityLedgerEntry = new ManagedEntityArray();
+                meaEntityLedgerEntry.AddEntity(entity);
 
-            //Create Our Ledger Entry
-            meaEntityLedgerEntry.AddEntity(entity);
-
-            if (codeVariants.Length > 1)
-            {
-                if ( subLedgers.ContainsKey(codeVariants[1] ) )
-                    subLedgers[codeVariants[1]].AddEntity(new AssetLocation(codeVariants[codeVariants.Length - 1]), entity, pathDepth - 1);
-                else
+                if (codeVariants.Length > 1)
+                {
                     subLedgers.Add(codeVariants[1], new EntityLedgerEntry(new AssetLocation(codeVariants[codeVariants.Length - 1]), entity, pathDepth - 1));
+                }
             }
-        }
 
-        public List<Entity> GetAllEntitiesMatchingCode(AssetLocation assetLocation, EntityLedgerEntrySearchData searchData)
-        {
-            string shortString = assetLocation.ToShortString();
-            int pathDepth = shortString.Count(x => x == '-');
-            string[] codeVariants = GetAllCodeVariantsForAssetLocation(assetLocation, -1);
-
-            //Configure our static search data before beginning our search.
-            searchData.assetLocation = assetLocation;
-            searchData.codeVariants = codeVariants;
-            searchData.pathDepthMax = pathDepth + 1;
-            searchData.pathDepthCurrent = 0;
-            return CrawlLedgerEntryTree( searchData );
-        }
-
-        public List<Entity> CrawlLedgerEntryTree(EntityLedgerEntrySearchData searchData)
-        {
-            if ( searchData.assetLocation == assetLocation )
+            public void AddEntity(AssetLocation assetLocation, Entity entity, int pathLimit = -1)
             {
-                return meaEntityLedgerEntry.GetManagedList();
+                string[] codeVariants = GetAllCodeVariantsForAssetLocation(assetLocation, pathLimit);
+                int pathDepth = codeVariants.Length - 1;
+
+                //Create Our Ledger Entry
+                meaEntityLedgerEntry.AddEntity(entity);
+
+                if (codeVariants.Length > 1)
+                {
+                    if (subLedgers.ContainsKey(codeVariants[1]))
+                        subLedgers[codeVariants[1]].AddEntity(new AssetLocation(codeVariants[codeVariants.Length - 1]), entity, pathDepth - 1);
+                    else
+                        subLedgers.Add(codeVariants[1], new EntityLedgerEntry(new AssetLocation(codeVariants[codeVariants.Length - 1]), entity, pathDepth - 1));
+                }
             }
-            else
+
+            public List<Entity> GetAllEntitiesMatchingCode(AssetLocation assetLocation, EntityLedgerEntrySearchData searchData)
             {
-                searchData.pathDepthCurrent++;
+                string shortString = assetLocation.ToShortString();
+                int pathDepth = shortString.Count(x => x == '-');
+                string[] codeVariants = GetAllCodeVariantsForAssetLocation(assetLocation, -1);
 
-                if (searchData.pathDepthMax == searchData.pathDepthCurrent)
-                    return EntityManager.emptyList;
+                //Configure our static search data before beginning our search.
+                searchData.assetLocation = assetLocation;
+                searchData.codeVariants = codeVariants;
+                searchData.pathDepthMax = pathDepth + 1;
+                searchData.pathDepthCurrent = 0;
+                return CrawlLedgerEntryTree(searchData);
+            }
 
-                if (subLedgers.ContainsKey(searchData.codeVariants[searchData.pathDepthCurrent]))
-                    return subLedgers[searchData.codeVariants[searchData.pathDepthCurrent]].CrawlLedgerEntryTree(searchData);
+            public List<Entity> CrawlLedgerEntryTree(EntityLedgerEntrySearchData searchData)
+            {
+                if (searchData.assetLocation == assetLocation)
+                {
+                    return meaEntityLedgerEntry.GetManagedList();
+                }
                 else
-                    return EntityManager.emptyList;
+                {
+                    searchData.pathDepthCurrent++;
+
+                    if (searchData.pathDepthMax == searchData.pathDepthCurrent)
+                        return EntityManager.emptyList;
+
+                    if (subLedgers.ContainsKey(searchData.codeVariants[searchData.pathDepthCurrent]))
+                        return subLedgers[searchData.codeVariants[searchData.pathDepthCurrent]].CrawlLedgerEntryTree(searchData);
+                    else
+                        return EntityManager.emptyList;
+                }
             }
-        }
 
-        private string[] GetAllCodeVariantsForAssetLocation( AssetLocation assetLocation, int pathLimit = -1 ) 
-        {
-            string shortString = assetLocation.ToShortString();
-
-            int pathDepth = shortString.Count(x => x == '-');
-
-            if (pathLimit > -1)
-                pathDepth = Math.Min(pathDepth, pathLimit);
-
-            AssetLocation currentPath = assetLocation.Clone();
-            currentPath.Domain = ""; //Clear Domain;
-
-            //Generate the path name at every potential wildcard.
-            string[] codeVariants = new string[pathDepth + 1];
-            for (int i = pathDepth; i >= 0; i--)
+            private string[] GetAllCodeVariantsForAssetLocation(AssetLocation assetLocation, int pathLimit = -1)
             {
-                codeVariants[i] = currentPath.Path;
+                string shortString = assetLocation.ToShortString();
 
-                if (i < pathDepth)
-                    codeVariants[i] += "-*";
+                int pathDepth = shortString.Count(x => x == '-');
 
-                string endVariant = currentPath.EndVariant();
-                if (endVariant != "")
-                    currentPath = currentPath.WithoutPathAppendix("-" + endVariant);
+                if (pathLimit > -1)
+                    pathDepth = Math.Min(pathDepth, pathLimit);
+
+                AssetLocation currentPath = assetLocation.Clone();
+                currentPath.Domain = ""; //Clear Domain;
+
+                //Generate the path name at every potential wildcard.
+                string[] codeVariants = new string[pathDepth + 1];
+                for (int i = pathDepth; i >= 0; i--)
+                {
+                    codeVariants[i] = currentPath.Path;
+
+                    if (i < pathDepth)
+                        codeVariants[i] += "-*";
+
+                    string endVariant = currentPath.EndVariant();
+                    if (endVariant != "")
+                        currentPath = currentPath.WithoutPathAppendix("-" + endVariant);
+                }
+
+                return codeVariants;
             }
+        }
 
-            return codeVariants;
+        private struct EntityLedgerEntrySearchData
+        {
+            public AssetLocation assetLocation;
+            public string[] codeVariants;
+            public int pathDepthMax;
+            public int pathDepthCurrent;
         }
     }
-    
-    public struct EntityLedgerEntrySearchData
-    {
-        public AssetLocation assetLocation;
-        public string[] codeVariants;
-        public int pathDepthMax;
-        public int pathDepthCurrent;
-    }
- 
- /*   
-  _____       _   _ _           __  __                                   
- | ____|_ __ | |_(_) |_ _   _  |  \/  | __ _ _ __   __ _  __ _  ___ _ __ 
- |  _| | '_ \| __| | __| | | | | |\/| |/ _` | '_ \ / _` |/ _` |/ _ \ '__|
- | |___| | | | |_| | |_| |_| | | |  | | (_| | | | | (_| | (_| |  __/ |   
- |_____|_| |_|\__|_|\__|\__, | |_|  |_|\__,_|_| |_|\__,_|\__, |\___|_|   
-                        |___/                            |___/            
- */
 
-    //////////////////
-    //ENTITY MANAGER//
-    //////////////////
+    /*   
+     _____       _   _ _           __  __                                   
+    | ____|_ __ | |_(_) |_ _   _  |  \/  | __ _ _ __   __ _  __ _  ___ _ __ 
+    |  _| | '_ \| __| | __| | | | | |\/| |/ _` | '_ \ / _` |/ _` |/ _ \ '__|
+    | |___| | | | |_| | |_| |_| | | |  | | (_| | | | | (_| | (_| |  __/ |   
+    |_____|_| |_|\__|_|\__|\__, | |_|  |_|\__,_|_| |_|\__,_|\__, |\___|_|   
+                           |___/                            |___/            
+    */
+
     public static class EntityManager
     {
+        /////////////////
+        //ENTITY LEDGER//
+        /////////////////
         private static EntityLedger entityLedger = new EntityLedger();
         private static EntityLedger itemLedger = new EntityLedger();
-        private static EntityLedgerEntrySearchData searchData = new EntityLedgerEntrySearchData();
         public  static List<Entity> emptyList = new List<Entity>();
 
-
-        //Look at optimizing this down to projectiles that are in flight, by removing stuck projectiles.
+        /////////////////
+        //ENTITY ARRAYS//
+        /////////////////
         private static ManagedEntityArray _meaEntityProjectiles = new ManagedEntityArray();
         private static ManagedEntityArray _meaEntityProjectilesInFlight = new ManagedEntityArray();
         private static ManagedEntityArray _meaEntityDead = new ManagedEntityArray();
@@ -282,17 +285,16 @@ namespace ExpandedAiTasks.Managers
             {
                 entityLedger.AddEntityToLedger(entity);
             }
-            
         }
 
         public static List<Entity> GetAllEntitiesMatchingCode( AssetLocation assetLocation )
         {
-            return entityLedger.GetAllEntitiesMatchingCode(assetLocation, searchData);
+            return entityLedger.GetAllEntitiesMatchingCode(assetLocation);
         }
 
         public static List<Entity> GetAllEntityItemsMatchingCode( AssetLocation assetLocation ) 
         {
-            return itemLedger.GetAllEntitiesMatchingCode(assetLocation, searchData);
+            return itemLedger.GetAllEntitiesMatchingCode(assetLocation);
         }
 
         public static Entity GetNearestEntityItemMatchingCodes(Vec3d position, double radius, AssetLocation[] codes, ActionConsumable<Entity> matches = null)
