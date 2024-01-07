@@ -3,6 +3,7 @@ using HarmonyLib;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Vintagestory.GameContent;
+using ExpandedAiTasks.Managers;
 
 namespace ExpandedAiTasks
 {
@@ -22,7 +23,7 @@ namespace ExpandedAiTasks
             {
                 RegisterAiTasksOnServer();
                 IlluminationManager.Init(api as ICoreServerAPI);
-                AiUtility.Init();
+                AwarenessManager.Init();
                 api.Event.OnEntityDespawn += IlluminationManager.OnDespawn;
                 api.Event.OnEntityDespawn += AwarenessManager.OnDespawn;
 

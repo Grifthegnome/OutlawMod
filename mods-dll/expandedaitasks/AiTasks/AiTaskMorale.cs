@@ -8,6 +8,7 @@ using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
+using ExpandedAiTasks.Managers;
 
 namespace ExpandedAiTasks
 {
@@ -280,7 +281,7 @@ namespace ExpandedAiTasks
                 if (agent.HerdId == entity.HerdId)
                     return false;
 
-                if (!IsTargetableEntity(ent, moraleRange, ignoreEntityCode) || !AiUtility.IsAwareOfTarget(entity, ent, moraleRange, moraleRange))
+                if (!IsTargetableEntity(ent, moraleRange, ignoreEntityCode) || !AwarenessManager.IsAwareOfTarget(entity, ent, moraleRange, moraleRange))
                     return false;
             }
             else

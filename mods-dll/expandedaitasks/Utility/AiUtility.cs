@@ -8,8 +8,7 @@ using Vintagestory.API.Util;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Datastructures;
 using Vintagestory.GameContent;
-using System.Threading.Tasks;
-using System.Security.Cryptography.X509Certificates;
+using ExpandedAiTasks.Managers;
 
 namespace ExpandedAiTasks
 {
@@ -40,45 +39,11 @@ namespace ExpandedAiTasks
 
     public static class AiUtility
     {
-        //To Do: Make these attributes we can read from an AI file.
-        private const double AI_HEARING_AWARENESS_SNEAK_MODIFIER = 0.0;
-        private const double AI_HEARING_AWARENESS_STANDNG_MODIFIER = 1.0;
-        private const double AI_HEARING_AWARENESS_WALK_MODIFIER = 1.2;
-        private const double AI_HEARING_AWARENESS_SPRINT_MODIFIER = 2.0;
-        private const double AI_HEARING_AWARENESS_SWIMMING_MODIFIER = 0.0;
-
-        private const double AI_VISION_AWARENESS_SNEAK_MODIFIER = 0.20;
-        private const double AI_VISION_AWARENESS_STANDNG_MODIFIER = 0.5;
-        private const double AI_VISION_AWARENESS_WALK_MODIFIER = 1.0;
-        private const double AI_VISION_AWARENESS_SPRINT_MODIFIER = 1.0;
-
-        //To Do: Consider adding smell. (See if there is a concept of wind direction.)
-
-        private const double AI_HEARING_RANGE = 3.5;
-
-        private const double MAX_LIGHT_LEVEL = 22;//12;
-        private const double MIN_LIGHT_LEVEL = 4;
-        private const double MAX_LIGHT_LEVEL_DETECTION_DIST = 60;
-        private const double MIN_LIGHT_LEVEL_DETECTION_DIST = 2;
-
-        private const float HERD_ALERT_RANGE = 15;
-
-        //To Do: Consider narrowing AI FOV at night.
-        private const float AI_VISION_FOV = 120;
-        private const float AI_SCENT_WIND_FOV = 20;
-
         private const float ALWAYS_ALLOW_TELEPORT_BEYOND_RANGE_FROM_PLAYER = 80;
         private const float BLOCK_TELEPORT_WHEN_PLAYER_CLOSER_THAN = 30;
         private const float BLOCK_TELEPORT_AFTER_COMBAT_DURATION = 30000;
 
-        private const string BUTTERFLY_CODE = "butterfly";
-
-        private static List<string> alwaysIgnoreEntityCodes = new List<string>();
-
-        public static void Init()
-        {
-            alwaysIgnoreEntityCodes.Add(BUTTERFLY_CODE);
-        }
+        private const float HERD_ALERT_RANGE = 15;
 
         public static string GetAiTaskName( AiTaskBase task )
         {
@@ -97,7 +62,14 @@ namespace ExpandedAiTasks
             ent.WatchedAttributes.SetLong("guardedEntityId", entToGuarded.EntityId);
             ent.WatchedAttributes.MarkPathDirty("guardedEntityId");
         }
+        /*
+          _              _        _   _   _             _             
+         | |    __ _ ___| |_     / \ | |_| |_ __ _  ___| | _____ _ __ 
+         | |   / _` / __| __|   / _ \| __| __/ _` |/ __| |/ / _ \ '__|
+         | |__| (_| \__ \ |_   / ___ \ |_| || (_| | (__|   <  __/ |   
+         |_____\__,_|___/\__| /_/   \_\__|\__\__,_|\___|_|\_\___|_|   
 
+         */
         public static void SetLastAttacker( Entity ent, DamageSource damageSource)
         {
 
@@ -160,6 +132,55 @@ namespace ExpandedAiTasks
             return damageSource.SourceEntity is EntityProjectile;
         }
 
+        /*
+           ____                _           _     _   _ _   _ _ _ _         
+          / ___|___  _ __ ___ | |__   __ _| |_  | | | | |_(_) (_) |_ _   _ 
+         | |   / _ \| '_ ` _ \| '_ \ / _` | __| | | | | __| | | | __| | | |
+         | |__| (_) | | | | | | |_) | (_| | |_  | |_| | |_| | | | |_| |_| |
+          \____\___/|_| |_| |_|_.__/ \__,_|\__|  \___/ \__|_|_|_|\__|\__, |
+                                                                     |___/  
+        */
+
+        public static bool IsInCombat(Entity ent)
+        {
+            if (ent is EntityPlayer)
+                return false;
+
+            if (ent is EntityAgent)
+            {
+                AiTaskManager taskManager = ent.GetBehavior<EntityBehaviorTaskAI>().TaskManager;
+
+                if (taskManager != null)
+                {
+                    IAiTask[] activeTasks = taskManager.ActiveTasksBySlot;
+                    foreach (IAiTask task in activeTasks)
+                    {
+                        if (task is null)
+                            continue;
+
+                        if (task is AiTaskBaseTargetable)
+                        {
+                            AiTaskBaseTargetable baseTargetable = (AiTaskBaseTargetable)task;
+
+                            //If we are fleeing, we are in combat. (Not the same as morale)
+                            if (task is AiTaskFleeEntity)
+                                return true;
+
+                            //If not an agressive action.
+                            if (!baseTargetable.AggressiveTargeting)
+                                continue;
+
+                            //If we have a target entity and hostile intent, then we are in combat.
+                            if (baseTargetable.TargetEntity != null && baseTargetable.TargetEntity.Alive && !AreMembersOfSameHerd(ent, baseTargetable.TargetEntity))
+                                return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public static void UpdateLastTimeEntityInCombatMs( Entity ent )
         {
             ent.Attributes.SetDouble("lastTimeInCombatMs", ent.World.ElapsedMilliseconds);
@@ -178,6 +199,41 @@ namespace ExpandedAiTasks
             }
 
             return lastInCombatMs;
+        }
+
+        /*
+          __  __                 _        _   _ _   _ _ _ _         
+         |  \/  | ___  _ __ __ _| | ___  | | | | |_(_) (_) |_ _   _ 
+         | |\/| |/ _ \| '__/ _` | |/ _ \ | | | | __| | | | __| | | |
+         | |  | | (_) | | | (_| | |  __/ | |_| | |_| | | | |_| |_| |
+         |_|  |_|\___/|_|  \__,_|_|\___|  \___/ \__|_|_|_|\__|\__, |
+                                                              |___/ 
+         */
+
+        public static bool IsRoutingFromBattle(Entity ent)
+        {
+            if (ent is EntityPlayer)
+                return false;
+
+            if (ent is EntityAgent)
+            {
+                AiTaskManager taskManager = ent.GetBehavior<EntityBehaviorTaskAI>().TaskManager;
+
+                if (taskManager != null)
+                {
+                    List<IAiTask> tasks = taskManager.AllTasks;
+                    foreach (IAiTask task in tasks)
+                    {
+                        if (task is AiTaskMorale)
+                        {
+                            if (taskManager.IsTaskActive(task.Id))
+                                return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
 
         public static void UpdateLastTimeEntityFailedMoraleMs( Entity ent )
@@ -200,6 +256,29 @@ namespace ExpandedAiTasks
             return lastFailedMoraleMs;
         }
 
+        public static double CalculateInjuryRatio(Entity ent)
+        {
+            ITreeAttribute treeAttribute = ent.WatchedAttributes.GetTreeAttribute("health");
+
+            if (treeAttribute != null)
+            {
+                double currentHealth = treeAttribute.GetFloat("currenthealth"); ;
+                double maxHealth = treeAttribute.GetFloat("maxhealth"); ;
+
+                return (maxHealth - currentHealth) / maxHealth;
+            }
+
+            return 0.0;
+        }
+
+        /*
+             _    ___   _   _              _   _   _ _   _ _ _ _         
+            / \  |_ _| | | | | ___ _ __ __| | | | | | |_(_) (_) |_ _   _ 
+           / _ \  | |  | |_| |/ _ \ '__/ _` | | | | | __| | | | __| | | |
+          / ___ \ | |  |  _  |  __/ | | (_| | | |_| | |_| | | | |_| |_| |
+         /_/   \_\___| |_| |_|\___|_|  \__,_|  \___/ \__|_|_|_|\__|\__, |
+                                                                   |___/ 
+        */
         public static void SetMasterHerdList( Entity ent, List<Entity> herdList )
         {
             List<long> herdListEntIds = new List<long>();
@@ -283,7 +362,7 @@ namespace ExpandedAiTasks
                 {
                     if (herdMember.EntityId != alertEntity.EntityId && herdMember.HerdId == alertEntity.HerdId)
                     {
-                        if ( !requireAwarenessToNotify || IsAwareOfTarget(herdMember, alertEntity, alertRange, alertRange) )
+                        if ( !requireAwarenessToNotify || AwarenessManager.IsAwareOfTarget(herdMember, alertEntity, alertRange, alertRange) )
                         {
                             EntityTargetPairing targetPairing = new EntityTargetPairing(alertEntity, targetEntity);
                             herdMember.Notify("attackEntity", targetPairing);
@@ -297,87 +376,6 @@ namespace ExpandedAiTasks
         {
             //We can replace this with a Attribute in the future if we want.
             return HERD_ALERT_RANGE;
-        }
-
-        public static bool IsInCombat( Entity ent )
-        {
-            if (ent is EntityPlayer)
-                return false;
-
-            if ( ent is EntityAgent)
-            {
-                AiTaskManager taskManager = ent.GetBehavior<EntityBehaviorTaskAI>().TaskManager;
-
-                if (taskManager != null)
-                {
-                    IAiTask[] activeTasks = taskManager.ActiveTasksBySlot;
-                    foreach (IAiTask task in activeTasks)
-                    {
-                        if (task is null)
-                            continue;
-
-                        if (task is AiTaskBaseTargetable)
-                        {
-                            AiTaskBaseTargetable baseTargetable = (AiTaskBaseTargetable)task;
-
-                            //If we are fleeing, we are in combat. (Not the same as morale)
-                            if (task is AiTaskFleeEntity)
-                                return true;
-
-                            //If not an agressive action.
-                            if (!baseTargetable.AggressiveTargeting)
-                                continue;
-
-                            //If we have a target entity and hostile intent, then we are in combat.
-                            if (baseTargetable.TargetEntity != null && baseTargetable.TargetEntity.Alive && !AreMembersOfSameHerd(ent, baseTargetable.TargetEntity))
-                                return true;
-                        }
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        public static bool IsRoutingFromBattle(Entity ent)
-        {
-            if (ent is EntityPlayer)
-                return false;
-
-            if (ent is EntityAgent)
-            {
-                AiTaskManager taskManager = ent.GetBehavior<EntityBehaviorTaskAI>().TaskManager;
-
-                if (taskManager != null)
-                {
-                    List<IAiTask> tasks = taskManager.AllTasks;
-                    foreach (IAiTask task in tasks)
-                    {
-                        if (task is AiTaskMorale)
-                        {
-                            if (taskManager.IsTaskActive(task.Id))
-                                return true;
-                        }
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        public static double CalculateInjuryRatio( Entity ent )
-        {
-            ITreeAttribute treeAttribute = ent.WatchedAttributes.GetTreeAttribute("health");
-
-            if (treeAttribute != null)
-            {
-                double currentHealth = treeAttribute.GetFloat("currenthealth"); ;
-                double maxHealth = treeAttribute.GetFloat("maxhealth"); ;
-
-                return (maxHealth - currentHealth) / maxHealth;
-            }
-
-            return 0.0;
         }
 
         public static double CalculateHerdInjuryRatio(List<Entity> herdMembers)
@@ -417,7 +415,7 @@ namespace ExpandedAiTasks
             return percentLiving;
         }
 
-        public static bool AreMembersOfSameHerd( Entity ent1, Entity ent2 )
+        public static bool AreMembersOfSameHerd(Entity ent1, Entity ent2)
         {
             if (!(ent1 is EntityAgent))
                 return false;
@@ -431,18 +429,27 @@ namespace ExpandedAiTasks
             return agent1.HerdId == agent2.HerdId;
         }
 
-        public static List<Entity> GetHerdMembersInRangeOfPos( List<Entity> herdMembers, Vec3d pos, float range )
+        public static List<Entity> GetHerdMembersInRangeOfPos(List<Entity> herdMembers, Vec3d pos, float range)
         {
             List<Entity> herdMembersInRange = new List<Entity>();
-            foreach( Entity herdMember in herdMembers)
+            foreach (Entity herdMember in herdMembers)
             {
                 double distSqr = herdMember.ServerPos.XYZ.SquareDistanceTo(pos);
-                
+
                 if (distSqr <= range * range)
                     herdMembersInRange.Add(herdMember);
             }
             return herdMembersInRange;
         }
+
+        /*
+          ____  _                         _   _ _   _ _ _ _         
+         |  _ \| | __ _ _   _  ___ _ __  | | | | |_(_) (_) |_ _   _ 
+         | |_) | |/ _` | | | |/ _ \ '__| | | | | __| | | | __| | | |
+         |  __/| | (_| | |_| |  __/ |    | |_| | |_| | | | |_| |_| |
+         |_|   |_|\__,_|\__, |\___|_|     \___/ \__|_|_|_|\__|\__, |
+                        |___/                                 |___/ 
+         */
 
         public static bool IsPlayerWithinRangeOfPos(EntityPlayer player, Vec3d pos, float range)
         {
@@ -494,7 +501,16 @@ namespace ExpandedAiTasks
         private static Entity losTraceSourceEnt = null;
         private static Entity[] ignoreEnts = null;
 
-        public static bool CanEntSeePos( Entity ent, Vec3d pos, float fov = AI_VISION_FOV, Entity[] entsToIgnore = null)
+        /*
+          _     ___  ____    _   _ _   _ _ _ _         
+         | |   / _ \/ ___|  | | | | |_(_) (_) |_ _   _ 
+         | |  | | | \___ \  | | | | __| | | | __| | | |
+         | |__| |_| |___) | | |_| | |_| | | | |_| |_| |
+         |_____\___/|____/   \___/ \__|_|_|_|\__|\__, |
+                                                 |___/ 
+         */
+
+        public static bool CanEntSeePos( Entity ent, Vec3d pos, float fov = AwarenessManager.DEFAULT_AI_VISION_FOV, Entity[] entsToIgnore = null)
         {
             blockSel = null;
             entitySel = null;
@@ -556,15 +572,6 @@ namespace ExpandedAiTasks
             return true;
         }
 
-        public static Vec3d GetCenterMass( Entity ent)
-        {
-            if (ent.SelectionBox.Empty)
-                return ent.SidedPos.XYZ;
-
-            float heightOffset = ent.SelectionBox.Y2 - ent.SelectionBox.Y1;
-            return ent.SidedPos.XYZ.Add(0, heightOffset, 0);
-        }
-
         public static Vec3d GetEntityForwardViewVector(Entity ent, Vec3d pitchPoint)
         {
             if ( ent is EntityPlayer)
@@ -612,223 +619,15 @@ namespace ExpandedAiTasks
             Vec3d aheadPos = eyePos.AheadCopy(1, pitch, ent.ServerPos.Yaw + (90 * (Math.PI / 180)));
             return (aheadPos - eyePos).Normalize();
         }
-
-        public static float GetEntitySmellRange(Entity entity)
-        {
-            if (entity.Properties.Attributes.KeyExists("smellRange"))
-            {
-                return entity.Properties.Attributes["smellRange"].AsFloat();
-            }
-
-            return 0.0f;
-        }
-
-        public static bool CanEntitySmellPositionWithWind( Entity entity, Vec3d pos, float scentRange )
-        {
-            Vec3d posWindSpeed = entity.World.BlockAccessor.GetWindSpeedAt(pos);
-
-            double maxScentDot = Math.Cos((AI_SCENT_WIND_FOV / 2) * (Math.PI / 180));
-
-            Vec3d entityToTarget = entity.ServerPos.XYZ - pos;
-            entityToTarget.Normalize();
-
-            double dot = entityToTarget.Dot(posWindSpeed.Clone().Normalize());
-
-            //DebugUtility.DebugDrawScentSystem(entity.World, entity.ServerPos.XYZ, pos, entityToTarget, posWindSpeed);
-
-            if (dot > maxScentDot)
-            {
-                double windLength = posWindSpeed.Length();
-                double smellRange = (GetEntitySmellRange(entity) * windLength) + scentRange;
-                return entity.ServerPos.SquareDistanceTo(pos) <= smellRange * smellRange;
-            }
-
-            return false;
-        }
-
-
-        public static double GetAiHearingAwarenessScalarForPlayerMovementType(EntityPlayer playerEnt)
-        {
-            if ( playerEnt.Swimming )
-            {
-                return AI_HEARING_AWARENESS_SWIMMING_MODIFIER;
-            }
-            else if (playerEnt.Controls.Sneak && playerEnt.OnGround)
-            {
-                return AI_HEARING_AWARENESS_SNEAK_MODIFIER;
-            }
-            else if (playerEnt.Controls.Sprint && playerEnt.OnGround)
-            {
-                return AI_HEARING_AWARENESS_SPRINT_MODIFIER;
-            }
-            else if (playerEnt.Controls.TriesToMove && playerEnt.OnGround)
-            {
-                return AI_HEARING_AWARENESS_WALK_MODIFIER;
-            }
-
-            return AI_HEARING_AWARENESS_STANDNG_MODIFIER;
-        }
-
-        public static double GetAiVisionAwarenessScalarForPlayerMovementType(EntityPlayer playerEnt)
-        {
-            if (playerEnt.Controls.Sneak && playerEnt.OnGround)
-            {
-                return AI_VISION_AWARENESS_SNEAK_MODIFIER;
-            }
-            else if (playerEnt.Controls.Sprint && playerEnt.OnGround)
-            {
-                return AI_VISION_AWARENESS_SPRINT_MODIFIER;
-            }
-            else if (playerEnt.Controls.TriesToMove && playerEnt.OnGround)
-            {
-                return AI_VISION_AWARENESS_WALK_MODIFIER;
-            }
-
-            return AI_VISION_AWARENESS_STANDNG_MODIFIER;
-        }
-
-        public static bool EntityHasNightVison( Entity entity )
-        {
-            if ( entity.Properties.Attributes.KeyExists("hasNightVision") )
-            {
-                return entity.Properties.Attributes["hasNightVision"].AsBool();
-            }
-
-            return false;
-        }
-
-        //TO DO: OPTIMIZE THE LIGHT CHECKING PORTION OF THIS FUNCTION SO IT ONLY RUNS ONCE PER FRAME, IF POSSIBLE.
-        //1. We shouldn't run the light check multiple times per frame. Because we are running n number of light checks per n number of HasLOSContactWithTarget calls per frame.
-        //2. We should make sure this function is only called where it needs to be called, it is called by the melee function and HasDirectContact may be a better option there.
-        //3. This function does many similar things to CanSense, but gets called seperately, we need to determine whether the two should remain seperate.
-        public static bool IsAwareOfTarget(Entity searchingEntity, Entity targetEntity, float maxDist, float maxVerDist)
-        {
-            //Bulk ignore entities that we just don't care about, like butterflies.
-            if (EntityCodeInList(targetEntity, alwaysIgnoreEntityCodes))
-                return false;
-
-            //We cannot percieve ourself as a target.
-            if (searchingEntity == targetEntity)
-                return false;
-
-            //If no players are within a reasonable range, don't spot anything just return true to save overhead.
-            if (!AiUtility.IsAnyPlayerWithinRangeOfPos(targetEntity.ServerPos.XYZ, 250, targetEntity.World))
-                return false;
-
-            //Because traces and light checks are expensive, see if we have already run this calculation this frame and
-            //if we have, use the saved value for the entity. This will prevent redundant calls to get the same data.
-            if (AwarenessManager.EntityHasAwarenessEntry(searchingEntity))
-            {
-                if (AwarenessManager.EntityHasAwarenessEntryForTargetEntity(searchingEntity, targetEntity) )
-                {
-                    if (!AwarenessManager.EntityAwarenessEntryForTargetEntityIsStale(searchingEntity, targetEntity))
-                    {
-                        return AwarenessManager.GetEntityAwarenessForTargetEntity(searchingEntity, targetEntity);
-                    }
-                }
-            }
-
-            Cuboidd cuboidd = targetEntity.SelectionBox.ToDouble().Translate(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
-            Vec3d selectionBoxMidPoint = searchingEntity.ServerPos.XYZ.Add(0.0, searchingEntity.SelectionBox.Y2 / 2f, 0.0).Ahead(searchingEntity.SelectionBox.XSize / 2f, 0f, searchingEntity.ServerPos.Yaw);
-            double shortestDist = cuboidd.ShortestDistanceFrom(selectionBoxMidPoint);
-            double shortestVertDist = Math.Abs(cuboidd.ShortestVerticalDistanceFrom(selectionBoxMidPoint.Y));
-
-            //////////////////////////
-            ///BASIC DISTANCE CHECK///
-            //////////////////////////
-
-            //Scale Ai Awareness Based on How the player is Moving;
-            double aiAwarenessHearingScalar = 1.0;
-            double aiAwarenessVisionScalar = 1.0;
-
-            if (targetEntity is EntityPlayer)
-            {
-                aiAwarenessHearingScalar = GetAiHearingAwarenessScalarForPlayerMovementType((EntityPlayer)targetEntity);
-                aiAwarenessVisionScalar = GetAiVisionAwarenessScalarForPlayerMovementType((EntityPlayer)targetEntity);
-            }
-
-            double shortestHearingDist = shortestDist * aiAwarenessHearingScalar;
-            double shortestHearingVertDist = shortestVertDist * aiAwarenessHearingScalar;
-            double shortestVisionDist = shortestDist * aiAwarenessVisionScalar;
-            double shortestVisionVertDist = shortestVertDist * aiAwarenessVisionScalar;
-
-            if (shortestDist >= (double)maxDist || shortestVertDist >= (double)maxVerDist)
-            {
-                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, false);
-                return false;
-            }
-                
-
-            ///////////////////
-            ///HEARING CHECK///
-            ///////////////////
-
-            //if we can hear the target moving, enage 
-            double aiHearingRange = AI_HEARING_RANGE * aiAwarenessHearingScalar;
-            if (shortestDist <= aiHearingRange && targetEntity.ServerPos.Motion.LengthSq() > 0)
-            {
-                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, true);
-                return true;
-            }
-                
-            ///////////////
-            //SMELL CHECK//
-            ///////////////
-            if ( GetEntitySmellRange( searchingEntity ) > 0 )
-            {
-                if( CanEntitySmellPositionWithWind(searchingEntity, targetEntity.ServerPos.XYZ, 0) )
-                {
-                    AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, true);
-                    return true;
-                }
-            }
-
-            //////////////////////////
-            ///EYE-TO-EYE LOS CHECK///
-            //////////////////////////
-            //If we don't have direct line of sight to the target's eyes.
-            Entity[] ignoreEnts = { targetEntity };
-            if (!AiUtility.CanEntSeePos(searchingEntity, targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0), AI_VISION_FOV, ignoreEnts))
-            {
-                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, false);
-                return false;
-            }
-                
-
-            /////////////////
-            ///LIGHT CHECK///
-            /////////////////
-
-            //If this Ai can see in the dark, we don't need to check lights.
-            if (EntityHasNightVison( searchingEntity ) )
-            {
-                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, true);
-                return true;
-            }
-                
-
-            //If no players are within a close range, don't bother with illumination checks.
-            if (!AiUtility.IsAnyPlayerWithinRangeOfPos(targetEntity.ServerPos.XYZ, 60, targetEntity.World))
-            {
-                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, true);
-                return true;
-            }
-                
-
-            //This ensures we only run one full illumination update every 500ms.
-            int lightLevel = IlluminationManager.GetIlluminationLevelForEntity(targetEntity);
-            double lightLevelDist = MathUtility.GraphClampedValue(MIN_LIGHT_LEVEL, MAX_LIGHT_LEVEL, MIN_LIGHT_LEVEL_DETECTION_DIST, MAX_LIGHT_LEVEL_DETECTION_DIST, (double)lightLevel);
-            double lightLevelVisualAwarenessDist = lightLevelDist * aiAwarenessVisionScalar;
-
-            if (shortestDist <= lightLevelVisualAwarenessDist)
-            {
-                AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, true);
-                return true;
-            }
-
-            AwarenessManager.UpdateOrCreateEntityAwarenessEntryForTargetEntity(searchingEntity, targetEntity, false);
-            return false;
-        }
+      
+        /*
+          _____    _                       _     _   _ _   _ _ _ _         
+         |_   _|__| | ___ _ __   ___  _ __| |_  | | | | |_(_) (_) |_ _   _ 
+           | |/ _ \ |/ _ \ '_ \ / _ \| '__| __| | | | | __| | | | __| | | |
+           | |  __/ |  __/ |_) | (_) | |  | |_  | |_| | |_| | | | |_| |_| |
+           |_|\___|_|\___| .__/ \___/|_|   \__|  \___/ \__|_|_|_|\__|\__, |
+                         |_|                                         |___/          
+        */
 
         public static void TryTeleportToEntity(Entity entityToTeleport, Entity targetEntity )
         {
@@ -896,6 +695,23 @@ namespace ExpandedAiTasks
             }
 
             return null;
+        }
+
+        /*
+           ____                           _   _   _ _   _ _ _ _         
+          / ___| ___ _ __   ___ _ __ __ _| | | | | | |_(_) (_) |_ _   _ 
+         | |  _ / _ \ '_ \ / _ \ '__/ _` | | | | | | __| | | | __| | | |
+         | |_| |  __/ | | |  __/ | | (_| | | | |_| | |_| | | | |_| |_| |
+          \____|\___|_| |_|\___|_|  \__,_|_|  \___/ \__|_|_|_|\__|\__, |
+                                                                  |___/ 
+        */
+        public static Vec3d GetCenterMass(Entity ent)
+        {
+            if (ent.SelectionBox.Empty)
+                return ent.SidedPos.XYZ;
+
+            float heightOffset = ent.SelectionBox.Y2 - ent.SelectionBox.Y1;
+            return ent.SidedPos.XYZ.Add(0, heightOffset, 0);
         }
 
         public static bool LocationInLiquid(IWorldAccessor world, Vec3d pos)

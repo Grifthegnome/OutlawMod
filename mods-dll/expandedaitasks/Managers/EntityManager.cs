@@ -8,13 +8,19 @@ using Vintagestory.GameContent;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
-using System.IO;
+using ExpandedAiTasks.DataTypes;
 
-namespace ExpandedAiTasks
+namespace ExpandedAiTasks.Managers
 {
-    //////////////////
-    //ENTITY LEDGERS//
-    //////////////////
+ /*
+  _____       _   _ _           _             _                     
+ | ____|_ __ | |_(_) |_ _   _  | |    ___  __| | __ _  ___ _ __ ___ 
+ |  _| | '_ \| __| | __| | | | | |   / _ \/ _` |/ _` |/ _ \ '__/ __|
+ | |___| | | | |_| | |_| |_| | | |__|  __/ (_| | (_| |  __/ |  \__ \
+ |_____|_| |_|\__|_|\__|\__, | |_____\___|\__,_|\__, |\___|_|  |___/
+                        |___/                   |___/       
+ */
+
     public struct EntityLedger
     {
         private Dictionary<string, EntityLedgerEntry> ledgerEntries;
@@ -195,7 +201,15 @@ namespace ExpandedAiTasks
         public int pathDepthMax;
         public int pathDepthCurrent;
     }
-
+ 
+ /*   
+  _____       _   _ _           __  __                                   
+ | ____|_ __ | |_(_) |_ _   _  |  \/  | __ _ _ __   __ _  __ _  ___ _ __ 
+ |  _| | '_ \| __| | __| | | | | |\/| |/ _` | '_ \ / _` |/ _` |/ _ \ '__|
+ | |___| | | | |_| | |_| |_| | | |  | | (_| | | | | (_| | (_| |  __/ |   
+ |_____|_| |_|\__|_|\__|\__, | |_|  |_|\__,_|_| |_|\__,_|\__, |\___|_|   
+                        |___/                            |___/            
+ */
 
     //////////////////
     //ENTITY MANAGER//

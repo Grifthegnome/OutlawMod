@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Collections.Generic;
-using Vintagestory.API;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
-using Vintagestory.API.Server;
-using Vintagestory.API.Util;
 using Vintagestory.GameContent;
-using Vintagestory.API.Client;
+using ExpandedAiTasks.Managers;
 
 namespace ExpandedAiTasks
 {
@@ -300,7 +297,7 @@ namespace ExpandedAiTasks
             if (!IsTargetableEntity(ent, range, ignoreEntityCode))
                 return false;
 
-            return AiUtility.IsAwareOfTarget(entity, ent, range, range);
+            return AwarenessManager.IsAwareOfTarget(entity, ent, range, range);
         }
 
         public float MinDistanceToTarget()
@@ -379,7 +376,7 @@ namespace ExpandedAiTasks
             bool canSeeTarget = true;
 
             if (pursueLastKnownPosition)
-                canSeeTarget = AiUtility.IsAwareOfTarget(entity,targetEntity, pursueRange, pursueRange);
+                canSeeTarget = AwarenessManager.IsAwareOfTarget(entity,targetEntity, pursueRange, pursueRange);
 
             Vec3d pathToPos = !pursueLastKnownPosition || canSeeTarget ? targetPos : lastKnownPos;
             Vec3d clampedPathPos = AiUtility.ClampPositionToGround(world, pathToPos, 15);
@@ -1059,7 +1056,7 @@ namespace ExpandedAiTasks
             if (!IsEntityTargetableByPack(ent, range))
                 return true;
 
-            if (!AiUtility.IsAwareOfTarget(entity, ent, pursueRange, pursueRange))
+            if (!AwarenessManager.IsAwareOfTarget(entity, ent, pursueRange, pursueRange))
                 return true;
 
             //Don't Chase Ai that are already routing.

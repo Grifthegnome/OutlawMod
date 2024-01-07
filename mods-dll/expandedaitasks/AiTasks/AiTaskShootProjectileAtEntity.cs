@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Collections.Generic;
-using Vintagestory.API;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Config;
-using Vintagestory.API.Server;
-using Vintagestory.API.Util;
 using Vintagestory.GameContent;
-using Vintagestory.API.Client;
-using System.Text;
+using ExpandedAiTasks.Managers;
 
 namespace ExpandedAiTasks
 {
@@ -172,13 +167,13 @@ namespace ExpandedAiTasks
                 attackedByEntity = null;
             }
 
-            if (retaliateAttacks && attackedByEntity != null && attackedByEntity.Alive && IsTargetableEntity(attackedByEntity, range, true) && AiUtility.IsAwareOfTarget(entity, attackedByEntity, range, vertRange))
+            if (retaliateAttacks && attackedByEntity != null && attackedByEntity.Alive && IsTargetableEntity(attackedByEntity, range, true) && AwarenessManager.IsAwareOfTarget(entity, attackedByEntity, range, vertRange))
             {
                 targetEntity = attackedByEntity;
             }
             else if (guardTargetAttackedByEntity != null && guardTargetAttackedByEntity.Alive)
             {
-                if (AiUtility.IsAwareOfTarget(entity, guardTargetAttackedByEntity, range, vertRange))
+                if (AwarenessManager.IsAwareOfTarget(entity, guardTargetAttackedByEntity, range, vertRange))
                     targetEntity = guardTargetAttackedByEntity;
             }
             else
@@ -188,7 +183,7 @@ namespace ExpandedAiTasks
 
             if (targetEntity == null || !targetEntity.Alive)
             {
-                targetEntity = partitionUtil.GetNearestInteractableEntity(entity.ServerPos.XYZ, range, (e) => IsTargetableEntity(e, range) && AiUtility.IsAwareOfTarget(entity, e, range, vertRange));
+                targetEntity = partitionUtil.GetNearestInteractableEntity(entity.ServerPos.XYZ, range, (e) => IsTargetableEntity(e, range) && AwarenessManager.IsAwareOfTarget(entity, e, range, vertRange));
             }
 
             //Reset our zeroing accuracy. (May need changes to play nice with LKP)
@@ -237,7 +232,7 @@ namespace ExpandedAiTasks
             didShoot = false;
             stopNow = false;
 
-            if ( fireOnLastKnownPosition && AiUtility.IsAwareOfTarget(entity, targetEntity, maxDist, maxVertDist))
+            if ( fireOnLastKnownPosition && AwarenessManager.IsAwareOfTarget(entity, targetEntity, maxDist, maxVertDist))
             {
                 targetLKP = targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0);
                 lastTimeSeenTarget = entity.World.ElapsedMilliseconds;
@@ -275,7 +270,7 @@ namespace ExpandedAiTasks
             if (entity.Swimming)
                 return false;
 
-            if ( fireOnLastKnownPosition && AiUtility.IsAwareOfTarget(entity, targetEntity, maxDist, maxVertDist))
+            if ( fireOnLastKnownPosition && AwarenessManager.IsAwareOfTarget(entity, targetEntity, maxDist, maxVertDist))
             {
                 targetLKP = targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0);
                 lastTimeSeenTarget = entity.World.ElapsedMilliseconds;
@@ -642,7 +637,7 @@ namespace ExpandedAiTasks
                     Entity herdMember = targetPairing.entityTargeting;
                     Entity newTarget = targetPairing.targetEntity;
 
-                    if (newTarget == null || !IsTargetableEntity(newTarget, maxDist, true) || !AiUtility.IsAwareOfTarget(entity, newTarget, maxDist, maxVertDist))
+                    if (newTarget == null || !IsTargetableEntity(newTarget, maxDist, true) || !AwarenessManager.IsAwareOfTarget(entity, newTarget, maxDist, maxVertDist))
                         return false;
 
                     //Handle case where a teammate asks us to attack a target, but we have no ammo.

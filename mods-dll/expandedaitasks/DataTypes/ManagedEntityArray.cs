@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 
-namespace ExpandedAiTasks
+namespace ExpandedAiTasks.DataTypes
 {
     public struct ManagedEntityArray
     {

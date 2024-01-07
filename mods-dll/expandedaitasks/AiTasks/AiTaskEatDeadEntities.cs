@@ -9,6 +9,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
+using ExpandedAiTasks.Managers;
 
 namespace ExpandedAiTasks
 {
@@ -193,8 +194,8 @@ namespace ExpandedAiTasks
             //Depending on how rotten the dead thing is we can detect it from farther away.
             //If it is down wind from us, add any smelling range bonus we have to the detect distance.
             double detectRange = GetDetectionRangeForEnt(e);
-            if (AiUtility.CanEntitySmellPositionWithWind(entity, e.ServerPos.XYZ, (float)detectRange))
-                detectRange += AiUtility.GetEntitySmellRange(entity);
+            if (AwarenessManager.CanEntitySmellPositionWithWind(entity, e.ServerPos.XYZ, (float)detectRange))
+                detectRange += AwarenessManager.GetEntitySmellRange(entity);
 
             if (entity.ServerPos.SquareDistanceTo(e.ServerPos) > detectRange * detectRange)
                 return false;
