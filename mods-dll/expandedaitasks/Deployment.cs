@@ -21,18 +21,23 @@ namespace ExpandedAiTasks
 
             if ( api.Side == EnumAppSide.Server )
             {
+                ICoreServerAPI serverAPI = api as ICoreServerAPI;
+
                 RegisterAiTasksOnServer();
                 IlluminationManager.Init(api as ICoreServerAPI);
                 AwarenessManager.Init();
-                api.Event.OnEntityDespawn += IlluminationManager.OnDespawn;
-                api.Event.OnEntityDespawn += AwarenessManager.OnDespawn;
+                serverAPI.Event.OnEntityDespawn += IlluminationManager.OnDespawn;
+                serverAPI.Event.OnEntityDespawn += AwarenessManager.OnDespawn;
 
-                api.Event.OnEntityDeath += AwarenessManager.OnDeath;
+                serverAPI.Event.OnEntityDeath += AwarenessManager.OnDeath;
 
                 //Consolidate all of these into one call.
-                api.Event.OnEntitySpawn += EntityManager.RegisterEntityWithEntityLedger;
-                api.Event.OnEntitySpawn += EntityManager.OnEntityProjectileSpawn;
-                api.Event.OnEntityDeath += EntityManager.OnEntityDeath;
+                serverAPI.Event.OnEntitySpawn += EntityManager.RegisterEntityWithEntityLedger;
+                serverAPI.Event.OnEntitySpawn += EntityManager.OnEntityProjectileSpawn;
+                serverAPI.Event.OnEntityDeath += EntityManager.OnEntityDeath;
+
+                //Set up a timer to clean the dibs system every minute.
+                serverAPI.Event.Timer(EntityManager.CleanDibsSystem, 60.0f);
             }
 
 

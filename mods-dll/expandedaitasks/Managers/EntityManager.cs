@@ -205,6 +205,257 @@ namespace ExpandedAiTasks.Managers
         }
     }
 
+    /*
+      _____       _   _ _         ____  _ _         ____            _                 
+     | ____|_ __ | |_(_) |_ _   _|  _ \(_) |__  ___/ ___| _   _ ___| |_ ___ _ __ ___  
+     |  _| | '_ \| __| | __| | | | | | | | '_ \/ __\___ \| | | / __| __/ _ \ '_ ` _ \ 
+     | |___| | | | |_| | |_| |_| | |_| | | |_) \__ \___) | |_| \__ \ ||  __/ | | | | |
+     |_____|_| |_|\__|_|\__|\__, |____/|_|_.__/|___/____/ \__, |___/\__\___|_| |_| |_|
+                            |___/                         |___/                       
+     */
+
+    public enum EDibsReason
+    {
+        Eat,
+        Attack,
+        Heal,
+        Pickup,
+        Follow,
+    }
+
+    //To Do: Me need to figure out how we get null Dibsed Entities and Null Claimant Entities Out of the System.
+    //We may have to crawl and clean the tree from time to time so it doesn't get full of old entries.
+
+    //To Do: We need to figure out when to call our clean data functions.
+
+    //DOES THIS NEED TO BE A MODSYSYSTEM SO WE HAVE A TICK?
+
+    public struct EntityDibsDatabase
+    {
+        private Dictionary<Entity, EntityDibsData> dibsByEntity = new Dictionary<Entity, EntityDibsData>();
+
+        static List<EDibsReason> staleReasons = new List<EDibsReason>();
+        static List<Entity> staleClaimants = new List<Entity>();
+
+        public EntityDibsDatabase()
+        {
+
+        }
+
+        public void CallDibsOnEntity(Entity claimant, Entity target, EDibsReason reason, long durationMs)
+        {
+            if (dibsByEntity.ContainsKey(target))
+            {
+                dibsByEntity[target].AddOrUpdateDibsDataForClaimant(claimant, reason, durationMs);
+            }
+            else
+            {
+                EntityDibsData dibsData = new EntityDibsData(claimant, target, reason, durationMs);
+                dibsByEntity.Add(target, dibsData);
+            }
+        }
+
+        public bool HasDibsOnEntity(Entity claimant, Entity target, EDibsReason reason)
+        {
+            if (dibsByEntity.ContainsKey(target))
+            {
+                CleanData(target);
+                if (dibsByEntity[target].dibsByReason.ContainsKey(reason))
+                {
+                    if (dibsByEntity[target].dibsByReason[reason].dibsTimeoutByEntity.ContainsKey(claimant))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public bool IsEntityClaimedForAnyReason(Entity target)
+        {
+            if (dibsByEntity.ContainsKey(target))
+            {
+                CleanData(target);
+
+                if (dibsByEntity[target].dibsByReason.Count > 0)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public int CountEntityClaimantsForAnyReason( Entity target )
+        {
+            int claimantCount = 0;
+            
+            if (dibsByEntity.ContainsKey(target))
+            {
+                CleanData(target);
+
+                foreach ( EDibsReason reason in dibsByEntity[target].dibsByReason.Keys )
+                {
+                    claimantCount += dibsByEntity[target].dibsByReason[reason].dibsTimeoutByEntity.Count;
+                }
+            }
+
+            return claimantCount;
+        }
+
+        public bool IsEntityClaimedForReason(Entity target, EDibsReason reason )
+        {              
+
+            if ( dibsByEntity.ContainsKey(target) )
+            {
+                CleanData(target);
+
+                if (dibsByEntity[target].dibsByReason.ContainsKey(reason) )
+                {
+                    if ( dibsByEntity[target].dibsByReason[reason].dibsTimeoutByEntity.Count() > 0 )
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        public int CountEntityClaimantsForReason(Entity target, EDibsReason reason)
+        {
+            int claimantCount = 0;
+
+            if (dibsByEntity.ContainsKey(target))
+            {
+                CleanData(target);
+
+                if (dibsByEntity[target].dibsByReason.ContainsKey (reason) ) 
+                {
+                    claimantCount += dibsByEntity[target].dibsByReason[reason].dibsTimeoutByEntity.Count;
+                }
+            }
+
+            return claimantCount;
+        }
+
+        public void CleanTree()
+        {
+            foreach( Entity target in dibsByEntity.Keys ) 
+            {
+                CleanData(target);
+            }
+        }
+
+        private void CleanData( Entity target )
+        {
+            //Walk and clean the tree of entries that are null, shouldDespawn, or timedout.
+            Debug.Assert( dibsByEntity.ContainsKey(target) );
+
+            dibsByEntity[target].CleanData(target.World.ElapsedMilliseconds);
+            
+            if ( target.ShouldDespawn || dibsByEntity[target].GetEntryCount() == 0)
+                dibsByEntity.Remove(target);
+        }
+
+        private struct EntityDibsData
+        {
+            public Dictionary<EDibsReason, DibsReasonEntry> dibsByReason = new Dictionary<EDibsReason, DibsReasonEntry>();
+
+            public EntityDibsData( Entity claimant, Entity target, EDibsReason reason, long duationMs )
+            {
+                AddOrUpdateDibsDataForClaimant(claimant, reason, duationMs);
+            }
+
+            public void AddOrUpdateDibsDataForClaimant( Entity claimant, EDibsReason reason, long durationMs )
+            {
+                if (dibsByReason.ContainsKey(reason) )
+                {
+                    dibsByReason[reason].AddOrUpdateClaimant(claimant, durationMs);
+                }
+                else
+                {
+                    DibsReasonEntry dibsReasonData = new DibsReasonEntry(claimant, durationMs);
+                    dibsByReason.Add(reason, dibsReasonData);
+                }
+            }
+
+            public int GetEntryCount()
+            {
+                return dibsByReason.Count;
+            }
+
+            public void CleanData( long elapsedMS )
+            {
+                int index = 0;
+                staleReasons.Clear();
+                foreach( EDibsReason reason in dibsByReason.Keys )
+                {
+                    dibsByReason[reason].CleanData(elapsedMS);
+                    
+                    if( dibsByReason[reason].GetEntryCount() == 0 )
+                        staleReasons.Add(reason);
+                    
+                    index++;
+                }
+
+                foreach( EDibsReason reason in staleReasons )
+                {
+                    dibsByReason.Remove(reason);
+                }
+            }
+
+            public struct DibsReasonEntry
+            {
+                public Dictionary<Entity, long> dibsTimeoutByEntity = new Dictionary<Entity, long>();
+
+                public DibsReasonEntry( Entity claimant, long durationMs )
+                {
+                    long timeoutMs = claimant.World.ElapsedMilliseconds + durationMs;
+                    dibsTimeoutByEntity.Add(claimant, timeoutMs);
+                }
+
+                public int GetEntryCount()
+                {
+                    return dibsTimeoutByEntity.Count;
+                }
+
+                public void AddOrUpdateClaimant( Entity claimant, long durationMs )
+                {
+                    long timeoutMs = claimant.World.ElapsedMilliseconds + durationMs;
+                    if ( dibsTimeoutByEntity.ContainsKey(claimant) )
+                    {
+                        dibsTimeoutByEntity[claimant] = timeoutMs;
+                    }
+                    else
+                    {
+                        dibsTimeoutByEntity.Add(claimant, timeoutMs);
+                    }
+                }
+
+                public void CleanData(long elapsedMS) 
+                {
+                    staleClaimants.Clear();
+
+                    int index = 0;
+                    foreach( Entity claimant in dibsTimeoutByEntity.Keys )
+                    {
+                        Debug.Assert( claimant != null );
+                        if (claimant.ShouldDespawn)
+                            staleClaimants.Add(claimant);
+                        else if (dibsTimeoutByEntity[claimant] < elapsedMS)
+                            staleClaimants.Add(claimant);
+
+                        index++;
+                    }
+
+                    foreach( Entity claimant in staleClaimants )
+                    {
+                        if (claimant != null)
+                            dibsTimeoutByEntity.Remove(claimant);
+                    }
+                }
+            }
+        }
+    }   
+
     /*   
      _____       _   _ _           __  __                                   
     | ____|_ __ | |_(_) |_ _   _  |  \/  | __ _ _ __   __ _  __ _  ___ _ __ 
@@ -222,6 +473,11 @@ namespace ExpandedAiTasks.Managers
         private static EntityLedger entityLedger = new EntityLedger();
         private static EntityLedger itemLedger = new EntityLedger();
         public  static List<Entity> emptyList = new List<Entity>();
+
+        ///////////////
+        //DIBS SYSTEM//
+        ///////////////
+        private static EntityDibsDatabase entityDibsDatabase = new EntityDibsDatabase();
 
         /////////////////
         //ENTITY ARRAYS//
@@ -428,5 +684,45 @@ namespace ExpandedAiTasks.Managers
 
             return nearestEntity;
         }
+
+        //////////////////
+        //DIBS FUNCTIONS//
+        //////////////////
+
+        public static void CallDibsOnEntity( Entity claimant, Entity target, EDibsReason reason, long durationMs )
+        {
+            entityDibsDatabase.CallDibsOnEntity(claimant, target, reason, durationMs);
+        }
+
+        public static bool HasDibsOnEntity( Entity claimant, Entity target, EDibsReason reason )
+        {
+            return entityDibsDatabase.HasDibsOnEntity(claimant, target, reason);
+        }
+
+        public static void CleanDibsSystem()
+        {
+            entityDibsDatabase.CleanTree();
+        }
+
+        public static bool IsEntityClaimedForAnyReason(Entity target)
+        {
+            return entityDibsDatabase.IsEntityClaimedForAnyReason(target);
+        }
+
+        public static int CountEntityClaimantsForAnyReason(Entity target)
+        {
+            return entityDibsDatabase.CountEntityClaimantsForAnyReason(target);
+        }
+
+        public static bool IsEntityClaimedForReason(Entity target, EDibsReason reason)
+        {
+            return entityDibsDatabase.IsEntityClaimedForReason(target, reason);
+        }
+
+        public static int CountEntityClaimantsForReason(Entity target, EDibsReason reason)
+        {
+            return entityDibsDatabase.CountEntityClaimantsForReason(target, reason);
+        }
+
     }
 }

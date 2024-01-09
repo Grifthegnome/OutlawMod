@@ -213,6 +213,8 @@
 						eatAnimMinInterval: 1.0,
 						eatAnimMaxInterval: 3.5,
 
+						maxEatersPerEntity: 3,
+
 						eatEveryting: true,
         				allowCannibalism: true,
 

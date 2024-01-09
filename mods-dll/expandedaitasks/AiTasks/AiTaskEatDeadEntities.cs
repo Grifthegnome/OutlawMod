@@ -28,6 +28,8 @@ namespace ExpandedAiTasks
         protected float eatAnimMinInterval = 1.0f;
         protected float eatAnimMaxInterval = 1.5f;
 
+        protected int maxEatersPerEntity = 1;
+
         protected bool eatEveryting = false;
         protected bool allowCannibalism = false;
 
@@ -86,6 +88,8 @@ namespace ExpandedAiTasks
             eatAnimation = taskConfig["eatAnimation"].AsString("eat");
             eatAnimMinInterval = taskConfig["eatAnimMinInterval"].AsFloat(1.0f);
             eatAnimMaxInterval = taskConfig["eatAnimMaxInterval"].AsFloat(1.5f);
+
+            maxEatersPerEntity = taskConfig["maxEatersPerEntity"].AsInt(1);
 
             eatEveryting = taskConfig["eatEveryting"].AsBool(false);
             allowCannibalism = taskConfig["allowCannibalism"].AsBool(false);
@@ -204,6 +208,12 @@ namespace ExpandedAiTasks
             if (lastTargetTime < entity.World.ElapsedMilliseconds + TARGET_RETRY_MS_TIME && lastTargetTime != -1.0)
                 return false;
 
+            int eatDibsCount = EntityManager.CountEntityClaimantsForReason(e, EDibsReason.Eat);
+
+            //If too many others have claimed this target, skip it.
+            if (eatDibsCount >= maxEatersPerEntity)
+                return false;
+
             if (ignoreEntityCode)
             {
                 return true;
@@ -294,6 +304,13 @@ namespace ExpandedAiTasks
                 return false;
 
             UpdateState();
+
+            //If too many other AI have claimed this entity for eating and we don't already have dibs, early out.
+            if ( EntityManager.CountEntityClaimantsForReason(targetEntity, EDibsReason.Eat) >= maxEatersPerEntity )
+            {
+                if( !EntityManager.HasDibsOnEntity( entity, targetEntity, EDibsReason.Eat ) )
+                    return false;
+            }
 
             //Turn to face target.
             Vec3f targetVec = new Vec3f();
@@ -452,6 +469,8 @@ namespace ExpandedAiTasks
             {
                 //Eating State
                 internalTaskState = eInternalTaskState.Eating;
+
+                EntityManager.CallDibsOnEntity( entity, TargetEntity, EDibsReason.Eat, (long)(eatDuration * 1000) );
 
                 if (moveAnimation != null)
                     entity.AnimManager.StopAnimation(moveAnimation);
