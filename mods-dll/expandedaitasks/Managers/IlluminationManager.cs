@@ -34,6 +34,11 @@ namespace ExpandedAiTasks.Managers
             partitionUtil = sapi.ModLoader.GetModSystem<EntityPartitioning>();
         }
 
+        public static void ShutdownCleanup()
+        {
+            illuminationData.Clear();
+        }
+
         public static void OnDespawn( Entity ent, EntityDespawnData despawnData )
         {
             if (illuminationData.ContainsKey( ent.EntityId ) )

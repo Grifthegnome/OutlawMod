@@ -30,16 +30,19 @@ namespace ExpandedAiTasks
                 serverAPI.Event.OnEntityDespawn += AwarenessManager.OnDespawn;
 
                 serverAPI.Event.OnEntityDeath += AwarenessManager.OnDeath;
-
-                //Consolidate all of these into one call.
-                serverAPI.Event.OnEntitySpawn += EntityManager.RegisterEntityWithEntityLedger;
-                serverAPI.Event.OnEntitySpawn += EntityManager.OnEntityProjectileSpawn;
                 serverAPI.Event.OnEntityDeath += EntityManager.OnEntityDeath;
 
                 //Set up a timer to clean the dibs system every minute.
                 serverAPI.Event.Timer(EntityManager.CleanDibsSystem, 60.0f);
-            }
 
+                serverAPI.Event.ServerRunPhase(EnumServerRunPhase.Shutdown, () => {
+                    //Clean up all manager stuff.
+                    //If we don't it persists between loads.
+                    EntityManager.ShutdownCleanup();
+                    AwarenessManager.ShutdownCleanup();
+                    IlluminationManager.ShutdownCleanup();
+                });
+            }
 
             RegisterAiTasksShared();
             RegisterEntityBehaviors(api);

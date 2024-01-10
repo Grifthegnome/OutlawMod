@@ -27,11 +27,11 @@ namespace ExpandedAiTasks
         }
     }
 
-    //////////////////////////////////////////////////////////////////
-    ///PATCHING TO ADD ENTITIES INTO ENTITY LEDGER ON LOAD FROM DISK//
-    //////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////
+    ///PATCHING TO ADD ENTITIES INTO ENTITY LEDGER ON INITIALIZE//
+    //////////////////////////////////////////////////////////////
     [HarmonyPatch(typeof(Entity))]
-    public class OnEntityLoadedOverride
+    public class AfterInitializedOverride
     {
         [HarmonyPrepare]
         static bool Prepare(MethodBase original, Harmony harmony)
@@ -39,23 +39,22 @@ namespace ExpandedAiTasks
             return true;
         }
 
-        [HarmonyPatch("OnEntityLoaded")]
+        [HarmonyPatch("AfterInitialized")]
         [HarmonyPostfix]
-        static void OverrideOnEntityLoaded(Entity __instance)
+        static void OverrideAfterInitialized(Entity __instance, bool onFirstSpawn)
         {
-            if( __instance.Api.Side == EnumAppSide.Server )
+            if (__instance.Api.Side == EnumAppSide.Server)
             {
                 EntityManager.RegisterEntityWithEntityLedger(__instance);
 
-                if (!__instance.Alive && !__instance.ShouldDespawn)
+                if (!__instance.Alive && !__instance.ShouldDespawn && !EntityManager.IsRegisteredAsDeadEntity(__instance))
                     EntityManager.RegisterDeadEntity(__instance);
 
-                if (__instance is EntityProjectile)
+                if (__instance is EntityProjectile && !EntityManager.IsRegisteredAsEntityProjectile(__instance))
                     EntityManager.RegisterEntityProjectile(__instance);
             }
         }
     }
-
 
     //////////////////////////////////////////////////////////////////////////////////////
     ///PATCHING TO ADD A UNIVERAL SET LOCATION FOR LAST ENTITY TO ATTACK ON ENTITY AGENT//

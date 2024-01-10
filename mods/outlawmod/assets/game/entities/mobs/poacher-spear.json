@@ -164,7 +164,6 @@
 					},
 					{
 						code: "morale",
-						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-feral" ],
 						priority: 5.0,
 						movespeed: 0.040,
 						cancelOnHurt: false,
@@ -175,13 +174,14 @@
 						moraleRange: 15,
 						useGroupMorale: true,
 						deathsImpactMorale: true,
-						canRoutFromAnyEnemy: true,
+						canRoutFromAnyEnemy: false,
 
 						entitySourcesOfFear: [
-							{ code: "player", fearWeight: 1.0},
+							{ code: "player", fearWeight: 0.1},
 							{ code: "looter", fearWeight: 0.05},
 							{ code: "bandit-*", fearWeight: -0.1},
 							{ code: "hound-feral", fearWeight: 0.05},
+							{ code: "hound-hunting", fearWeight: -0.1},
 						],
 						itemStackSourcesOfFear: [
 							{ code: "outlawhead-*", fearWeight: 0.2},
@@ -259,37 +259,34 @@
 						whenInEmotionState: "aggressiveondamage"
 
 					},
-					//Run from the player if we take damage.
+					//Keep distance from any target that approaches.
 					{
-						code: "fleeentity",
-						entityCodes: ["player", "drifter-*", "looter", "hound-feral", "humanoid-villager-*"],
-						priority: 3.5,
+						code: "morale",
+						priority: 3.0,
 						priorityForCancel: 4.0,
 						movespeed: 0.040,
-						seekingRange: 22,
-						cancelOnHurt: false,
-						fleeingDistance: 22,
-						fleeDurationMs: 30000,
+						cancelOnHurt: true,
+						routDistance: 14,
+						rallyTimeAfterRoutMs: 12000,
+						minMorale: -100.0,
+						maxMorale: -100.0,
+						moraleRange: 6,
+						useGroupMorale: false,
+						canRoutFromAnyEnemy: false,
+						tacticalRetreat: true,
+						
+						entitySourcesOfFear: [
+							{ code: "player", fearWeight: 1.0},
+							{ code: "looter", fearWeight: 1.0},
+							{ code: "hound-feral", fearWeight: 1.0},
+							{ code: "drifter-*", fearWeight: 1.0},
+
+							//Mods
+							{ code: "humanoid-villager-*", fearWeight: 1.0},						
+						],
+						
 						animation: "sprint",
-						animationSpeed: 1.0,
-						executionChance: 1.0,
-						soundStartMs: 650,
-						whenInEmotionState: "fleeondamage",
-						whenNotInEmotionState: "aggressiveondamage"
-					},
-					//Keep distance from the player when player approaches.
-					{
-						code: "fleeentity",
-						entityCodes: ["player", "drifter-*", "looter", "hound-feral", "humanoid-villager-*"],
-						priority: 3.0,
-						movespeed: 0.040,
-						seekingRange: 6,
-						cancelOnHurt: false,
-						fleeingDistance: 14,
-						fleeDurationMs: 12000,
-						animation: "sprint",
-						animationSpeed: 1.0,
-						executionChance: 1.0,
+						animationSpeed: 1,
 						whenNotInEmotionState: "aggressiveondamage"
 					},
 					//Seek game to hunt.

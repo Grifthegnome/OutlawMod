@@ -58,7 +58,7 @@ namespace ExpandedAiTasks.DataTypes
             List<Entity> compactedList = new List<Entity>();
             foreach (Entity entity in _managedEntityArray)
             {
-                if (entity != null)
+                if (entity != null && !entity.ShouldDespawn)
                     compactedList.Add(entity);
             }
 
@@ -77,7 +77,7 @@ namespace ExpandedAiTasks.DataTypes
             List<Entity> compactedList = new List<Entity>();
             foreach (Entity entity in _managedEntityArray)
             {
-                if (entity != null)
+                if (entity != null && !entity.ShouldDespawn)
                 {
                     if ( check(entity) )
                     {

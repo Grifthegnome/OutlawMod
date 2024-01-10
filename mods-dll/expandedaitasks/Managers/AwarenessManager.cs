@@ -92,6 +92,16 @@ namespace ExpandedAiTasks.Managers
             alwaysIgnoreEntityCodes.Add(BUTTERFLY_CODE);
         }
 
+        public static void ShutdownCleanup()
+        {
+            foreach ( Dictionary<long,AwarenessData> awarenessEntry in awarenessData.Values )
+            {
+                awarenessEntry.Clear();
+            }
+
+            awarenessData.Clear();
+        }
+
         public static bool EntityHasAwarenessEntry( Entity ent )
         {
             return awarenessData.ContainsKey(ent.EntityId);

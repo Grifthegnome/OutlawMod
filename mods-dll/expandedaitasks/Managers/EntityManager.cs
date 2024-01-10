@@ -8,6 +8,7 @@ using Vintagestory.GameContent;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Server;
 using ExpandedAiTasks.DataTypes;
 
 namespace ExpandedAiTasks.Managers
@@ -37,6 +38,19 @@ namespace ExpandedAiTasks.Managers
         public EntityLedger() 
         { 
             ledgerEntries = new Dictionary<string, EntityLedgerEntry>();
+        }
+
+        public void ShutdownCleanup()
+        {
+            foreach( EntityLedgerEntry entry in ledgerEntries.Values ) 
+            {
+                entry.ShutdownCleanup();
+            }
+
+            ledgerEntries.Clear();
+
+            lastEntIDAdded = -1;
+            lastEntItemIDAdded = -1;
         }
 
         public void AddEntityToLedger( Entity entity )
@@ -113,6 +127,18 @@ namespace ExpandedAiTasks.Managers
                 {
                     subLedgers.Add(codeVariants[1], new EntityLedgerEntry(new AssetLocation(codeVariants[codeVariants.Length - 1]), entity, pathDepth - 1));
                 }
+            }
+
+            public void ShutdownCleanup()
+            {
+                meaEntityLedgerEntry.Clear();
+                foreach( EntityLedgerEntry entry in subLedgers.Values )
+                {
+                    entry.ShutdownCleanup();
+                }
+
+                assetLocation = null;
+                subLedgers.Clear();
             }
 
             public void AddEntity(AssetLocation assetLocation, Entity entity, int pathLimit = -1)
@@ -206,13 +232,13 @@ namespace ExpandedAiTasks.Managers
     }
 
     /*
-      _____       _   _ _         ____  _ _         ____            _                 
-     | ____|_ __ | |_(_) |_ _   _|  _ \(_) |__  ___/ ___| _   _ ___| |_ ___ _ __ ___  
-     |  _| | '_ \| __| | __| | | | | | | | '_ \/ __\___ \| | | / __| __/ _ \ '_ ` _ \ 
-     | |___| | | | |_| | |_| |_| | |_| | | |_) \__ \___) | |_| \__ \ ||  __/ | | | | |
-     |_____|_| |_|\__|_|\__|\__, |____/|_|_.__/|___/____/ \__, |___/\__\___|_| |_| |_|
-                            |___/                         |___/                       
-     */
+      _____       _   _ _           ____  _ _           ____            _                 
+     | ____|_ __ | |_(_) |_ _   _  |  _ \(_) |__  ___  / ___| _   _ ___| |_ ___ _ __ ___  
+     |  _| | '_ \| __| | __| | | | | | | | | '_ \/ __| \___ \| | | / __| __/ _ \ '_ ` _ \ 
+     | |___| | | | |_| | |_| |_| | | |_| | | |_) \__ \  ___) | |_| \__ \ ||  __/ | | | | |
+     |_____|_| |_|\__|_|\__|\__, | |____/|_|_.__/|___/ |____/ \__, |___/\__\___|_| |_| |_|
+                            |___/                             |___/                                          
+    */
 
     public enum EDibsReason
     {
@@ -222,13 +248,6 @@ namespace ExpandedAiTasks.Managers
         Pickup,
         Follow,
     }
-
-    //To Do: Me need to figure out how we get null Dibsed Entities and Null Claimant Entities Out of the System.
-    //We may have to crawl and clean the tree from time to time so it doesn't get full of old entries.
-
-    //To Do: We need to figure out when to call our clean data functions.
-
-    //DOES THIS NEED TO BE A MODSYSYSTEM SO WE HAVE A TICK?
 
     public struct EntityDibsDatabase
     {
@@ -240,6 +259,16 @@ namespace ExpandedAiTasks.Managers
         public EntityDibsDatabase()
         {
 
+        }
+
+        public void ShutdownCleanup()
+        {
+            foreach(EntityDibsData dibsData in dibsByEntity.Values)
+            {
+                dibsData.ShutdownCleanup();
+            }
+
+            dibsByEntity.Clear();
         }
 
         public void CallDibsOnEntity(Entity claimant, Entity target, EDibsReason reason, long durationMs)
@@ -364,6 +393,16 @@ namespace ExpandedAiTasks.Managers
                 AddOrUpdateDibsDataForClaimant(claimant, reason, duationMs);
             }
 
+            public void ShutdownCleanup()
+            {
+                foreach( DibsReasonEntry reasonEntry in dibsByReason.Values )
+                {
+                    reasonEntry.ShutdownCleanup();
+                }
+
+                dibsByReason.Clear();
+            }
+
             public void AddOrUpdateDibsDataForClaimant( Entity claimant, EDibsReason reason, long durationMs )
             {
                 if (dibsByReason.ContainsKey(reason) )
@@ -410,6 +449,11 @@ namespace ExpandedAiTasks.Managers
                 {
                     long timeoutMs = claimant.World.ElapsedMilliseconds + durationMs;
                     dibsTimeoutByEntity.Add(claimant, timeoutMs);
+                }
+
+                public void ShutdownCleanup()
+                {
+                    dibsTimeoutByEntity.Clear();
                 }
 
                 public int GetEntryCount()
@@ -526,6 +570,24 @@ namespace ExpandedAiTasks.Managers
             }
         }
 
+        public static void ShutdownCleanup()
+        {
+            //Clean Up Managed Arrays
+            _meaEntityProjectiles.Clear();
+            _meaEntityProjectilesInFlight.Clear();
+            _meaEntityDead.Clear();
+
+            //Clean Up Dibs System
+            entityDibsDatabase.ShutdownCleanup();
+
+            //Unload Entity Ledger
+            entityLedger.ShutdownCleanup();
+            itemLedger.ShutdownCleanup();
+
+            lastProjectileEntIDAdded = -1;
+            lastDeadEntIDAdded = -1;
+        }
+
         private static bool ProjectileIsInFlight( Entity entity )
         {
             return entity.ApplyGravity;
@@ -601,6 +663,11 @@ namespace ExpandedAiTasks.Managers
             lastProjectileEntIDAdded = entity.EntityId;
         }
 
+        public static bool IsRegisteredAsEntityProjectile(Entity entity)
+        {
+            return _meaEntityProjectiles.Contains(entity);
+        }
+
         public static void OnEntityDeath(Entity entity, DamageSource damageSource)
         {
             RegisterDeadEntity(entity);
@@ -617,6 +684,11 @@ namespace ExpandedAiTasks.Managers
 
             _meaEntityDead.AddEntity(entity);
             lastDeadEntIDAdded = entity.EntityId;
+        }
+
+        public static bool IsRegisteredAsDeadEntity( Entity entity )
+        {
+            return _meaEntityDead.Contains(entity);
         }
 
         private static List<EntityProjectile> projectilesInRange = new List<EntityProjectile>();

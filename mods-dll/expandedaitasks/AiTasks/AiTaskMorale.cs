@@ -257,19 +257,22 @@ namespace ExpandedAiTasks
             //Handle case where our target is an enemy entity.
             if ( ent is EntityAgent )
             {
-                bool ignoreEntityCode = canRoutFromAnyEnemy;
+                bool entityMatchesCode = canRoutFromAnyEnemy;
 
                 if (entitySourcesOfFear != null)
                 {
                     if (entitySourcesOfFearWeightsByCodeExact.Count > 0 || entitySourcesOfFearWeightsByCodePartial.Count > 0 || ent.Code.Path == "player")
                     {
-                        entitySourceOfFearTotalWeight += GetEntitySourceOfFearWeight(ent);
-                        ignoreEntityCode = true;
+                        double fearWeight = GetEntitySourceOfFearWeight(ent);
+                        entitySourceOfFearTotalWeight += fearWeight;
+
+                        if (fearWeight > 0)
+                            entityMatchesCode = true;
                     }
                         
                 }
 
-                if (entitySourcesOfFear == null && !canRoutFromAnyEnemy)
+                if (!entityMatchesCode)
                     return false;
 
                 //Dead things can contribute to morale but not be the cause of a route.
@@ -281,7 +284,7 @@ namespace ExpandedAiTasks
                 if (agent.HerdId == entity.HerdId)
                     return false;
 
-                if (!IsTargetableEntity(ent, moraleRange, ignoreEntityCode) || !AwarenessManager.IsAwareOfTarget(entity, ent, moraleRange, moraleRange))
+                if (!IsTargetableEntity(ent, moraleRange, entityMatchesCode) || !AwarenessManager.IsAwareOfTarget(entity, ent, moraleRange, moraleRange))
                     return false;
             }
             else
