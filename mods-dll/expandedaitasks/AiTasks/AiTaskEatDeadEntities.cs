@@ -146,8 +146,8 @@ namespace ExpandedAiTasks
             //Aquire a dead target if we don't have one.
             if (targetEntity == null || targetEntity.Alive)
             {
-                List<Entity> deadEntities = EntityManager.GetAllDeadEntitiesRangeOfPos(entity.ServerPos.XYZ, range);
-                targetEntity = EntityManager.GetNearestEntity(deadEntities, entity.ServerPos.XYZ, range, (e) => IsEntityTargetableForEating(e, range, eatEveryting));
+                float maxRange = range + AwarenessManager.GetEntitySmellRange(entity);
+                targetEntity = partitionUtil.GetNearestInteractableEntity( entity.ServerPos.XYZ, maxRange, (e) => IsEntityTargetableForEating(e, maxRange, eatEveryting));
             }
 
             if (targetEntity != null)

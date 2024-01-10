@@ -295,8 +295,10 @@ namespace ExpandedAiTasks.Managers
         public bool HasDibsOnEntity(Entity claimant, Entity target, EDibsReason reason)
         {
             if (dibsByEntity.ContainsKey(target))
-            {
                 CleanData(target);
+
+            if (dibsByEntity.ContainsKey(target))
+            {
                 if (dibsByEntity[target].dibsByReason.ContainsKey(reason))
                 {
                     if (dibsByEntity[target].dibsByReason[reason].dibsTimeoutByEntity.ContainsKey(claimant))
@@ -312,9 +314,10 @@ namespace ExpandedAiTasks.Managers
         public bool IsEntityClaimedForAnyReason(Entity target)
         {
             if (dibsByEntity.ContainsKey(target))
-            {
                 CleanData(target);
 
+            if (dibsByEntity.ContainsKey(target))
+            {
                 if (dibsByEntity[target].dibsByReason.Count > 0)
                     return true;
             }
@@ -325,11 +328,12 @@ namespace ExpandedAiTasks.Managers
         public int CountEntityClaimantsForAnyReason( Entity target )
         {
             int claimantCount = 0;
-            
+
             if (dibsByEntity.ContainsKey(target))
-            {
                 CleanData(target);
 
+            if (dibsByEntity.ContainsKey(target))
+            {
                 foreach ( EDibsReason reason in dibsByEntity[target].dibsByReason.Keys )
                 {
                     claimantCount += dibsByEntity[target].dibsByReason[reason].dibsTimeoutByEntity.Count;
@@ -340,12 +344,12 @@ namespace ExpandedAiTasks.Managers
         }
 
         public bool IsEntityClaimedForReason(Entity target, EDibsReason reason )
-        {              
+        {
+            if (dibsByEntity.ContainsKey(target))
+                CleanData(target);
 
             if ( dibsByEntity.ContainsKey(target) )
             {
-                CleanData(target);
-
                 if (dibsByEntity[target].dibsByReason.ContainsKey(reason) )
                 {
                     if ( dibsByEntity[target].dibsByReason[reason].dibsTimeoutByEntity.Count() > 0 )
@@ -361,9 +365,10 @@ namespace ExpandedAiTasks.Managers
             int claimantCount = 0;
 
             if (dibsByEntity.ContainsKey(target))
-            {
                 CleanData(target);
 
+            if (dibsByEntity.ContainsKey(target))
+            {
                 if (dibsByEntity[target].dibsByReason.ContainsKey (reason) ) 
                 {
                     claimantCount += dibsByEntity[target].dibsByReason[reason].dibsTimeoutByEntity.Count;
@@ -552,10 +557,7 @@ namespace ExpandedAiTasks.Managers
         /////////////////
         private static ManagedEntityArray _meaEntityProjectiles = new ManagedEntityArray();
         private static ManagedEntityArray _meaEntityProjectilesInFlight = new ManagedEntityArray();
-        private static ManagedEntityArray _meaEntityDead = new ManagedEntityArray();
-
         private static long lastProjectileEntIDAdded = -1;
-        private static long lastDeadEntIDAdded = -1;
         
         public static List<EntityProjectile> entityProjectiles
         {
@@ -586,20 +588,11 @@ namespace ExpandedAiTasks.Managers
             }
         }
 
-        public static List<Entity> deadEntities
-        {
-            get
-            {
-                return _meaEntityDead.GetManagedList();
-            }
-        }
-
         public static void ShutdownCleanup()
         {
             //Clean Up Managed Arrays
             _meaEntityProjectiles.Clear();
             _meaEntityProjectilesInFlight.Clear();
-            _meaEntityDead.Clear();
 
             //Clean Up Dibs System
             entityDibsDatabase.ShutdownCleanup();
@@ -609,7 +602,6 @@ namespace ExpandedAiTasks.Managers
             itemLedger.ShutdownCleanup();
 
             lastProjectileEntIDAdded = -1;
-            lastDeadEntIDAdded = -1;
         }
 
         private static bool ProjectileIsInFlight( Entity entity )
@@ -692,29 +684,6 @@ namespace ExpandedAiTasks.Managers
             return _meaEntityProjectiles.Contains(entity);
         }
 
-        public static void OnEntityDeath(Entity entity, DamageSource damageSource)
-        {
-            RegisterDeadEntity(entity);
-        }
-
-        public static void RegisterDeadEntity( Entity entity)
-        {
-            Debug.Assert(!entity.Alive);
-
-            if (entity.ShouldDespawn)
-                return;
-
-            Debug.Assert(entity.EntityId != lastDeadEntIDAdded);
-
-            _meaEntityDead.AddEntity(entity);
-            lastDeadEntIDAdded = entity.EntityId;
-        }
-
-        public static bool IsRegisteredAsDeadEntity( Entity entity )
-        {
-            return _meaEntityDead.Contains(entity);
-        }
-
         private static List<EntityProjectile> projectilesInRange = new List<EntityProjectile>();
         public static List<EntityProjectile> GetAllEntityProjectilesWithinRangeOfPos( Vec3d pos, float range )
         {
@@ -744,21 +713,6 @@ namespace ExpandedAiTasks.Managers
             }
 
             return projectilesInRange;
-        }
-
-        private static List<Entity> EntitiesInRange = new List<Entity>();
-        public static List<Entity> GetAllDeadEntitiesRangeOfPos(Vec3d pos, float range)
-        {
-            EntitiesInRange.Clear();
-            foreach (Entity entity in deadEntities)
-            {
-                if (entity.ServerPos.SquareDistanceTo(pos) <= range * range)
-                {
-                    EntitiesInRange.Add(entity);
-                }
-            }
-
-            return EntitiesInRange;
         }
 
         public static Entity GetNearestEntity(List<Entity> entities, Vec3d position, double radius, ActionConsumable<Entity> matches = null)

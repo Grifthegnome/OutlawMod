@@ -30,7 +30,6 @@ namespace ExpandedAiTasks
                 serverAPI.Event.OnEntityDespawn += AwarenessManager.OnDespawn;
 
                 serverAPI.Event.OnEntityDeath += AwarenessManager.OnDeath;
-                serverAPI.Event.OnEntityDeath += EntityManager.OnEntityDeath;
 
                 //Set up a timer to clean the dibs system every minute.
                 serverAPI.Event.Timer(EntityManager.CleanDibsSystem, 60.0f);

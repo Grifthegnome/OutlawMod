@@ -47,9 +47,6 @@ namespace ExpandedAiTasks
             {
                 EntityManager.RegisterEntityWithEntityLedger(__instance);
 
-                if (!__instance.Alive && !__instance.ShouldDespawn && !EntityManager.IsRegisteredAsDeadEntity(__instance))
-                    EntityManager.RegisterDeadEntity(__instance);
-
                 if (__instance is EntityProjectile && !EntityManager.IsRegisteredAsEntityProjectile(__instance))
                     EntityManager.RegisterEntityProjectile(__instance);
             }
