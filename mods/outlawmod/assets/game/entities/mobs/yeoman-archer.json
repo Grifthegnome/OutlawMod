@@ -369,7 +369,7 @@
 				maxTemp: 28,
 				minRain: 0,
 				minForestOrShrubs: 0.25,
-				companions: []
+				companions: ["bandit-knife"],
 			},
 			runtime: {
 				group: "hostile",
@@ -388,7 +388,7 @@
 				minRain: 0,
 				minForestOrShrubs: 0.25,
 				MinDistanceToPlayer: 50,
-				companions: []
+				companions: ["bandit-knife"],
 			}
 		}
 	},

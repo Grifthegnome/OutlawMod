@@ -221,14 +221,11 @@ namespace ExpandedAiTasks
 
                 if (taskManager != null)
                 {
-                    List<IAiTask> tasks = taskManager.AllTasks;
+                    IAiTask[] tasks = taskManager.ActiveTasksBySlot;
                     foreach (IAiTask task in tasks)
                     {
                         if (task is AiTaskMorale)
-                        {
-                            if (taskManager.IsTaskActive(task.Id))
-                                return true;
-                        }
+                            return true;
                     }
                 }
             }

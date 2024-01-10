@@ -284,6 +284,14 @@ namespace ExpandedAiTasks.Managers
             }
         }
 
+        public void ReleaseDibsOnEntity(Entity claimant, Entity target, EDibsReason reason)
+        {
+            if ( dibsByEntity.ContainsKey(target) )
+            {
+                dibsByEntity[target].RemoveDibsDataForClaimant(claimant, reason);
+            }
+        }
+
         public bool HasDibsOnEntity(Entity claimant, Entity target, EDibsReason reason)
         {
             if (dibsByEntity.ContainsKey(target))
@@ -416,6 +424,14 @@ namespace ExpandedAiTasks.Managers
                 }
             }
 
+            public void RemoveDibsDataForClaimant( Entity claimant, EDibsReason reason )
+            {
+                if (dibsByReason.ContainsKey(reason))
+                {
+                    dibsByReason[reason].RemoveClaimant(claimant);
+                }
+            }
+
             public int GetEntryCount()
             {
                 return dibsByReason.Count;
@@ -471,6 +487,14 @@ namespace ExpandedAiTasks.Managers
                     else
                     {
                         dibsTimeoutByEntity.Add(claimant, timeoutMs);
+                    }
+                }
+
+                public void RemoveClaimant( Entity claimant ) 
+                {
+                    if (dibsTimeoutByEntity.ContainsKey(claimant))
+                    {
+                        dibsTimeoutByEntity.Remove(claimant);
                     }
                 }
 
@@ -764,6 +788,11 @@ namespace ExpandedAiTasks.Managers
         public static void CallDibsOnEntity( Entity claimant, Entity target, EDibsReason reason, long durationMs )
         {
             entityDibsDatabase.CallDibsOnEntity(claimant, target, reason, durationMs);
+        }
+
+        public static void ReleaseDibsOnEntity( Entity claimant, Entity target, EDibsReason reason )
+        {
+            entityDibsDatabase.ReleaseDibsOnEntity( claimant, target, reason );
         }
 
         public static bool HasDibsOnEntity( Entity claimant, Entity target, EDibsReason reason )

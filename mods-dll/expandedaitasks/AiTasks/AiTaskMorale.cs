@@ -98,6 +98,14 @@ namespace ExpandedAiTasks
             canRoutFromAnyEnemy = taskConfig["canRoutFromAnyEnemy"].AsBool(false);
             tacticalRetreat = taskConfig["tacticalRetreat"].AsBool(false);
 
+            //Vary out flee speed between characters.
+            float speedVariance = (float)((moveSpeed * 0.1) * entity.World.Rand.NextDouble());
+            
+            if (entity.World.Rand.NextDouble() < 0.5)
+                speedVariance *= -1;
+
+            moveSpeed += speedVariance;
+
             //To Do: Once we build our data dictionaries from these trees, do we really need to save them on the entity?
             //To Do: Do we want to build and store these tables unqiuely for every entity, or do we want to store them statically per entity type?
 
