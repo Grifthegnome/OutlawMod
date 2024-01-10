@@ -81,7 +81,7 @@ namespace ExpandedAiTasks
         private eInternalMovementState internalMovementState = eInternalMovementState.Pursuing;
 
         const float NO_AGRESSIVE_PERSUIT_AFTER_ROUTE_MS = 30000;
-        const int AGGRO_SOUND_DBOUNCE_MS = 10000;
+        const int AGGRO_SOUND_DBOUNCE_MS = 5000;
 
         protected long nextAggroSoundTime = 0;
 

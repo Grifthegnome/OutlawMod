@@ -196,7 +196,6 @@
 
 						animationSpeed: 2.2,
 						alarmHerd: true,
-						sound: "creature/wolf/growl",
 					},
 					{
 						code: "stayclosetoherd",
@@ -293,7 +292,8 @@
 	sounds: {
 		hurt: "creature/wolf/hurt",
 		death: "creature/wolf/hurt",
-		idle: "creature/wolf/howl"
+		idle: "creature/wolf/howl",
+		engageentity: "creature/wolf/growl",
 	},
 	idleSoundChance: 0
 }

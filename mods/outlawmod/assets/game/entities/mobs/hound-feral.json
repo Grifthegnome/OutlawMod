@@ -194,7 +194,6 @@
 
 						animationSpeed: 2.2,
 						alarmHerd: true,
-						sound: "creature/wolf/growl",
 						whenInEmotionState: "aggressiveondamage",
 					},
 					//Don't hunt things when we can eat dead stuff nearby.
@@ -242,7 +241,6 @@
 
 						animationSpeed: 2.2,
 						alarmHerd: true,
-						sound: "creature/wolf/growl",
 						whenNotInEmotionState: "saturated",
 					},
 					{
@@ -371,7 +369,8 @@
 	sounds: {
 		hurt: "creature/wolf/hurt",
 		death: "creature/wolf/hurt",
-		idle: "creature/wolf/howl"
+		idle: "creature/wolf/howl",
+		engageentity: "creature/wolf/growl",
 	},
 	idleSoundChance: 0
 }
