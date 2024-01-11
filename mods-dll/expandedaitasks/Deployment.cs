@@ -4,6 +4,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Vintagestory.GameContent;
 using ExpandedAiTasks.Managers;
+using ExpandedAiTasks.Behaviors;
 
 namespace ExpandedAiTasks
 {
