@@ -279,6 +279,11 @@ namespace ExpandedAiTasks
                     }
                         
                 }
+                else
+                {
+                    double fearWeight = GetEntitySourceOfFearWeight(ent);
+                    entitySourceOfFearTotalWeight += fearWeight;
+                }
 
                 if (!entityMatchesCode)
                     return false;
