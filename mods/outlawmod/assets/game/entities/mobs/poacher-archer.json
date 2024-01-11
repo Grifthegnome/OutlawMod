@@ -403,16 +403,7 @@
 						animation: "swim",
 						animationSpeed: 0.3
 					},
-					{
-						code: "stayclosetoentity",
-						priority: 1.4,
-						entityCode: "poacher-*",
-						movespeed: 0.02,
-						animationSpeed: 4,
-						maxDistance: 15,
-						searchRange: 25,
-						animation: "sprint"
-					},
+					
 					{
 						code: "idle",
 						priority: 0.8,

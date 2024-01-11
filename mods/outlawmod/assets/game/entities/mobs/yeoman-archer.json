@@ -315,7 +315,12 @@
 					{
 						code: "stayclosetoherd",
 						priority: 1.1,
-						movespeed: 0.04,
+						
+						movespeed:0.006,
+						moveSpeedFarAway: 0.04,
+						moveNearAnimation: "walk",
+						moveFarAnimation: "sprint",
+
 						animationSpeed: 1.0,
 						maxDistance: 15,
 						arriveDistance: 8,

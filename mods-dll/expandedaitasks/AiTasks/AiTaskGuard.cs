@@ -217,10 +217,7 @@ namespace ExpandedAiTasks
 
                 if (moveFarAnimation != null)
                     entity.AnimManager.StopAnimation(moveFarAnimation);
-            }
-                
-
-            
+            }  
         }
 
         protected EntityAgent GetBestGuardTargetFromHerd()
@@ -342,15 +339,16 @@ namespace ExpandedAiTasks
             pathTraverser.CurrentTarget.Z = guardPosClamped.X;
 
             float size = guardedEntity.SelectionBox.XSize;
-            PlayBestMoveAnimation();
 
             if ( guardedEntity.Swimming || guardedEntity.FeetInLiquid )
             {
+                PlayBestMoveAnimation();
                 guardPosClamped = UpdateSwimSteering(guardPosClamped);
                 pathTraverser.WalkTowards(guardPosClamped, GetBestMoveSpeed(), size + 0.2f, OnGoalReached, OnStuck);
             }
             else if ( (!guardedEntity.Swimming && !guardedEntity.FeetInLiquid ) && guardTargetSwimmingLastFrame )
             {
+                PlayBestMoveAnimation();
                 pathTraverser.NavigateTo_Async(guardPosClamped, GetBestMoveSpeed(), size + 0.2f, OnGoalReached, OnStuck, OnPathFailed, 5000);
             }
 

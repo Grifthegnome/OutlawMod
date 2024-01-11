@@ -108,6 +108,11 @@
 				code: "taskai",
 				aitasks: [
 					{
+						code: "reacttoprojectiles",
+						entityCodes: ["player", "yeoman-*", "poacher-*"],
+						priority: 5.1,
+					},
+					{
 						code: "morale",
 						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-feral" ],
 						priority: 5.0,
@@ -246,7 +251,12 @@
 					{
 						code: "stayclosetoherd",
 						priority: 1.48,
-						movespeed: 0.02,
+						
+						movespeed:0.006,
+						moveSpeedFarAway: 0.02,
+						moveNearAnimation: "Walk",
+						moveFarAnimation: "Run",
+
 						animationSpeed: 1.0,
 						maxDistance: 10,
 						arriveDistance: 5,
@@ -255,7 +265,6 @@
 						allowHerdConsolidation: true,
 						consolidationRange: 40,
 						consolidationEntityCodes: ["hound-feral"],
-						animation: "Run",
 					},
 					{
 						code: "idle",
