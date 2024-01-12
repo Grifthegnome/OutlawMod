@@ -114,7 +114,6 @@
 					},
 					{
 						code: "morale",
-						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-feral" ],
 						priority: 5.0,
 						movespeed: 0.052,
 						cancelOnHurt: false,
@@ -140,7 +139,6 @@
 					},
 					{
 						code: "morale",
-						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-feral" ],
 						priority: 4.9,
 						movespeed: 0.052,
 						cancelOnHurt: false,
@@ -163,7 +161,8 @@
 					},
 					{
 						code: "melee",
-						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-hunting", "humanoid-villager-*"],
+						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "deer-*", "goat-*", "bandit-*", "poacher-*", "yeoman-*", "looter", 
+						"hound-hunting", "humanoid-villager-*"],
 						priority: 2,
 						damage: 2,
 						damageTier: 1,
@@ -204,7 +203,8 @@
 					//Don't hunt things when we can eat dead stuff nearby.
 					{
 						code: "eatdead",
-						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-hunting", "humanoid-villager-*"],
+						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "bear-*", "deer-*", "goat-*", "bandit-*", "poacher-*", "yeoman-*", "looter", 
+						"hound-hunting", "humanoid-villager-*"],
 						priority: 1.52,
 
 						moveSpeed: 0.006,
@@ -226,7 +226,8 @@
 					},
 					{
 						code: "engageentity",
-						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-hunting", "humanoid-villager-*"],
+						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "deer-*", "goat-*", "bandit-*", "poacher-*", "yeoman-*", "looter", 
+						"hound-hunting", "humanoid-villager-*"],
 						priority: 1.5,
 						maxTargetHealth: 5.0,
 						packHunting: "true",
