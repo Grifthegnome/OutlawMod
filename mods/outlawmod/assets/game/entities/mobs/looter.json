@@ -129,7 +129,7 @@
 				code: "emotionstates",
 				states: [
 					{ code: "aggressiveondamage", duration: 4, chance: 0.2, slot: 0, priority: 2, accumType: "noaccum" },
-					{ code: "fleeondamage", duration: 14, chance: 0.50, slot: 2, priority: 4, accumType: "max", whenHealthRelBelow: 0.50 }
+					{ code: "fleeondamage", duration: 1.5, chance: 1.00, slot: 2, priority: 4, accumType: "noaccum", whenHealthRelBelow: 1.00 },
 				],
 			},
 			{ 
@@ -174,6 +174,29 @@
 						animation: "sprint",
 						animationSpeed: 1,
 					},
+
+					//disengage when injured.
+					{
+						code: "morale",
+						priority: 4.5,
+						movespeed: 0.045,
+						cancelOnHurt: false,
+						routDistance: 12,
+						rallyTimeAfterRoutMs: 1500,
+						minMorale: -100,
+						maxMorale: -100,
+						moraleRange: 6,
+						useGroupMorale: false,
+						deathsImpactMorale: false,
+						canRoutFromAnyEnemy: true,
+						tacticalRetreat: true,
+
+						animation: "sprint",
+						animationSpeed: 1,
+
+						whenInEmotionState: "fleeondamage",
+					},
+
 					{
 						code: "melee",
 						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "hound-*", "humanoid-villager-*" ],
@@ -191,22 +214,47 @@
 						animationSpeed: 2,
 					},					
 
-					//DISABLING THIS UNTIL WE CAN GET IT WORKING WITH EXPANDED AI TASKS PROJECTILES, IT DOESN't WORK WITH OUR NEW STEALTH SYSTEMS BY DEFAULT.
-					/*
 					{
-						code: "throwatentity",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*" ],
+						code: "shootatentity",
+						entityCodes: ["player","test-dummy", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "hound-feral", "humanoid-villager-*"],
 						priority: 3.5,
-						priorityForCancel: 9,
-						mincooldown: 3000, 
-						maxcooldown: 10000, 
-						durationMs: 550,
-						releaseAtMs: 500,
-						seekingRange: 15,
-						animationSpeed: 0.5,
+						priorityForCancel: 4,
+						mincooldown: 5000, 
+						maxcooldown: 7000, 
+						minDist: 5,
+						maxDist: 10,
+						maxVertDist: 10,
+						minRangeDistOffTarget: 0.15,
+						maxRangeDistOffTarget: 0.35,
+						maxVelocity: 0.7,
+						newTargetDistOffTarget: 0.5,
+						newTargetZeroingTime: 1.5,
+						damage: 2.0,
+						damageFalloffPercent: 0.25,
+						damageFalloffStartDist: 5,
+						damageFalloffEndDist: 10,
+						projectileItem: "stone-basalt",
+						dummyProjectile: "dummyrock-meteorite-iron",
+						projectileRemainsInWorld: false,
+						projectileBreakOnImpactChance: 0.0,
+						stopIfPredictFriendlyFire: true,
+
+						leadTarget: true,
+            			arcShots: true,
+						fireOnLastKnownPosition: false,
+						lastKnownPositionTimeoutMs: 5000,
+
+						hasLimitedAmmo: true,
+						ammoRegenDuringCombat: true,
+						ammoRegenIntervalMs: 10000,
+						maxAmmo: 3,
+
+						durationMs: 500,
+						releaseAtMs: 250,
+						animationSpeed: 1.0,
 						animation: "throwlefthanded"
 					},
-					*/
+
 					//Agro When Damaged
 					{
 						code: "engageentity",
@@ -218,7 +266,7 @@
 						pursueRange: 40,
 						pursueAnimation: "sprint",
 						engageSpeed: 0.025,
-						engageRange: 4,
+						engageRange: 3,
 						engageAnimation: "walk",
 
 						withdrawIfNoPath: true,
@@ -244,7 +292,7 @@
 						pursueRange: 22,
 						pursueAnimation: "sprint",
 						engageSpeed: 0.025,
-						engageRange: 4,
+						engageRange: 3,
 						engageAnimation: "walk",
 
 						withdrawIfNoPath: true,
@@ -268,7 +316,12 @@
 					{
 						code: "stayclosetoherd",
 						priority: 1.1,
-						movespeed: 0.04,
+
+						movespeed:0.006,
+						moveSpeedFarAway: 0.04,
+						moveNearAnimation: "walk",
+						moveFarAnimation: "sprint",
+
 						animationSpeed: 1.0,
 						maxDistance: 15,
 						arriveDistance: 8,
@@ -277,7 +330,6 @@
 						allowHerdConsolidation: true,
 						consolidationRange: 40,
 						consolidationEntityCodes: ["looter"],
-						animation: "sprint"
 					},
 					/*
 					{

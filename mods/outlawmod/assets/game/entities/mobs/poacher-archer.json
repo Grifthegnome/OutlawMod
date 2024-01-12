@@ -175,7 +175,6 @@
 					},
 					{
 						code: "morale",
-						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-feral" ],
 						priority: 5.0,
 						movespeed: 0.040,
 						cancelOnHurt: false,
@@ -193,6 +192,7 @@
 							{ code: "looter", fearWeight: 0.05},
 							{ code: "bandit-*", fearWeight: -0.1},
 							{ code: "hound-feral", fearWeight: 0.05},
+							{ code: "hound-hunting", fearWeight: -0.1},
 						],
 						itemStackSourcesOfFear: [
 							{ code: "outlawhead-*", fearWeight: 0.2},
@@ -279,37 +279,92 @@
 						whenInEmotionState: "aggressiveondamage",
 						//sound: "creature/bandit/attack"
 					},
-					//Keep distance from any target that approaches.
-					{
-						code: "fleeentity",
-						entityCodes: ["player", "drifter-*", "looter", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "chicken-rooster", "chicken-hen", "chicken-baby", "hare-male", "hare-female", 
-							"fox-male", "fox-female", "fox-arctic-male", "fox-arctic-female", "pig-wild-male", "pig-wild-female", "raccoon-male", "raccoon-female", "sheep-bighorn-male", "sheep-bighorn-female", "hound-feral", "humanoid-villager-*"],
-						priority: 3.0,
-						movespeed: 0.040,
-						seekingRange: 6,
-						cancelOnHurt: false,
-						fleeingDistance: 14,
-						fleeDurationMs: 12000,
-						animation: "sprint",
-						animationSpeed: 1.0,
-						executionChance: 1.0,
-						whenNotInEmotionState: "aggressiveondamage"
-					},
 					//Run from the player if we take damage.
 					{
-						code: "fleeentity",
-						entityCodes: ["player", "drifter-*", "looter", "hound-feral", "humanoid-villager-*"],
+						code: "morale",
 						priority: 3.5,
 						priorityForCancel: 4.0,
 						movespeed: 0.040,
-						seekingRange: 22,
 						cancelOnHurt: false,
-						fleeingDistance: 22,
-						fleeDurationMs: 30000,
+						routDistance: 22,
+						rallyTimeAfterRoutMs: 10000,
+						minMorale: -100.0,
+						maxMorale: -100.0,
+						moraleRange: 5,
+						useGroupMorale: false,
+						canRoutFromAnyEnemy: false,
+						tacticalRetreat: true,
+						
+						entitySourcesOfFear: [
+							{ code: "player", fearWeight: 1.0},
+							{ code: "looter", fearWeight: 1.0},
+							{ code: "hound-feral", fearWeight: 1.0},
+							{ code: "drifter-*", fearWeight: 1.0},
+							{ code: "wolf-*", fearWeight: 1.0},
+							{ code: "hyena-*", fearWeight: 1.0},
+							{ code: "locust-*", fearWeight: 1.0},
+							{ code: "bear-*", fearWeight: 1.0},
+							{ code: "fox-*", fearWeight: 1.0},
+							{ code: "pig-*", fearWeight: 1.0},
+							{ code: "sheep-*", fearWeight: 1.0},
+
+							//Mods
+							{ code: "humanoid-villager-*", fearWeight: 1.0},
+						],
+						
 						animation: "sprint",
-						animationSpeed: 1.0,
-						executionChance: 1.0,
+						animationSpeed: 1,
 						whenInEmotionState: "fleeondamage",
+						whenNotInEmotionState: "aggressiveondamage"
+					},
+					//Keep distance from any target that approaches.
+					{
+						code: "morale",
+						priority: 3.0,
+						priorityForCancel: 4.0,
+						movespeed: 0.040,
+						cancelOnHurt: false,
+						routDistance: 14,
+						rallyTimeAfterRoutMs: 12000,
+						minMorale: -100.0,
+						maxMorale: -100.0,
+						moraleRange: 6,
+						useGroupMorale: false,
+						canRoutFromAnyEnemy: false,
+						tacticalRetreat: true,
+						
+						entitySourcesOfFear: [
+							{ code: "player", fearWeight: 1.0},
+							{ code: "looter", fearWeight: 1.0},
+							{ code: "hound-feral", fearWeight: 1.0},
+							{ code: "drifter-*", fearWeight: 1.0},
+							{ code: "wolf-male", fearWeight: 1.0},
+							{ code: "wolf-female", fearWeight: 1.0},
+							{ code: "hyena-male", fearWeight: 1.0},
+							{ code: "hyena-female", fearWeight: 1.0},
+							{ code: "locust-*", fearWeight: 1.0},
+							{ code: "bear-*", fearWeight: 1.0},
+							{ code: "chicken-rooster", fearWeight: 1.0},
+							{ code: "chicken-hen", fearWeight: 1.0},
+							{ code: "hare-male", fearWeight: 1.0},
+							{ code: "hare-female", fearWeight: 1.0},
+							{ code: "fox-male", fearWeight: 1.0},
+							{ code: "fox-female", fearWeight: 1.0},
+							{ code: "fox-arctic-male", fearWeight: 1.0},
+							{ code: "fox-arctic-female", fearWeight: 1.0},
+							{ code: "pig-wild-male", fearWeight: 1.0},
+							{ code: "pig-wild-female", fearWeight: 1.0},
+							{ code: "raccoon-male", fearWeight: 1.0},
+							{ code: "raccoon-female", fearWeight: 1.0},
+							{ code: "sheep-bighorn-male", fearWeight: 1.0},
+							{ code: "sheep-bighorn-female", fearWeight: 1.0},
+
+							//Mods
+							{ code: "humanoid-villager-*", fearWeight: 1.0},						
+						],
+						
+						animation: "sprint",
+						animationSpeed: 1,
 						whenNotInEmotionState: "aggressiveondamage"
 					},
 					//Seek game to hunt.
@@ -348,16 +403,7 @@
 						animation: "swim",
 						animationSpeed: 0.3
 					},
-					{
-						code: "stayclosetoentity",
-						priority: 1.4,
-						entityCode: "poacher-*",
-						movespeed: 0.02,
-						animationSpeed: 4,
-						maxDistance: 15,
-						searchRange: 25,
-						animation: "sprint"
-					},
+					
 					{
 						code: "idle",
 						priority: 0.8,

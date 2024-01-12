@@ -13,6 +13,7 @@ using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
 using ExpandedAiTasks;
+using ExpandedAiTasks.Managers;
 
 namespace OutlawMod
 {
@@ -216,7 +217,7 @@ namespace OutlawMod
             //Give player super sneak attack damage if the target is not in combat and has not been in combat for 10 seconds.
             if (attacker is EntityPlayer && !AiUtility.IsInCombat(__instance.entity) && __instance.entity.World.ElapsedMilliseconds - AiUtility.GetLastTimeEntityInCombatMs(__instance.entity) > 10000.0f && damageSource.Type != EnumDamageType.Heal)
             {
-                if ( !AiUtility.IsAwareOfTarget( __instance.entity, attacker, 60, 60 ) )
+                if ( !AwarenessManager.IsAwareOfTarget( __instance.entity, attacker, 60, 60 ) )
                 {
                     if ( AiUtility.AttackWasFromProjectile(damageSource) )
                     {

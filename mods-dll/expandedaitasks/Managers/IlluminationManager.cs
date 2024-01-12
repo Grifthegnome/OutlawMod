@@ -5,7 +5,7 @@ using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
 
-namespace ExpandedAiTasks
+namespace ExpandedAiTasks.Managers
 {
     public struct EntIlluminationData
     {
@@ -32,6 +32,11 @@ namespace ExpandedAiTasks
         public static void Init( ICoreServerAPI sapi )
         {
             partitionUtil = sapi.ModLoader.GetModSystem<EntityPartitioning>();
+        }
+
+        public static void ShutdownCleanup()
+        {
+            illuminationData.Clear();
         }
 
         public static void OnDespawn( Entity ent, EntityDespawnData despawnData )

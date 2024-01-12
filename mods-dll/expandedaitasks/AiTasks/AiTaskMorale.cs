@@ -8,6 +8,7 @@ using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
+using ExpandedAiTasks.Managers;
 
 namespace ExpandedAiTasks
 {
@@ -34,6 +35,7 @@ namespace ExpandedAiTasks
         TreeAttribute[] itemStackSourcesOfFear = null;
         Dictionary<string, double> itemStackSourcesOfFearWeightsByCodeExact = null;// new Dictionary<string, double>();
         Dictionary<string, double> itemStackSourcesOfFearWeightsByCodePartial = null;// new Dictionary<string, double>();
+        AssetLocation[] itemStackSourcesOfFearCodes = null;
 
         //Data for points of intrest in morale range.
         TreeAttribute[] poiSourcesOfFear = null;
@@ -95,6 +97,14 @@ namespace ExpandedAiTasks
             deathsImpactMorale = taskConfig["deathsImpactMorale"].AsBool(false);
             canRoutFromAnyEnemy = taskConfig["canRoutFromAnyEnemy"].AsBool(false);
             tacticalRetreat = taskConfig["tacticalRetreat"].AsBool(false);
+
+            //Vary out flee speed between characters.
+            float speedVariance = (float)((moveSpeed * 0.1) * entity.World.Rand.NextDouble());
+            
+            if (entity.World.Rand.NextDouble() < 0.5)
+                speedVariance *= -1;
+
+            moveSpeed += speedVariance;
 
             //To Do: Once we build our data dictionaries from these trees, do we really need to save them on the entity?
             //To Do: Do we want to build and store these tables unqiuely for every entity, or do we want to store them statically per entity type?
@@ -179,10 +189,14 @@ namespace ExpandedAiTasks
             //To Do: See if there is a way to imediately stop searching entities as soon as our fear exceeds our morale.
 
             //Only search all entities in the world if we are afraid of items, otherwise, only search entity agents.
-            if (itemStackSourcesOfFear == null || recentlyFailedMorale)
+            if (itemStackSourcesOfFear == null)
                 targetEntity = partitionUtil.GetNearestInteractableEntity(ownPos, moraleRange, (e) => IsValidMoraleTarget(e));
             else
-                targetEntity = entity.World.GetNearestEntity(ownPos, moraleRange, moraleRange, IsValidMoraleTarget);
+            {
+                Entity nearestInteractableEntity = partitionUtil.GetNearestInteractableEntity(ownPos, moraleRange, (e) => IsValidMoraleTarget(e));
+                Entity nearestEntityItem = EntityManager.GetNearestEntityItemMatchingCodes(ownPos, moraleRange, itemStackSourcesOfFearCodes, (e) => IsValidMoraleTarget(e));
+                targetEntity = nearestInteractableEntity != null ? nearestInteractableEntity : nearestEntityItem;
+            }
 
             if (targetEntity != null)
             {
@@ -251,19 +265,27 @@ namespace ExpandedAiTasks
             //Handle case where our target is an enemy entity.
             if ( ent is EntityAgent )
             {
-                bool ignoreEntityCode = canRoutFromAnyEnemy;
+                bool entityMatchesCode = canRoutFromAnyEnemy;
 
                 if (entitySourcesOfFear != null)
                 {
                     if (entitySourcesOfFearWeightsByCodeExact.Count > 0 || entitySourcesOfFearWeightsByCodePartial.Count > 0 || ent.Code.Path == "player")
                     {
-                        entitySourceOfFearTotalWeight += GetEntitySourceOfFearWeight(ent);
-                        ignoreEntityCode = true;
+                        double fearWeight = GetEntitySourceOfFearWeight(ent);
+                        entitySourceOfFearTotalWeight += fearWeight;
+
+                        if (fearWeight > 0)
+                            entityMatchesCode = true;
                     }
                         
                 }
+                else
+                {
+                    double fearWeight = GetEntitySourceOfFearWeight(ent);
+                    entitySourceOfFearTotalWeight += fearWeight;
+                }
 
-                if (entitySourcesOfFear == null && !canRoutFromAnyEnemy)
+                if (!entityMatchesCode)
                     return false;
 
                 //Dead things can contribute to morale but not be the cause of a route.
@@ -275,7 +297,7 @@ namespace ExpandedAiTasks
                 if (agent.HerdId == entity.HerdId)
                     return false;
 
-                if (!IsTargetableEntity(ent, moraleRange, ignoreEntityCode) || !AiUtility.IsAwareOfTarget(entity, ent, moraleRange, moraleRange))
+                if (!IsTargetableEntity(ent, moraleRange, entityMatchesCode) || !AwarenessManager.IsAwareOfTarget(entity, ent, moraleRange, moraleRange))
                     return false;
             }
             else
@@ -357,6 +379,10 @@ namespace ExpandedAiTasks
                 AiUtility.UpdateLastTimeEntityFailedMoraleMs(entity);
 
             if (targetEntity == null)
+                return false;
+
+            //This covers the case where we are afraid of someone who is then auto-merged into our herd.
+            if (AiUtility.AreMembersOfSameHerd(entity, targetEntity))
                 return false;
 
             if (world.Rand.NextDouble() < 0.2)
@@ -494,6 +520,7 @@ namespace ExpandedAiTasks
                 itemStackSourcesOfFearWeightsByCodePartial = new Dictionary<string, double>();
                 itemStackSourcesOfFearWeightsByCodeExact = new Dictionary<string, double>();
 
+                itemStackSourcesOfFearCodes = new AssetLocation[itemStackSourcesOfFear.Length];
                 for (int i = 0; i < itemStackSourcesOfFear.Length; i++)
                 {
                     Debug.Assert(itemStackSourcesOfFear[i].HasAttribute("code"), "itemStackSourcesOfFear for " + entity.Code.Path + " is missing code: at entry " + i);
@@ -512,6 +539,8 @@ namespace ExpandedAiTasks
                         //Handle Exact Entity Code
                         itemStackSourcesOfFearWeightsByCodeExact.Add(code, weight);
                     }
+
+                    itemStackSourcesOfFearCodes[i] = new AssetLocation(code);
                 }
             }
 

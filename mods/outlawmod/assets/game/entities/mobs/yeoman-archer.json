@@ -247,8 +247,8 @@
 						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "hound-feral", "humanoid-villager-*"],
 						priority: 3.75,
 						priorityForCancel: 9,
-						mincooldown: 1000, 
-						maxcooldown: 1500, 
+						mincooldown: 0, 
+						maxcooldown: 0, 
 						minDist: 4,
 						maxDist: 40,
 						maxVertDist: 30,
@@ -315,7 +315,12 @@
 					{
 						code: "stayclosetoherd",
 						priority: 1.1,
-						movespeed: 0.04,
+						
+						movespeed:0.006,
+						moveSpeedFarAway: 0.04,
+						moveNearAnimation: "walk",
+						moveFarAnimation: "sprint",
+
 						animationSpeed: 1.0,
 						maxDistance: 15,
 						arriveDistance: 8,
@@ -369,7 +374,7 @@
 				maxTemp: 28,
 				minRain: 0,
 				minForestOrShrubs: 0.25,
-				companions: []
+				companions: ["bandit-knife"],
 			},
 			runtime: {
 				group: "hostile",
@@ -388,7 +393,7 @@
 				minRain: 0,
 				minForestOrShrubs: 0.25,
 				MinDistanceToPlayer: 50,
-				companions: []
+				companions: ["bandit-knife"],
 			}
 		}
 	},

@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Collections.Generic;
-using Vintagestory.API;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
-using Vintagestory.API.Server;
-using Vintagestory.API.Util;
 using Vintagestory.GameContent;
-using Vintagestory.API.Client;
+using ExpandedAiTasks.Managers;
 
 namespace ExpandedAiTasks
 {
@@ -66,11 +63,13 @@ namespace ExpandedAiTasks
         protected float lastTimeSawTarget = 0;
         protected float withdrawTargetMoveDistBeforeEncroaching = 0.0f;
 
+        protected float pursueSpeedVariance = -1;
+        protected float engageSpeedVariance = -1;
+
         protected long finishedMs;
 
         protected long lastSearchTotalMs;
 
-        //protected EntityPartitioning partitionUtil;
         protected float extraTargetDistance = 0f;
 
         float healthLastFrame = 0;
@@ -82,6 +81,9 @@ namespace ExpandedAiTasks
         private eInternalMovementState internalMovementState = eInternalMovementState.Pursuing;
 
         const float NO_AGRESSIVE_PERSUIT_AFTER_ROUTE_MS = 30000;
+        const int AGGRO_SOUND_DBOUNCE_MS = 5000;
+
+        protected long nextAggroSoundTime = 0;
 
         private enum eInternalMovementState
         {
@@ -143,6 +145,14 @@ namespace ExpandedAiTasks
 
             retaliateAttacks = taskConfig["retaliateAttacks"].AsBool(true);
 
+            pursueSpeedVariance = (float)((pursueSpeed * 0.1) * entity.World.Rand.NextDouble());
+            engageSpeedVariance = (float)((engageSpeed * 0.1) * entity.World.Rand.NextDouble());
+
+            if ( entity.World.Rand.NextDouble() < 0.5 )
+            {
+                pursueSpeedVariance *= -1;
+                engageSpeedVariance *= -1;
+            }
 
 
             Debug.Assert(pursueRange > engageRange, "pursueRange must be a greater value to engageRange.");
@@ -203,7 +213,7 @@ namespace ExpandedAiTasks
 
             lastSearchTotalMs = entity.World.ElapsedMilliseconds;
 
-            if (entity.World.ElapsedMilliseconds - attackedByEntityMs > 30000 )
+            if (entity.World.ElapsedMilliseconds - attackedByEntityMs > 5000 )
             {
                 attackedByEntity = null;
             }
@@ -297,7 +307,7 @@ namespace ExpandedAiTasks
             if (!IsTargetableEntity(ent, range, ignoreEntityCode))
                 return false;
 
-            return AiUtility.IsAwareOfTarget(entity, ent, range, range);
+            return AwarenessManager.IsAwareOfTarget(entity, ent, range, range);
         }
 
         public float MinDistanceToTarget()
@@ -339,10 +349,11 @@ namespace ExpandedAiTasks
             currentWithdrawTime = 0;
             consecutivePathFailCount = 0;
 
-            if ( !stopNow )
+            if ( !stopNow && world.ElapsedMilliseconds > nextAggroSoundTime )
             {
                 //play a sound associated with this action.
                 entity.PlayEntitySound("engageentity", null, true);
+                nextAggroSoundTime = (world.ElapsedMilliseconds + AGGRO_SOUND_DBOUNCE_MS);
             }
             
         }
@@ -365,13 +376,17 @@ namespace ExpandedAiTasks
             if (!targetEntity.Alive)
                 return false;
 
+            //This covers the case where we get hit by a projectile and then the shooter is auto-merged into our herd.
+            if ( AiUtility.AreMembersOfSameHerd( entity, targetEntity ) )
+                return false;
+
             currentFollowTime += dt;
             lastPathUpdateSeconds += dt;
 
             bool canSeeTarget = true;
 
             if (pursueLastKnownPosition)
-                canSeeTarget = AiUtility.IsAwareOfTarget(entity,targetEntity, pursueRange, pursueRange);
+                canSeeTarget = AwarenessManager.IsAwareOfTarget(entity,targetEntity, pursueRange, pursueRange);
 
             Vec3d pathToPos = !pursueLastKnownPosition || canSeeTarget ? targetPos : lastKnownPos;
             Vec3d clampedPathPos = AiUtility.ClampPositionToGround(world, pathToPos, 15);
@@ -801,7 +816,15 @@ namespace ExpandedAiTasks
             else if (distSqr <= engageRange * engageRange && entity.ServerPos.Motion.Length() > 0.0 )
             {
                 //Engage State
-                internalMovementState = eInternalMovementState.Engaging;                
+                if ( AiUtility.IsRoutingFromBattle(TargetEntity) )
+                {
+                    internalMovementState = eInternalMovementState.Pursuing;
+                }
+                else
+                {
+                    internalMovementState = eInternalMovementState.Engaging; 
+                }
+                               
             }
             else if ( entity.ServerPos.Motion.Length() > 0.0 )
             {
@@ -900,9 +923,9 @@ namespace ExpandedAiTasks
                 case eInternalMovementState.Arrived:
                     return 0.0f;
                 case eInternalMovementState.Engaging:
-                    return engageSpeed;
+                    return engageSpeed + engageSpeedVariance;
                 case eInternalMovementState.Pursuing:
-                    return pursueSpeed;
+                    return pursueSpeed + pursueSpeedVariance;
             }
 
             Debug.Assert(false, "Invalid intermal move state.");
@@ -1051,7 +1074,7 @@ namespace ExpandedAiTasks
             if (!IsEntityTargetableByPack(ent, range))
                 return true;
 
-            if (!AiUtility.IsAwareOfTarget(entity, ent, pursueRange, pursueRange))
+            if (!AwarenessManager.IsAwareOfTarget(entity, ent, pursueRange, pursueRange))
                 return true;
 
             //Don't Chase Ai that are already routing.

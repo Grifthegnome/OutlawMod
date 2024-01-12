@@ -5,7 +5,10 @@
 	deadHitboxSize: { x: 1, y: 0.75 },
 	eyeHeight: 0.9,
 	drops: [],
-	attributes:{ hasNightVision: true },
+	attributes:{ 
+		hasNightVision: true,
+		smellRange: 20.0,
+	},
 	client: {
 		renderer: "Shape",
 		shape: { base: "entity/land/hound-hunting" },
@@ -109,6 +112,11 @@
 				code: "taskai",
 				aitasks: [
 					{
+						code: "reacttoprojectiles",
+						entityCodes: ["player", "yeoman-*", "poacher-*"],
+						priority: 5.1,
+					},
+					{
 						code: "morale",
 						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "yeoman-*", "looter", "hound-feral" ],
 						priority: 5.0,
@@ -193,12 +201,16 @@
 
 						animationSpeed: 2.2,
 						alarmHerd: true,
-						sound: "creature/wolf/growl",
 					},
 					{
 						code: "stayclosetoherd",
 						priority: 1.48,
-						movespeed: 0.048,
+
+						movespeed:0.006,
+						moveSpeedFarAway: 0.048,
+						moveNearAnimation: "Walk",
+						moveFarAnimation: "Run",
+
 						animationSpeed: 1.0,
 						maxDistance: 8,
 						arriveDistance: 4,
@@ -207,8 +219,6 @@
 						allowHerdConsolidation: true,
 						consolidationRange: 40,
 						consolidationEntityCodes: ["poacher-*", "hound-hunting"],
-						animation: "Run",
-						animationSpeed: 1.5,
 					},
 					{
 						code: "idle",
@@ -290,7 +300,8 @@
 	sounds: {
 		hurt: "creature/wolf/hurt",
 		death: "creature/wolf/hurt",
-		idle: "creature/wolf/howl"
+		idle: "creature/wolf/howl",
+		engageentity: "creature/wolf/growl",
 	},
 	idleSoundChance: 0
 }

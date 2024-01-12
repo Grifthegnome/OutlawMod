@@ -3,33 +3,51 @@ using HarmonyLib;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Vintagestory.GameContent;
+using ExpandedAiTasks.Managers;
+using ExpandedAiTasks.Behaviors;
 
 namespace ExpandedAiTasks
 {
     public static class ExpandedAiTasksDeployment
     {
+        static bool hasDeployed = false;
         public static void Deploy( ICoreAPI api )
         {
+            if (hasDeployed)
+                return;
+
             //Apply AiExpandedTask Patches if they haven't already been applied.
             if (ExpandedAiTasksHarmonyPatcher.ShouldPatch())
                 ExpandedAiTasksHarmonyPatcher.ApplyPatches();
 
             if ( api.Side == EnumAppSide.Server )
             {
+                ICoreServerAPI serverAPI = api as ICoreServerAPI;
+
                 RegisterAiTasksOnServer();
                 IlluminationManager.Init(api as ICoreServerAPI);
-                AiUtility.Init();
-                api.Event.OnEntityDespawn += IlluminationManager.OnDespawn;
-                api.Event.OnEntityDespawn += AwarenessManager.OnDespawn;
+                AwarenessManager.Init();
+                serverAPI.Event.OnEntityDespawn += IlluminationManager.OnDespawn;
+                serverAPI.Event.OnEntityDespawn += AwarenessManager.OnDespawn;
 
-                api.Event.OnEntityDeath += AwarenessManager.OnDeath;
+                serverAPI.Event.OnEntityDeath += AwarenessManager.OnDeath;
 
-                //Tell Entity Manager to Track Projectile Spawns.
-                api.Event.OnEntitySpawn += EntityManager.OnEntityProjectileSpawn;
+                //Set up a timer to clean the dibs system every minute.
+                serverAPI.Event.Timer(EntityManager.CleanDibsSystem, 60.0f);
+
+                serverAPI.Event.ServerRunPhase(EnumServerRunPhase.Shutdown, () => {
+                    //Clean up all manager stuff.
+                    //If we don't it persists between loads.
+                    EntityManager.ShutdownCleanup();
+                    AwarenessManager.ShutdownCleanup();
+                    IlluminationManager.ShutdownCleanup();
+                });
             }
 
             RegisterAiTasksShared();
             RegisterEntityBehaviors(api);
+
+            hasDeployed = true;
         }
         private static void RegisterAiTasksOnServer()
         {

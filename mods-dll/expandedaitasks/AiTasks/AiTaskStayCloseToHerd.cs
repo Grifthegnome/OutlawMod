@@ -18,13 +18,19 @@ namespace ExpandedAiTasks
     {
         protected Entity herdLeaderEntity;
         protected List<Entity> herdEnts;
-        protected float moveSpeed = 0.03f;
+
+        float moveSpeedNear = 0.03f;
+        float moveSpeedFarAway = 0.03f;
+
         protected float range = 8f;
         protected float maxDistance = 3f;
         protected float arriveDistance = 3f;
         protected bool allowStrayFromHerdInCombat = true;
         protected bool allowHerdConsolidation = false;
         protected float consolidationRange = 40f;
+
+        string moveNearAnimation = "Walk";
+        string moveFarAnimation = "Run";
 
         //Data for entities this ai is allowed to consolidate its herd with.
         protected HashSet<string> consolidationEntitiesByCodeExact = new HashSet<string>();
@@ -34,6 +40,8 @@ namespace ExpandedAiTasks
         protected bool stopNow = false;
         protected bool allowTeleport = true;
         protected float teleportAfterRange;
+
+        protected bool herdLeaderSwimmingLastFrame = false;
 
         protected Vec3d targetOffset = new Vec3d();
 
@@ -46,13 +54,19 @@ namespace ExpandedAiTasks
         {
             base.LoadConfig(taskConfig, aiConfig);
 
-            moveSpeed = taskConfig["movespeed"].AsFloat(0.03f);
+            //moveSpeed = taskConfig["movespeed"].AsFloat(0.03f);
             range = taskConfig["searchRange"].AsFloat(8f);
             maxDistance = taskConfig["maxDistance"].AsFloat(3f);
             arriveDistance = taskConfig["arriveDistance"].AsFloat(3f);
             allowStrayFromHerdInCombat = taskConfig["allowStrayFromHerdInCombat"].AsBool(true);
             allowHerdConsolidation = taskConfig["allowHerdConsolidation"].AsBool(false);
             consolidationRange = taskConfig["consolidationRange"].AsFloat(40f);
+
+            moveSpeedNear = taskConfig["moveSpeed"].AsFloat(0.006f);
+            moveSpeedFarAway = taskConfig["moveSpeedFarAway"].AsFloat(0.04f);
+
+            moveNearAnimation = taskConfig["moveNearAnimation"].AsString("Walk");
+            moveFarAnimation = taskConfig["moveFarAnimation"].AsString("Run");
 
             BuildConsolidationTable(taskConfig);
 
@@ -214,13 +228,59 @@ namespace ExpandedAiTasks
             stepHeight = bh == null ? 0.6f : bh.stepHeight;
 
             float size = herdLeaderEntity.SelectionBox.XSize;
-           
-            pathTraverser.WalkTowards(herdLeaderEntity.ServerPos.XYZ, moveSpeed, size + 0.2f, OnGoalReached, OnStuck);
+
+            herdLeaderSwimmingLastFrame = herdLeaderEntity.Swimming || herdLeaderEntity.FeetInLiquid;
+
+            PlayBestMoveAnimation();
+            pathTraverser.WalkTowards(herdLeaderEntity.ServerPos.XYZ, GetBestMoveSpeed(), size + 0.2f, OnGoalReached, OnStuck);
 
             targetOffset.Set(entity.World.Rand.NextDouble() * 2 - 1, 0, entity.World.Rand.NextDouble() * 2 - 1);
 
             stuck = false;
             stopNow = false;
+        }
+
+        protected float GetBestMoveSpeed()
+        {
+            double distSqr = entity.ServerPos.SquareDistanceTo(herdLeaderEntity.ServerPos.XYZ);
+            float size = entity.SelectionBox.XSize;
+
+            if (size < 0)
+                size *= 1;
+
+            if (distSqr > (maxDistance * 1.5 ) * (maxDistance * 1.5))
+                return moveSpeedFarAway;
+
+            return moveSpeedNear;
+        }
+
+        protected void PlayBestMoveAnimation()
+        {
+            double distSqr = entity.ServerPos.SquareDistanceTo(herdLeaderEntity.ServerPos.XYZ);
+            float size = entity.SelectionBox.XSize;
+
+            if (size < 0)
+                size *= 1;
+
+            if (distSqr > (maxDistance * 1.5 ) * (maxDistance * 1.5))
+            {
+                if (moveFarAnimation != null)
+                    entity.AnimManager.StartAnimation(new AnimationMetaData() { Animation = moveFarAnimation, Code = moveFarAnimation }.Init());
+
+                if (moveNearAnimation != null)
+                    entity.AnimManager.StopAnimation(moveNearAnimation);
+            }
+            else
+            {
+                if (moveNearAnimation != null)
+                    entity.AnimManager.StartAnimation(new AnimationMetaData() { Animation = moveNearAnimation, Code = moveNearAnimation }.Init());
+
+                if (moveFarAnimation != null)
+                    entity.AnimManager.StopAnimation(moveFarAnimation);
+            }
+
+
+
         }
 
         Vec3d steeringVec = new Vec3d();
@@ -239,9 +299,26 @@ namespace ExpandedAiTasks
 
             steeringVec = UpdateSteering(steeringVec);
 
-            pathTraverser.CurrentTarget.X = steeringVec.X;
-            pathTraverser.CurrentTarget.Y = steeringVec.Y;
-            pathTraverser.CurrentTarget.Z = steeringVec.Z;
+            Vec3d herdLeaderPos = new Vec3d(x, y, z);
+            Vec3d herdLeaderPosClamped = AiUtility.ClampPositionToGround(world, herdLeaderPos, 5);
+
+            pathTraverser.CurrentTarget.X = herdLeaderPosClamped.X;
+            pathTraverser.CurrentTarget.Y = herdLeaderPosClamped.Y;
+            pathTraverser.CurrentTarget.Z = herdLeaderPosClamped.Z;
+
+            float size = herdLeaderEntity.SelectionBox.XSize;
+
+            if (herdLeaderEntity.Swimming || herdLeaderEntity.FeetInLiquid)
+            {
+                PlayBestMoveAnimation();
+                //herdLeaderPosClamped = UpdateSwimSteering(herdLeaderPosClamped);
+                pathTraverser.WalkTowards(herdLeaderPosClamped, GetBestMoveSpeed(), size + 0.2f, OnGoalReached, OnStuck);
+            }
+            else if ((!herdLeaderEntity.Swimming && !herdLeaderEntity.FeetInLiquid) && herdLeaderSwimmingLastFrame)
+            {
+                PlayBestMoveAnimation();
+                pathTraverser.NavigateTo_Async(herdLeaderPosClamped, GetBestMoveSpeed(), size + 0.2f, OnGoalReached, OnStuck, OnPathFailed, 5000);
+            }
 
             float distSqr = entity.ServerPos.SquareDistanceTo(x, y, z);
 
@@ -255,6 +332,8 @@ namespace ExpandedAiTasks
             {
                 AiUtility.TryTeleportToEntity(entity, herdLeaderEntity);
             }
+
+            herdLeaderSwimmingLastFrame = herdLeaderEntity.Swimming || herdLeaderEntity.FeetInLiquid;
 
             return !stuck && !stopNow && pathTraverser.Active && herdLeaderEntity != null && herdLeaderEntity.Alive;
         }
@@ -286,6 +365,12 @@ namespace ExpandedAiTasks
         {
             pathTraverser.Stop();
             base.FinishExecute(cancelled);
+
+            if (moveFarAnimation != null)
+                entity.AnimManager.StopAnimation(moveFarAnimation);
+
+            if (moveNearAnimation != null)
+                entity.AnimManager.StopAnimation(moveNearAnimation);
         }
 
         protected void OnStuck()

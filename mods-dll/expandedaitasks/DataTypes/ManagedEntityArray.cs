@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 
-namespace ExpandedAiTasks
+namespace ExpandedAiTasks.DataTypes
 {
     public struct ManagedEntityArray
     {
@@ -23,7 +23,7 @@ namespace ExpandedAiTasks
             List<Entity> compactedList = new List<Entity>();
             foreach (Entity entity in _managedEntityArray)
             {
-                if (entity != null)
+                if (entity != null && !entity.ShouldDespawn)
                     compactedList.Add(entity);
             }
 
@@ -58,7 +58,7 @@ namespace ExpandedAiTasks
             List<Entity> compactedList = new List<Entity>();
             foreach (Entity entity in _managedEntityArray)
             {
-                if (entity != null)
+                if (entity != null && !entity.ShouldDespawn)
                     compactedList.Add(entity);
             }
 
@@ -77,7 +77,7 @@ namespace ExpandedAiTasks
             List<Entity> compactedList = new List<Entity>();
             foreach (Entity entity in _managedEntityArray)
             {
-                if (entity != null)
+                if (entity != null && !entity.ShouldDespawn)
                 {
                     if ( check(entity) )
                     {

@@ -5,7 +5,10 @@
 	deadHitboxSize: { x: 1, y: 0.75 },
 	eyeHeight: 0.9,
 	drops: [],
-	attributes:{ hasNightVision: true },
+	attributes:{ 
+		hasNightVision: true,
+		smellRange: 20.0,
+	},
 	client: {
 		renderer: "Shape",
 		shape: { base: "entity/land/hound" },
@@ -105,6 +108,11 @@
 				code: "taskai",
 				aitasks: [
 					{
+						code: "reacttoprojectiles",
+						entityCodes: ["player", "yeoman-*", "poacher-*"],
+						priority: 5.1,
+					},
+					{
 						code: "morale",
 						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-feral" ],
 						priority: 5.0,
@@ -191,7 +199,6 @@
 
 						animationSpeed: 2.2,
 						alarmHerd: true,
-						sound: "creature/wolf/growl",
 						whenInEmotionState: "aggressiveondamage",
 					},
 					//Don't hunt things when we can eat dead stuff nearby.
@@ -209,6 +216,8 @@
 						eatAnimation: "eat",
 						eatAnimMinInterval: 1.0,
 						eatAnimMaxInterval: 3.5,
+
+						maxEatersPerEntity: 3,
 
 						eatEveryting: true,
         				allowCannibalism: true,
@@ -237,13 +246,17 @@
 
 						animationSpeed: 2.2,
 						alarmHerd: true,
-						sound: "creature/wolf/growl",
 						whenNotInEmotionState: "saturated",
 					},
 					{
 						code: "stayclosetoherd",
 						priority: 1.48,
-						movespeed: 0.02,
+						
+						movespeed:0.006,
+						moveSpeedFarAway: 0.02,
+						moveNearAnimation: "Walk",
+						moveFarAnimation: "Run",
+
 						animationSpeed: 1.0,
 						maxDistance: 10,
 						arriveDistance: 5,
@@ -252,7 +265,6 @@
 						allowHerdConsolidation: true,
 						consolidationRange: 40,
 						consolidationEntityCodes: ["hound-feral"],
-						animation: "Run",
 					},
 					{
 						code: "idle",
@@ -366,7 +378,8 @@
 	sounds: {
 		hurt: "creature/wolf/hurt",
 		death: "creature/wolf/hurt",
-		idle: "creature/wolf/howl"
+		idle: "creature/wolf/howl",
+		engageentity: "creature/wolf/growl",
 	},
 	idleSoundChance: 0
 }

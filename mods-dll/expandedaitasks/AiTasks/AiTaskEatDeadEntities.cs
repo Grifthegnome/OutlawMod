@@ -9,6 +9,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
+using ExpandedAiTasks.Managers;
 
 namespace ExpandedAiTasks
 {
@@ -27,6 +28,8 @@ namespace ExpandedAiTasks
         protected float eatAnimMinInterval = 1.0f;
         protected float eatAnimMaxInterval = 1.5f;
 
+        protected int maxEatersPerEntity = 1;
+
         protected bool eatEveryting = false;
         protected bool allowCannibalism = false;
 
@@ -36,8 +39,6 @@ namespace ExpandedAiTasks
         protected long finishedMs;
 
         protected long lastSearchTotalMs;
-
-        //protected EntityPartitioning partitionUtil;
 
         protected int searchWaitMs = 4000;
 
@@ -87,6 +88,8 @@ namespace ExpandedAiTasks
             eatAnimation = taskConfig["eatAnimation"].AsString("eat");
             eatAnimMinInterval = taskConfig["eatAnimMinInterval"].AsFloat(1.0f);
             eatAnimMaxInterval = taskConfig["eatAnimMaxInterval"].AsFloat(1.5f);
+
+            maxEatersPerEntity = taskConfig["maxEatersPerEntity"].AsInt(1);
 
             eatEveryting = taskConfig["eatEveryting"].AsBool(false);
             allowCannibalism = taskConfig["allowCannibalism"].AsBool(false);
@@ -142,7 +145,10 @@ namespace ExpandedAiTasks
 
             //Aquire a dead target if we don't have one.
             if (targetEntity == null || targetEntity.Alive)
-                targetEntity = partitionUtil.GetNearestInteractableEntity(entity.ServerPos.XYZ, range, (e) => IsEntityTargetableForEating(e, range, eatEveryting));
+            {
+                float maxRange = range + AwarenessManager.GetEntitySmellRange(entity);
+                targetEntity = partitionUtil.GetNearestInteractableEntity( entity.ServerPos.XYZ, maxRange, (e) => IsEntityTargetableForEating(e, maxRange, eatEveryting));
+            }
 
             if (targetEntity != null)
             {
@@ -190,12 +196,22 @@ namespace ExpandedAiTasks
                 return false;
 
             //Depending on how rotten the dead thing is we can detect it from farther away.
+            //If it is down wind from us, add any smelling range bonus we have to the detect distance.
             double detectRange = GetDetectionRangeForEnt(e);
+            if (AwarenessManager.CanEntitySmellPositionWithWind(entity, e.ServerPos.XYZ, (float)detectRange))
+                detectRange += AwarenessManager.GetEntitySmellRange(entity);
+
             if (entity.ServerPos.SquareDistanceTo(e.ServerPos) > detectRange * detectRange)
                 return false;
 
             double lastTargetTime = GetLastTargetTime(e);
             if (lastTargetTime < entity.World.ElapsedMilliseconds + TARGET_RETRY_MS_TIME && lastTargetTime != -1.0)
+                return false;
+
+            int eatDibsCount = EntityManager.CountEntityClaimantsForReason(e, EDibsReason.Eat);
+
+            //If too many others have claimed this target, skip it.
+            if (eatDibsCount >= maxEatersPerEntity)
                 return false;
 
             if (ignoreEntityCode)
@@ -269,7 +285,7 @@ namespace ExpandedAiTasks
             curTurnRadPerSec *= GameMath.DEG2RAD * 50 * 0.02f;
 
             if ( !pathTraverser.WalkTowards(GetTargetPosWithPathOffset().Clone(), moveSpeed, MinDistanceToTarget(), OnGoalReached, OnStuck) )    
-            FindNextPathSearchOffsetForPos(targetPos);
+                FindNextPathSearchOffsetForPos(targetPos);
 
             currentEatingTime = 0.0f;
             nextEatAnimTime = 0.0f;
@@ -288,6 +304,13 @@ namespace ExpandedAiTasks
                 return false;
 
             UpdateState();
+
+            //If too many other AI have claimed this entity for eating and we don't already have dibs, early out.
+            if ( EntityManager.CountEntityClaimantsForReason(targetEntity, EDibsReason.Eat) >= maxEatersPerEntity )
+            {
+                if( !EntityManager.HasDibsOnEntity( entity, targetEntity, EDibsReason.Eat ) )
+                    return false;
+            }
 
             //Turn to face target.
             Vec3f targetVec = new Vec3f();
@@ -446,6 +469,8 @@ namespace ExpandedAiTasks
             {
                 //Eating State
                 internalTaskState = eInternalTaskState.Eating;
+
+                EntityManager.CallDibsOnEntity( entity, TargetEntity, EDibsReason.Eat, (long)(eatDuration * 1000) );
 
                 if (moveAnimation != null)
                     entity.AnimManager.StopAnimation(moveAnimation);

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
@@ -75,6 +77,82 @@ namespace ExpandedAiTasks
             colors.Add(colorTarget);
             colors.Add(colorLKP);
             colors.Add(colorNav);
+
+            IPlayer player = world.AllOnlinePlayers[0];
+            world.HighlightBlocks(player, 2, blockPositions, colors, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Arbitrary);
+        }
+
+        private static BlockSelection blockSel = null;
+        private static EntitySelection entitySel = null;
+        private static BlockSelection raytraceBlockSel = null;
+        private static EntitySelection raytraceEntityRay = null;
+        private static List<BlockPos> raycastDebugDrawBlockPositions = new List<BlockPos>();
+        private static List<int> raycastDebugColors = new List<int>();
+        public static void DebugDrawRayTrace(IWorldAccessor world, Vec3d startPos, Vec3d endPos, BlockFilter BlockFilter, EntityFilter EntFilter)
+        {
+            raycastDebugDrawBlockPositions.Clear();
+            raycastDebugColors.Clear();
+
+            world.RayTraceForSelection(startPos, endPos, ref blockSel, ref entitySel, BlockFilter, EntFilter);
+            world.RayTraceForSelection(startPos, endPos, ref raytraceBlockSel, ref raytraceEntityRay, RayTrace_BlockFilter, RayTrace_EntityFilter);
+
+            for (int i = 0; i < raycastDebugDrawBlockPositions.Count; i++ )
+            {
+                raycastDebugColors.Add(ColorUtil.ColorFromRgba(255, 164, 0, 150));
+            }
+
+            IPlayer player = world.AllOnlinePlayers[0];
+            world.HighlightBlocks(player, 2, raycastDebugDrawBlockPositions, raycastDebugColors, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Arbitrary);
+        }
+
+        private static bool RayTrace_BlockFilter(BlockPos pos, Block block)
+        {
+            raycastDebugDrawBlockPositions.Add(pos);
+
+            if (blockSel == null)
+                return false;
+
+            if (block == blockSel.Block)
+                return true;
+
+            return false;
+        }
+
+        private static bool RayTrace_EntityFilter(Entity ent)
+        {
+            if ( entitySel == null )
+                return false;
+
+            if (ent == entitySel.Entity) 
+                return true;
+
+            return false;
+        }
+
+        public static void DebugDrawScentSystem(IWorldAccessor world, Vec3d smellPos, Vec3d scentPos, Vec3d smellToScent, Vec3d windDir )
+        {
+            BlockPos smellPosBlockPos = smellPos.AsBlockPos;
+            BlockPos scentPosBlockPos = scentPos.AsBlockPos;
+            BlockPos smellToScentBlockPos = (smellPos + (smellToScent * 2)).AsBlockPos;
+            BlockPos windDirBlockPos = (scentPos + (windDir * 2)).AsBlockPos;
+
+
+            // Debug visualization
+            List<BlockPos> blockPositions = new List<BlockPos>();
+            blockPositions.Add(smellPosBlockPos);
+            blockPositions.Add(scentPosBlockPos);
+            blockPositions.Add(smellToScentBlockPos);
+            blockPositions.Add(windDirBlockPos);
+
+            int colorSmell = ColorUtil.ColorFromRgba(255, 136, 0, 150);
+            int colorScent = ColorUtil.ColorFromRgba(0, 255, 0, 150);
+            int colorSmellToScent = ColorUtil.ColorFromRgba(255, 0, 0, 150);
+            int colorWind = ColorUtil.ColorFromRgba(0, 0, 255, 150);
+            List<int> colors = new List<int>();
+            colors.Add(colorSmell);
+            colors.Add(colorScent);
+            colors.Add(colorSmellToScent);
+            colors.Add(colorWind);
 
             IPlayer player = world.AllOnlinePlayers[0];
             world.HighlightBlocks(player, 2, blockPositions, colors, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Arbitrary);

@@ -5,7 +5,7 @@ using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
 
-namespace ExpandedAiTasks
+namespace ExpandedAiTasks.Behaviors
 {
     //This is a modified version of repulse agents that has a level of detail behavior based on player distance.
     //The farther the closest player is away, the less often and less detailed the repulse will be.

@@ -134,7 +134,6 @@
 					},
 					{
 						code: "morale",
-						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-feral" ],
 						priority: 5.0,
 						movespeed: 0.040,
 						cancelOnHurt: false,
@@ -181,19 +180,26 @@
 					},
 					//disengage when injured.
 					{
-						code: "fleeentity",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "hound-feral", "humanoid-villager-*"],
+						code: "morale",
 						priority: 4.5,
 						movespeed: 0.045,
-						seekingRange: 22,
 						cancelOnHurt: false,
-						fleeingDistance: 12,
-						fleeDurationMs: 2000,
+						routDistance: 20,
+						rallyTimeAfterRoutMs: 3500,
+						minMorale: -100,
+						maxMorale: -100,
+						moraleRange: 22,
+						useGroupMorale: false,
+						deathsImpactMorale: false,
+						canRoutFromAnyEnemy: true,
+						tacticalRetreat: true,
+
 						animation: "sprint",
-						animationSpeed: 2.0,
-						executionChance: 1.0,
+						animationSpeed: 1,
+
 						whenInEmotionState: "fleeondamage",
 					},
+
 					//Agro When Damaged
 					{
 						code: "engageentity",
@@ -260,7 +266,12 @@
 					{
 						code: "stayclosetoherd",
 						priority: 1.1,
-						movespeed: 0.04,
+
+						movespeed:0.006,
+						moveSpeedFarAway: 0.04,
+						moveNearAnimation: "walk",
+						moveFarAnimation: "sprint",
+
 						animationSpeed: 1.0,
 						maxDistance: 20,
 						arriveDistance: 8,
@@ -269,7 +280,6 @@
 						allowHerdConsolidation: true,
 						consolidationRange: 40,
 						consolidationEntityCodes: ["yeoman-archer", "bandit-*"],
-						animation: "sprint"
 					},
 					/*
 					{

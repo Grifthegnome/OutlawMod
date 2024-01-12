@@ -10,6 +10,7 @@ using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
+using ExpandedAiTasks.Managers;
 
 namespace ExpandedAiTasks
 {
@@ -139,7 +140,7 @@ namespace ExpandedAiTasks
 
                     if (projectile.ApplyGravity )
                     {
-                        if ( AiUtility.IsAwareOfTarget(entity, projectile, reactRange, reactRange ) )
+                        if ( AwarenessManager.IsAwareOfTarget(entity, projectile, reactRange, reactRange ) )
                         {
                             filteredProjectiles.Add(projectile);
                         }

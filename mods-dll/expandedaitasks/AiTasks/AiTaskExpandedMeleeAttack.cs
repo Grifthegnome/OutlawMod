@@ -9,6 +9,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
+using ExpandedAiTasks.Managers;
 
 namespace ExpandedAiTasks
 {
@@ -84,13 +85,13 @@ namespace ExpandedAiTasks
                 attackedByEntity = null;
             }
 
-            if (retaliateAttacks && attackedByEntity != null && attackedByEntity.Alive && IsTargetableEntity(attackedByEntity, minDist, true) && AiUtility.IsAwareOfTarget(entity, attackedByEntity, minDist, minVerDist))
+            if (retaliateAttacks && attackedByEntity != null && attackedByEntity.Alive && IsTargetableEntity(attackedByEntity, minDist, true) && AwarenessManager.IsAwareOfTarget(entity, attackedByEntity, minDist, minVerDist))
             {
                 targetEntity = attackedByEntity;
             }
             else if (guardTargetAttackedByEntity != null && guardTargetAttackedByEntity.Alive)
             {
-                if (IsTargetableEntity(guardTargetAttackedByEntity, minDist, true) && AiUtility.IsAwareOfTarget(entity, guardTargetAttackedByEntity, minDist, minVerDist))
+                if (IsTargetableEntity(guardTargetAttackedByEntity, minDist, true) && AwarenessManager.IsAwareOfTarget(entity, guardTargetAttackedByEntity, minDist, minVerDist))
                     targetEntity = guardTargetAttackedByEntity;
             }
             else
@@ -102,7 +103,7 @@ namespace ExpandedAiTasks
             {
                 targetEntity = entity.World.GetNearestEntity(pos, minDist, minVerDist, (e) =>
                 {
-                    return IsTargetableEntity(e, minDist, false) && AiUtility.IsAwareOfTarget(entity, e, minDist, minVerDist);
+                    return IsTargetableEntity(e, minDist, false) && AwarenessManager.IsAwareOfTarget(entity, e, minDist, minVerDist);
                 });
             }
 
@@ -155,7 +156,7 @@ namespace ExpandedAiTasks
             if (!damageInflicted && correctYaw && IsInMeleeRange(targetEntity))
             {
                 //To do: We should test if this check is really needed anymore.
-                if (!IsTargetableEntity(targetEntity, minDist, true) || !AiUtility.IsAwareOfTarget(entity, targetEntity, minDist, minVerDist)) 
+                if (!IsTargetableEntity(targetEntity, minDist, true) || !AwarenessManager.IsAwareOfTarget(entity, targetEntity, minDist, minVerDist)) 
                     return false;
 
                 bool alive = targetEntity.Alive;
