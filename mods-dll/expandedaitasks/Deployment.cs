@@ -13,14 +13,11 @@ namespace ExpandedAiTasks
         static bool hasDeployed = false;
         public static void Deploy( ICoreAPI api )
         {
-            if (hasDeployed)
-                return;
-
             //Apply AiExpandedTask Patches if they haven't already been applied.
             if (ExpandedAiTasksHarmonyPatcher.ShouldPatch())
                 ExpandedAiTasksHarmonyPatcher.ApplyPatches();
 
-            if ( api.Side == EnumAppSide.Server )
+            if ( api.Side == EnumAppSide.Server && !hasDeployed )
             {
                 ICoreServerAPI serverAPI = api as ICoreServerAPI;
 
