@@ -118,7 +118,6 @@
 					},
 					{
 						code: "morale",
-						//entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "yeoman-*", "looter", "hound-feral" ],
 						priority: 5.0,
 						movespeed: 0.052,
 						cancelOnHurt: false,
@@ -165,7 +164,8 @@
 					},
 					{
 						code: "melee",
-						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "bandit-*", "yeoman-*", "looter", "hound-feral", "humanoid-villager-*"],
+						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "bear-*", "deer-*", "goat-*", "bandit-*", "yeoman-*", "looter", 
+						"hound-feral", "humanoid-villager-*"],
 						priority: 2,
 						damage: 4,
 						damageTier: 1,
@@ -181,7 +181,8 @@
 					},
 					{
 						code: "engageentity",
-						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "bandit-*", "yeoman-*", "looter", "hound-feral", "humanoid-villager-*"],
+						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "bear-*", "deer-*", "goat-*", "bandit-*", "yeoman-*", "looter", 
+						"hound-feral", "humanoid-villager-*"],
 						priority: 1.5,		
 						maxTargetHealth: 5.0,
 						packHunting: "false",			

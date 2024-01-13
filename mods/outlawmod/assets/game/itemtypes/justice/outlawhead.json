@@ -50,7 +50,8 @@
         }
 	},
 	maxstacksize: 2,
-	heldTpIdleAnimation: "holdbothhands",
+	heldRightTpIdleAnimation: "holdinglanternrighthand",
+	heldLeftTpIdleAnimation: "holdinglanternlefthand",
 	variantgroups: [
 		{ code: "type", states: ["looter", "poacher", "brigand", "yeoman" ] }
 	],
@@ -83,14 +84,14 @@
 		scale: 2.34
 	},
     tpHandTransform: {
-		translation: { x: -1, y: -0.55, z: -0.25 },
-		rotation: { x: -170, y: -26, z: -102 },
+		translation: { x: -1, y: -0.55, z: -0.35 },
+		rotation: { x: 25, y: 0, z: -90 },
 		scale: 0.91
 	},
 	tpOffHandTransform: {
-		translation: { x: -0.7, y: -0.55, z: -0.5 },
-		rotation: { x: -180, y: 15, z: -92 },
-		scale: 0.87
+		translation: { x: -0.65, y: -0.55, z: -0.6 },
+		rotation: { x: -180, y: 10, z: -92 },
+		scale: 0.91
 	},
 	groundTransform: {
 		translation: { x: 0, y: 0.17, z: 0 },

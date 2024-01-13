@@ -208,7 +208,8 @@
 					{
 						code: "shootatentity",
 						entityCodes: ["wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "chicken-rooster", "chicken-hen", "chicken-baby", "hare-male", "hare-female", 
-							"fox-male", "fox-female", "fox-arctic-male", "fox-arctic-female", "pig-wild-male", "pig-wild-female", "raccoon-male", "raccoon-female", "sheep-bighorn-male", "sheep-bighorn-female"],
+							"fox-male", "fox-female", "fox-arctic-male", "fox-arctic-female", "pig-wild-male", "pig-wild-female", "raccoon-male", "raccoon-female", "sheep-bighorn-male", "sheep-bighorn-female",
+							"deer-*", "goat-*"],
 						priority: 3.75,
 						priorityForCancel: 9,
 						mincooldown: 1000, 
@@ -358,6 +359,9 @@
 							{ code: "raccoon-female", fearWeight: 1.0},
 							{ code: "sheep-bighorn-male", fearWeight: 1.0},
 							{ code: "sheep-bighorn-female", fearWeight: 1.0},
+							{ code: "deer-*", fearWeight: 1.0},
+							{ code: "goat-*", fearWeight: 1.0},
+
 
 							//Mods
 							{ code: "humanoid-villager-*", fearWeight: 1.0},						
@@ -371,7 +375,8 @@
 					{
 						code: "engageentity",
 						entityCodes: [ "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "chicken-rooster", "chicken-hen", "chicken-baby", "hare-male", "hare-female", 
-							"fox-male", "fox-female", "fox-arctic-male", "fox-arctic-female", "pig-wild-male", "pig-wild-female", "raccoon-male", "raccoon-female", "sheep-bighorn-male", "sheep-bighorn-female"],
+							"fox-male", "fox-female", "fox-arctic-male", "fox-arctic-female", "pig-wild-male", "pig-wild-female", "raccoon-male", "raccoon-female", "sheep-bighorn-male", "sheep-bighorn-female",
+							"deer-*", "goat-*"],
 						priority: 2.0,
 						priorityForCancel: 3.0,
 						mincooldown: 0, 
@@ -454,8 +459,8 @@
 				group: "hostile",
 				tryOnlySurface: true,
 				chance: 0.0012,
-				maxQuantity: 1,
-				maxQuantityByGroup: { code: "poacher-*", maxQuantity: 1 },
+				maxQuantity: 4,
+				maxQuantityByGroup: { code: "poacher-archer", maxQuantity: 1 },
 				spawnCapPlayerScaling: 0.05,
 				"__comment": "Make them spawn away from artifical light",
 				maxLightLevel: 7,

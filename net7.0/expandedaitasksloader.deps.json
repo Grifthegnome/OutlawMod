@@ -52,7 +52,7 @@
         "runtime": {
           "VintagestoryAPI.dll": {
             "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.7.0.0"
+            "fileVersion": "1.19.0.0"
           }
         }
       },
@@ -60,7 +60,7 @@
         "runtime": {
           "VSCreativeMod.dll": {
             "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.18.15.0"
+            "fileVersion": "1.19.0.0"
           }
         }
       },
@@ -68,7 +68,7 @@
         "runtime": {
           "VSEssentials.dll": {
             "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.18.15.0"
+            "fileVersion": "1.19.0.0"
           }
         }
       },
@@ -76,7 +76,7 @@
         "runtime": {
           "VSSurvivalMod.dll": {
             "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.18.15.0"
+            "fileVersion": "1.19.0.0"
           }
         }
       },

@@ -359,7 +359,7 @@
 		],
 		spawnconditions: {
 			worldgen: {
-				TriesPerChunk: { avg: 0.05, var: 0 },
+				TriesPerChunk: { avg: 0.033, var: 0 },
 				tryOnlySurface: true,				
 				groupSize: { dist: "stronginvexp", avg: 4, var: 4 },
 				insideBlockCodes: ["game:air", "game:tallgrass-*","game:snowlayer-1"],
