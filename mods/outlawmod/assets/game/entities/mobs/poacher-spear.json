@@ -87,7 +87,8 @@
 				code: "wander", 
 				animation: "walkspearshouldered",
 				blendMode: "Average",
-				easeOutSpeed: 1
+				easeInSpeed: 0.05,
+				easeOutSpeed: 0.05,
 			},
 			{ 
 				code: "sprint",
@@ -107,6 +108,14 @@
 				animation: "look",
 				easeOutSpeed: 1,
 				blendMode: "Add",
+				SupressDefaultAnimation: true
+			},
+			{
+				code: "walk",
+				animation: "WalkSpearShouldered",
+				blendMode: "AddAverage",
+				//easeInSpeed: 4,
+				//easeOutSpeed: 4,
 				SupressDefaultAnimation: true
 			},
 			{

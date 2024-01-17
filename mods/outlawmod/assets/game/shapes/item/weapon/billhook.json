@@ -1,0 +1,323 @@
+{
+	"editor": {
+		"collapsedPaths": "Root/LowerTorso/UpperTorso/UpperArmR/LowerArmR/billhook",
+		"allAngles": true,
+		"entityTextureMode": true
+	},
+	"textureWidth": 64,
+	"textureHeight": 64,
+	"textureSizes": {
+		"seraph": [64,64]
+	},
+	"textures": {
+		"head": "entity/bandit/poacher1",
+		"spearwood": "entity/spearwood",
+		"iron": "item/tool/material/iron"
+	},
+	"elements": [
+		{
+			"name": "spear",
+			"from": [ 39.0, 0.0, 7.75 ],
+			"to": [ 39.0, 0.0, 7.75 ],
+			"uv": [ 0.0, -1.0 ],
+			"rotationOrigin": [ 8.0, 0.0, 8.0 ],
+			"rotationZ": 90.0,
+			"faces": {
+				"north": { "texture": "#head", "uv": [ 0.0, -0.5, 0.5, 0.0 ] },
+				"east": { "texture": "#head", "uv": [ 0.5, -0.5, 1.0, 0.0 ] },
+				"south": { "texture": "#head", "uv": [ 1.0, -0.5, 1.5, 0.0 ] },
+				"west": { "texture": "#head", "uv": [ 1.5, -0.5, 2.0, 0.0 ] },
+				"up": { "texture": "#head", "uv": [ 0.0, -1.0, 0.5, -0.5 ] },
+				"down": { "texture": "#head", "uv": [ 0.5, -1.0, 1.0, -0.5 ] }
+			},
+			"children": [
+				{
+					"name": "handle",
+					"from": [ -8.0, -0.5, -0.5 ],
+					"to": [ 14.0, 1.0, 1.0 ],
+					"uv": [ 0.0, 0.5 ],
+					"rotationOrigin": [ -9.5, -8.0, 0.0 ],
+					"faces": {
+						"north": { "texture": "#spearwood", "uv": [ 0.0, 4.0, 22.0, 6.0 ] },
+						"east": { "texture": "#spearwood", "uv": [ 22.0, 4.0, 23.0, 6.0 ] },
+						"south": { "texture": "#spearwood", "uv": [ 23.0, 4.0, 45.0, 6.0 ] },
+						"west": { "texture": "#spearwood", "uv": [ 45.0, 4.0, 46.0, 6.0 ] },
+						"up": { "texture": "#spearwood", "uv": [ 0.0, 0.0, 22.0, 2.0 ] },
+						"down": { "texture": "#spearwood", "uv": [ 22.0, 0.0, 44.0, 2.0 ] }
+					}
+				},
+				{
+					"name": "handle 2",
+					"from": [ -24.0, -0.5, -0.5 ],
+					"to": [ -8.0, 1.0, 1.0 ],
+					"uv": [ 0.0, 0.5 ],
+					"rotationOrigin": [ -25.5, -8.0, 0.0 ],
+					"faces": {
+						"north": { "texture": "#spearwood", "uv": [ 0.0, 5.5, 16.0, 7.0 ] },
+						"east": { "texture": "#spearwood", "uv": [ 0.5, 0.5, 2.0, 2.0 ] },
+						"south": { "texture": "#spearwood", "uv": [ 0.0, 10.5, 16.0, 12.0 ] },
+						"west": { "texture": "#spearwood", "uv": [ 14.0, 10.0, 15.5, 11.5 ] },
+						"up": { "texture": "#spearwood", "uv": [ 0.0, 4.5, 16.0, 6.0 ] },
+						"down": { "texture": "#spearwood", "uv": [ 0.0, 5.0, 16.0, 6.5 ] }
+					}
+				},
+				{
+					"name": "ferule",
+					"from": [ 11.2, -0.7, -0.8 ],
+					"to": [ 14.2, 1.2, 1.2 ],
+					"uv": [ 1.0, 2.0 ],
+					"rotationOrigin": [ 11.0, 0.5, 0.0 ],
+					"faces": {
+						"north": { "texture": "#iron", "uv": [ 1.0, 4.0, 4.0, 6.0 ] },
+						"east": { "texture": "#iron", "uv": [ 4.0, 4.0, 6.0, 6.0 ] },
+						"south": { "texture": "#iron", "uv": [ 6.0, 4.0, 9.0, 6.0 ] },
+						"west": { "texture": "#iron", "uv": [ 9.0, 4.0, 11.0, 6.0 ] },
+						"up": { "texture": "#iron", "uv": [ 2.0, 2.0, 4.0, 4.0 ], "rotation": 90 },
+						"down": { "texture": "#iron", "uv": [ 3.0, 2.0, 6.0, 4.0 ] }
+					},
+					"children": [
+						{
+							"name": "billbase",
+							"from": [ 3.8, 0.7, 0.8 ],
+							"to": [ 8.8, 2.7, 1.3 ],
+							"uv": [ 1.0, 2.0 ],
+							"rotationOrigin": [ 3.8, 0.7, 0.8 ],
+							"faces": {
+								"north": { "texture": "#iron", "uv": [ 1.0, 6.0, 6.0, 8.0 ] },
+								"east": { "texture": "#iron", "uv": [ 6.0, 6.0, 7.0, 8.0 ] },
+								"south": { "texture": "#iron", "uv": [ 7.0, 6.0, 12.0, 8.0 ] },
+								"west": { "texture": "#iron", "uv": [ 12.0, 6.0, 13.0, 8.0 ] },
+								"up": { "texture": "#iron", "uv": [ 2.0, 2.0, 4.0, 6.0 ], "rotation": 90 },
+								"down": { "texture": "#iron", "uv": [ 3.0, 2.0, 8.0, 4.0 ] }
+							}
+						},
+						{
+							"name": "spike",
+							"from": [ 3.8, 0.2, 0.8 ],
+							"to": [ 14.3, 0.7, 1.3 ],
+							"uv": [ 1.0, 2.0 ],
+							"rotationOrigin": [ 3.8, 0.2, 0.8 ],
+							"faces": {
+								"north": { "texture": "#iron", "uv": [ 1.0, 12.0, 11.0, 14.0 ] },
+								"east": { "texture": "#iron", "uv": [ 11.0, 12.0, 12.0, 14.0 ] },
+								"south": { "texture": "#iron", "uv": [ 12.0, 12.0, 22.0, 14.0 ] },
+								"west": { "texture": "#iron", "uv": [ 22.0, 12.0, 23.0, 14.0 ] },
+								"up": { "texture": "#iron", "uv": [ 2.0, 2.0, 4.0, 12.0 ], "rotation": 90 },
+								"down": { "texture": "#iron", "uv": [ 3.0, 2.0, 13.0, 4.0 ] }
+							}
+						},
+						{
+							"name": "bracket",
+							"from": [ -3.2, 0.7, 0.05 ],
+							"to": [ 0.3, 1.2, 2.05 ],
+							"uv": [ 1.0, 2.0 ],
+							"rotationOrigin": [ -3.2, 1.2, -0.2 ],
+							"faces": {
+								"north": { "texture": "#iron", "uv": [ 1.0, 4.0, 4.0, 6.0 ] },
+								"east": { "texture": "#iron", "uv": [ 4.0, 4.0, 6.0, 6.0 ] },
+								"south": { "texture": "#iron", "uv": [ 6.0, 4.0, 9.0, 6.0 ] },
+								"west": { "texture": "#iron", "uv": [ 9.0, 4.0, 11.0, 6.0 ] },
+								"up": { "texture": "#iron", "uv": [ 2.0, 2.0, 4.0, 4.0 ], "rotation": 90 },
+								"down": { "texture": "#iron", "uv": [ 3.0, 2.0, 6.0, 4.0 ] }
+							}
+						},
+						{
+							"name": "ferule2",
+							"from": [ 3.0, 0.2, 0.3 ],
+							"to": [ 4.0, 1.7, 1.8 ],
+							"uv": [ 1.0, 2.0 ],
+							"rotationOrigin": [ 2.8, 1.2, 0.8 ],
+							"faces": {
+								"north": { "texture": "#iron", "uv": [ 1.0, 4.0, 2.0, 6.0 ] },
+								"east": { "texture": "#iron", "uv": [ 2.0, 4.0, 3.0, 6.0 ] },
+								"south": { "texture": "#iron", "uv": [ 3.0, 4.0, 4.0, 6.0 ] },
+								"west": { "texture": "#iron", "uv": [ 4.0, 4.0, 5.0, 6.0 ] },
+								"up": { "texture": "#iron", "uv": [ 2.0, 2.0, 4.0, 4.0 ], "rotation": 90 },
+								"down": { "texture": "#iron", "uv": [ 3.0, 2.0, 4.0, 4.0 ] }
+							}
+						},
+						{
+							"name": "billblade",
+							"from": [ 8.8, 0.7, 0.85 ],
+							"to": [ 10.8, 2.7, 1.25 ],
+							"uv": [ 1.0, 2.0 ],
+							"rotationOrigin": [ 8.8, 0.7, 0.8 ],
+							"rotationZ": 25.0,
+							"faces": {
+								"north": { "texture": "#iron", "uv": [ 1.0, 4.0, 3.0, 6.0 ] },
+								"east": { "texture": "#iron", "uv": [ 3.0, 4.0, 4.0, 6.0 ] },
+								"south": { "texture": "#iron", "uv": [ 4.0, 4.0, 6.0, 6.0 ] },
+								"west": { "texture": "#iron", "uv": [ 6.0, 4.0, 7.0, 6.0 ] },
+								"up": { "texture": "#iron", "uv": [ 2.0, 2.0, 4.0, 4.0 ], "rotation": 90 },
+								"down": { "texture": "#iron", "uv": [ 3.0, 2.0, 5.0, 4.0 ] }
+							}
+						},
+						{
+							"name": "billblade2",
+							"from": [ 9.55, 1.45, 0.9 ],
+							"to": [ 10.55, 3.95, 1.3 ],
+							"uv": [ 1.0, 2.0 ],
+							"rotationOrigin": [ 9.8, 2.7, 0.8 ],
+							"rotationZ": 8.0,
+							"faces": {
+								"north": { "texture": "#iron", "uv": [ 1.0, 4.0, 2.0, 6.0 ] },
+								"east": { "texture": "#iron", "uv": [ 2.0, 4.0, 3.0, 6.0 ] },
+								"south": { "texture": "#iron", "uv": [ 3.0, 4.0, 4.0, 6.0 ] },
+								"west": { "texture": "#iron", "uv": [ 4.0, 4.0, 5.0, 6.0 ] },
+								"up": { "texture": "#iron", "uv": [ 2.0, 2.0, 4.0, 4.0 ], "rotation": 90 },
+								"down": { "texture": "#iron", "uv": [ 3.0, 2.0, 4.0, 4.0 ] }
+							}
+						},
+						{
+							"name": "backspike",
+							"from": [ 6.6, 0.2, 0.8 ],
+							"to": [ 8.1, 0.7, 1.3 ],
+							"uv": [ 1.0, 2.0 ],
+							"rotationOrigin": [ 6.8, 0.2, 0.8 ],
+							"rotationZ": -105.0,
+							"faces": {
+								"north": { "texture": "#iron", "uv": [ 1.0, 4.0, 2.0, 6.0 ] },
+								"east": { "texture": "#iron", "uv": [ 2.0, 4.0, 3.0, 6.0 ] },
+								"south": { "texture": "#iron", "uv": [ 3.0, 4.0, 4.0, 6.0 ] },
+								"west": { "texture": "#iron", "uv": [ 4.0, 4.0, 5.0, 6.0 ] },
+								"up": { "texture": "#iron", "uv": [ 2.0, 2.0, 4.0, 4.0 ], "rotation": 90 },
+								"down": { "texture": "#iron", "uv": [ 3.0, 2.0, 4.0, 4.0 ] }
+							}
+						},
+						{
+							"name": "backspike2",
+							"from": [ 5.8, 0.7, 0.8 ],
+							"to": [ 7.3, 1.2, 1.3 ],
+							"uv": [ 1.0, 2.0 ],
+							"rotationOrigin": [ 5.8, 0.2, 0.8 ],
+							"rotationZ": -83.0,
+							"faces": {
+								"north": { "texture": "#iron", "uv": [ 1.0, 4.0, 2.0, 6.0 ] },
+								"east": { "texture": "#iron", "uv": [ 2.0, 4.0, 3.0, 6.0 ] },
+								"south": { "texture": "#iron", "uv": [ 3.0, 4.0, 4.0, 6.0 ] },
+								"west": { "texture": "#iron", "uv": [ 4.0, 4.0, 5.0, 6.0 ] },
+								"up": { "texture": "#iron", "uv": [ 2.0, 2.0, 4.0, 4.0 ], "rotation": 90 },
+								"down": { "texture": "#iron", "uv": [ 3.0, 2.0, 4.0, 4.0 ] }
+							}
+						}
+					]
+				},
+				{
+					"name": "handle 24",
+					"from": [ -31.0, -0.5, -0.5 ],
+					"to": [ -24.0, 1.0, 1.0 ],
+					"uv": [ 0.0, 0.5 ],
+					"rotationOrigin": [ -31.5, 0.0, 0.0 ],
+					"faces": {
+						"north": { "texture": "#spearwood", "uv": [ 0.0, 5.5, 7.0, 7.0 ] },
+						"east": { "texture": "#spearwood", "uv": [ 0.5, 0.5, 2.0, 2.0 ] },
+						"south": { "texture": "#spearwood", "uv": [ 0.0, 10.5, 7.0, 12.0 ] },
+						"west": { "texture": "#spearwood", "uv": [ 14.0, 10.0, 15.5, 11.5 ] },
+						"up": { "texture": "#spearwood", "uv": [ 0.0, 4.5, 7.0, 6.0 ] },
+						"down": { "texture": "#spearwood", "uv": [ 0.0, 5.0, 7.0, 6.5 ] }
+					}
+				}
+			]
+		}
+	],
+	"animations": [
+		{
+			"name": "idle",
+			"code": "idle",
+			"quantityframes": 90,
+			"onActivityStopped": "EaseOut",
+			"onAnimationEnd": "Repeat",
+			"keyframes": [
+
+			]
+		},
+
+		{
+			"name": "idle2",
+			"code": "idle2",
+			"quantityframes": 90,
+			"onActivityStopped": "PlayTillEnd",
+			"onAnimationEnd": "Stop",
+			"keyframes": [
+
+			]
+		},
+
+		{
+			"name": "look",
+			"code": "look",
+			"quantityframes": 135,
+			"onActivityStopped": "PlayTillEnd",
+			"onAnimationEnd": "Stop",
+			"keyframes": [
+
+			]
+		},
+
+		{
+			"name": "walk",
+			"code": "walk",
+			"quantityframes": 40,
+			"onActivityStopped": "EaseOut",
+			"onAnimationEnd": "Repeat",
+			"keyframes": [
+
+			]
+		},
+
+		{
+			"name": "WalkSpearShouldered",
+			"code": "walkspearshouldered",
+			"quantityframes": 40,
+			"onActivityStopped": "EaseOut",
+			"onAnimationEnd": "Repeat",
+			"keyframes": [
+
+			]
+		},
+
+		{
+			"name": "die",
+			"code": "die",
+			"quantityframes": 29,
+			"onActivityStopped": "PlayTillEnd",
+			"onAnimationEnd": "Hold",
+			"keyframes": [
+
+			]
+		},
+
+		{
+			"name": "Sprint",
+			"code": "sprint",
+			"quantityframes": 24,
+			"onActivityStopped": "EaseOut",
+			"onAnimationEnd": "Repeat",
+			"keyframes": [
+
+			]
+		},
+
+		{
+			"name": "swim",
+			"code": "swim",
+			"quantityframes": 30,
+			"onActivityStopped": "EaseOut",
+			"onAnimationEnd": "Repeat",
+			"keyframes": [
+
+			]
+		},
+
+		{
+			"name": "attack",
+			"code": "attack",
+			"quantityframes": 20,
+			"onActivityStopped": "PlayTillEnd",
+			"onAnimationEnd": "Stop",
+			"keyframes": [
+
+			]
+		}
+	]
+}

@@ -129,7 +129,7 @@
 				aitasks: [
 					{
 						code: "reacttoprojectiles",
-						entityCodes: ["player"],
+						entityCodes: ["player", "deserter-*"],
 						priority: 5.1,
 					},
 					{
@@ -150,6 +150,8 @@
 							{ code: "player", fearWeight: 0.1},
 							{ code: "looter", fearWeight: 0.05},
 							{ code: "bandit-*", fearWeight: -0.1},
+							{ code: "yeoman-*", fearWeight: -0.1},
+							{ code: "deserter-*", fearWeight: 0.1},
 							{ code: "hound-feral", fearWeight: 0.05},
 						],
 						itemStackSourcesOfFear: [
@@ -165,7 +167,7 @@
 					},
 					{
 						code: "melee",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "hound-feral", "humanoid-villager-*"],
+						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "deserter-*", "hound-feral", "humanoid-villager-*"],
 						priority: 4.0,
 						damage: 3.5,
 						damageTier: 1,
@@ -203,7 +205,7 @@
 					//Agro When Damaged
 					{
 						code: "engageentity",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "hound-feral", "humanoid-villager-*" ],
+						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "deserter-*", "hound-feral", "humanoid-villager-*" ],
 						priority: 4.0,
 						mincooldown: 0, 
 						maxcooldown: 0, 
@@ -231,7 +233,7 @@
 					//Double the agro distance of normal outlaws because of skirmish behavior.
 					{
 						code: "engageentity",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "humanoid-villager-*" ],
+						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "deserter-*", "humanoid-villager-*" ],
 						priority: 2.5,
 						priorityForCancel: 2.5,
 						mincooldown: 0, 

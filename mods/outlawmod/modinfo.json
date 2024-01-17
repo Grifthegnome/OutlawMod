@@ -4,7 +4,7 @@
   "name": "Outlaw Mod",
   "authors": ["Grifthegnome", "Inspired by COB_Bandit Mod"],
   "description": "Adds Outlaws to the game.",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "dependencies": {
     "game": "1.19.0-rc.6"
   }
