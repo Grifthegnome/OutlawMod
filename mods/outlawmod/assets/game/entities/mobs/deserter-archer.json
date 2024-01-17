@@ -141,7 +141,7 @@
 			{ code: "harvestable", drops: [
 				{
 					type: "item",
-					code: "outlawhead-yeoman",
+					code: "outlawhead-deserter-archer",
 					quantity: { avg: 1, var: 0 }
 				},
 

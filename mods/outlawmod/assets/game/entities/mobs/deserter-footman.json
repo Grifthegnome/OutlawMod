@@ -131,7 +131,7 @@
 			{ code: "harvestable", drops: [
 				{
 					type: "item",
-					code: "outlawhead-brigand",
+					code: "outlawhead-deserter-footman",
 					quantity: { avg: 1, var: 0 }
 				},
 

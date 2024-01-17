@@ -40,10 +40,28 @@
 				]
 			},
 			outlawSpawnBlockRadius: 25
+		},
+		"*-deserter-archer-*": {
+			handbook: {
+				groupBy: ["headonspear-*"],
+				extraSections: [
+					{ title: "headonspear-handbook-help-title", text: "headonspear-deserter-archer-handbook-help-text" }
+				]
+			},
+			outlawSpawnBlockRadius: 30
+		},
+		"*-deserter-footman-*": {
+			handbook: {
+				groupBy: ["headonspear-*"],
+				extraSections: [
+					{ title: "headonspear-handbook-help-title", text: "headonspear-deserter-footman-handbook-help-text" }
+				]
+			},
+			outlawSpawnBlockRadius: 35
 		}
 	},
 	variantgroups: [
-		{ code: "type", states: ["looter", "poacher", "brigand", "yeoman"]},
+		{ code: "type", states: ["looter", "poacher", "brigand", "yeoman", "deserter-archer", "deserter-footman"]},
 		{ code: "material", states: ["chert", "granite", "andesite", "basalt", "obsidian", "peridotite", "flint", 
 			"copper", "tinbronze", "bismuthbronze", "blackbronze", "ornategold", "ornatesilver", "hacking" ] },
 		{ loadFromProperties: "abstract/horizontalorientation" }
@@ -75,7 +93,15 @@
 		"*-yeoman-*": {
 			"head": { base: "item/justice/dead_outlaw/yeoman1", alternates: [ { base: "item/justice/dead_outlaw/yeoman2" }, { base: "item/justice/dead_outlaw/yeoman3" }, { base: "item/justice/dead_outlaw/yeoman4" } ] },
 			"material": { base: "item/tool/material/{material}" }
-		}
+		},
+		"*-deserter-archer-*": {
+			"head": { base: "item/justice/dead_outlaw/deserter_archer4", alternates: [ { base: "item/justice/dead_outlaw/deserter_archer2" }, { base: "item/justice/dead_outlaw/deserter_archer3" }, { base: "item/justice/dead_outlaw/deserter_archer1" } ] },
+			"material": { base: "item/tool/material/{material}" }
+		},
+		"*-deserter-footman-*": {
+			"head": { base: "item/justice/dead_outlaw/deserter_footman1", alternates: [ { base: "item/justice/dead_outlaw/deserter_footman2" }, { base: "item/justice/dead_outlaw/deserter_footman3" }, { base: "item/justice/dead_outlaw/deserter_footman4" } ] },
+			"material": { base: "item/tool/material/{material}" }
+		},
 	},
 	sidesolidByType: {	
 		"*-north": { all:false },
