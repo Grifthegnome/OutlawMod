@@ -54,6 +54,9 @@ namespace OutlawMod
                 case "bandit-spear":
                 case "bandit-knife":
                 case "yeoman-archer":
+                case "deserter-archer":
+                case "deserter-footman":
+                case "deserter-bannerman":
                     return ShouldSpawnOutlawOfType(ref properties, spawnPosition);
                 case "hound-feral":
                 case "hound-hunting":
@@ -80,6 +83,9 @@ namespace OutlawMod
                     case "bandit-spear":
                     case "bandit-knife":
                     case "yeoman-archer":
+                    case "deserter-archer":
+                    case "deserter-footman":
+                    case "deserter-bannerman":
                     case "hound-feral":
                     case "hound-hunting":
                         string message = "[Outlaw Mod Debug] Despawning entity " + ent.Code.Path;

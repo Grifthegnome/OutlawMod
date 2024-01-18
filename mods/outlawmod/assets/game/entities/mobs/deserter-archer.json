@@ -381,7 +381,7 @@
 				maxTemp: 28,
 				minRain: 0,
 				minForestOrShrubs: 0.25,
-				companions: ["deserter-footman"],
+				companions: ["deserter-footman", "deserter-bannerman"],
 			},
 			runtime: {
 				group: "hostile",
@@ -400,7 +400,7 @@
 				minRain: 0,
 				minForestOrShrubs: 0.25,
 				MinDistanceToPlayer: 50,
-				companions: ["deserter-footman"],
+				companions: ["deserter-footman", "deserter-bannerman"],
 			}
 		}
 	},
