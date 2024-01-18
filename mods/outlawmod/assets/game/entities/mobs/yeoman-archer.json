@@ -179,6 +179,7 @@
 						entitySourcesOfFear: [
 							{ code: "player", fearWeight: 0.1},
 							{ code: "looter", fearWeight: 0.05},
+							{ code: "deserter-*", fearWeight: 0.1},
 							{ code: "hound-feral", fearWeight: 0.05},
 							{ code: "yeoman-*", fearWeight: -0.1},
 						],
@@ -197,7 +198,7 @@
 					},
 					{
 						code: "melee",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "hound-feral", "humanoid-villager-*" ],
+						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "deserter-*", "hound-feral", "humanoid-villager-*" ],
 						priority: 4.0,
 						damage: 1.5,
 						damageTier: 1,
@@ -228,6 +229,7 @@
 						entitySourcesOfFear: [
 							{ code: "player", fearWeight: 1.0},
 							{ code: "looter", fearWeight: 1.0},
+							{ code: "deserter-*", fearWeight: 1.0},
 							{ code: "hound-feral", fearWeight: 1.0},
 							{ code: "drifter-*", fearWeight: 1.0},
 							{ code: "humanoid-villager-*", fearWeight: 1.0},
@@ -244,7 +246,7 @@
 					},
 					{
 						code: "shootatentity",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "hound-feral", "humanoid-villager-*"],
+						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "deserter-*", "hound-feral", "humanoid-villager-*"],
 						priority: 3.75,
 						priorityForCancel: 9,
 						mincooldown: 0, 
@@ -287,7 +289,7 @@
 					//Close the distance to enemy target.
 					{
 						code: "engageentity",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "humanoid-villager-*" ],
+						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "deserter-*", "humanoid-villager-*" ],
 						priority: 1.5,
 						priorityForCancel: 3.0,
 						mincooldown: 0, 
@@ -369,6 +371,7 @@
 				tryOnlySurface: true,
 				lightLevelType: "MaxTimeOfDayLight",					
 				groupSize: { dist: "stronginvexp", avg: 2, var: 4 },
+				maxQuantityByGroup: { code: "yeoman-archer", maxQuantity: 8, code: "bandit-knife", maxQuantity: 2 },
 				insideBlockCodes: ["game:air", "game:tallgrass-*","game:snowlayer-1"],
 				minTemp: -15,
 				maxTemp: 28,

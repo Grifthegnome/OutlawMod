@@ -1,5 +1,5 @@
 {
-	code: "deserter-footman",
+	code: "deserter-bannerman",
 	class: "EntityOutlaw",
 	canClimb: true,
 	hitboxSize: { x: 0.6, y: 1.75 },
@@ -41,9 +41,7 @@
 	],
 	client: {
 		renderer: "Shape",
-		shape: { 
-			base: "entity/land/deserter-footman-billhook", alternates: [ { base: "entity/land/deserter-footman-voulge" }, { base: "entity/land/deserter-footman-breachknife" }, { base: "entity/land/deserter-footman-awlpike" } ]  
-		},
+		shape: { base: "entity/land/deserter-bannerman" },
 		textures: {
 			"deserter": { base: "entity/bandit/deserter_footman1", alternates: [ { base: "entity/bandit/deserter_footman2" }, { base: "entity/bandit/deserter_footman3" }, { base: "entity/bandit/deserter_footman4" } ] },
 			//"brim": { base: "entity/bandit/transparent", alternates: [ {base: "entity/bandit/blade"}, {base: "entity/bandit/transparent"}, {base: "entity/bandit/transparent"} ] },
@@ -189,23 +187,60 @@
 						animation: "sprint",
 						animationSpeed: 1,
 					},
+
+					//Flee to arrow range.
 					{
-						code: "melee",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "bandit-*", "yeoman-*", "hound-feral", "humanoid-villager-*"],
-						priority: 4.0,
-						damage: 8.0,
-						damageTier: 2,
-						damageType: "PiercingAttack",
-						minDist: 3.5,
-						minVerDist: 2.5,
-						slot: 1,
-						mincooldown: 1500, 
-						maxcooldown: 1500, 
-						attackDurationMs: 450,
-						damagePlayerAtMs: 300,
-						animation: "attack",
-						animationSpeed: 1.0,
+						code: "morale",
+						priority: 4.9,
+						movespeed: 0.040,
+						cancelOnHurt: false,
+						routDistance: 15,
+						rallyTimeAfterRoutMs: 10000,
+						minMorale: -100.0,
+						maxMorale: -100.0,
+						moraleRange: 5,
+						useGroupMorale: true,
+						canRoutFromAnyEnemy: false,
+						tacticalRetreat: true,
+						
+						entitySourcesOfFear: [
+							{ code: "player", fearWeight: 1.0},
+							{ code: "looter", fearWeight: 1.0},
+							{ code: "bandit-*", fearWeight: 1.0},
+							{ code: "yeoman-*", fearWeight: 1.0},
+							{ code: "hound-feral", fearWeight: 1.0},
+							{ code: "drifter-*", fearWeight: 1.0},
+							{ code: "humanoid-villager-*", fearWeight: 1.0},
+							{ code: "wolf-male", fearWeight: 1.0},
+							{ code: "wolf-female", fearWeight: 1.0},
+							{ code: "hyena-male", fearWeight: 1.0},
+							{ code: "hyena-female", fearWeight: 1.0},
+							{ code: "locust-*", fearWeight: 1.0},
+							{ code: "bear-*", fearWeight: 1.0},
+						],
+						
+						animation: "sprint",
+						animationSpeed: 1,
 					},
+
+					{
+						code: "stayclosetoherd",
+						priority: 3.0,
+
+						movespeed:0.006,
+						moveSpeedFarAway: 0.04,
+						moveNearAnimation: "WalkSpearShouldered",
+						moveFarAnimation: "sprint",
+
+						animationSpeed: 1.0,
+						maxDistance: 5,
+						searchRange: 25,
+						allowStrayFromHerdInCombat: true,
+						allowHerdConsolidation: true,
+						consolidationRange: 40,
+						consolidationEntityCodes: ["deserter-*"],
+					},
+
 					//Agro When Damaged
 					{
 						code: "engageentity",
@@ -218,9 +253,9 @@
 						pursueAnimation: "sprint",
 						engageSpeed: 0.020,
 						engageRange: 8,
-						engageAnimation: "walkattackready",
+						engageAnimation: "walkspearshouldered",
 
-						arriveRange: 2.5,
+						arriveRange: 15,
 						arriveVerticalRange: 1.0,
 
 						withdrawIfNoPath: true,
@@ -248,9 +283,9 @@
 						pursueAnimation: "sprint",
 						engageSpeed: 0.020,
 						engageRange: 8,
-						engageAnimation: "walkattackready",
+						engageAnimation: "WalkSpearShouldered",
 
-						arriveRange: 2.5,
+						arriveRange: 15,
 						arriveVerticalRange: 1.0,
 
 						withdrawIfNoPath: true,
@@ -273,23 +308,6 @@
 						animationSpeed: 0.3
 					},
 
-					{
-						code: "stayclosetoherd",
-						priority: 1.1,
-
-						movespeed:0.006,
-						moveSpeedFarAway: 0.04,
-						moveNearAnimation: "WalkSpearShouldered",
-						moveFarAnimation: "sprint",
-
-						animationSpeed: 1.0,
-						maxDistance: 15,
-						searchRange: 25,
-						allowStrayFromHerdInCombat: true,
-						allowHerdConsolidation: true,
-						consolidationRange: 40,
-						consolidationEntityCodes: ["deserter-*"],
-					},
 					{
 						code: "idle",
 						priority: 0.8,
