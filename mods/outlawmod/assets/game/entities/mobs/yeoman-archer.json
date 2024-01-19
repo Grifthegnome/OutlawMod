@@ -371,13 +371,13 @@
 				tryOnlySurface: true,
 				lightLevelType: "MaxTimeOfDayLight",					
 				groupSize: { dist: "stronginvexp", avg: 2, var: 4 },
-				maxQuantityByGroup: { code: "yeoman-archer", maxQuantity: 8, code: "bandit-knife", maxQuantity: 2 },
 				insideBlockCodes: ["game:air", "game:tallgrass-*","game:snowlayer-1"],
 				minTemp: -15,
 				maxTemp: 28,
 				minRain: 0,
 				minForestOrShrubs: 0.25,
-				companions: ["bandit-knife"],
+				//For now, we can't enforce a maxium number of knife bandits per squad on world gen, so we are only going to spawn them at runtime.
+				//companions: ["bandit-knife"],
 			},
 			runtime: {
 				group: "hostile",

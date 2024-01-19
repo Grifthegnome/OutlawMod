@@ -375,13 +375,13 @@
 				tryOnlySurface: true,
 				lightLevelType: "MaxTimeOfDayLight",					
 				groupSize: { dist: "stronginvexp", avg: 4, var: 4 },
-				maxQuantityByGroup: { code: "deserter-archer", maxQuantity: 6, code: "deserter-footman", maxQuantity: 6, code: "deserter-bannerman", maxQuantity: 1 },
 				insideBlockCodes: ["game:air", "game:tallgrass-*","game:snowlayer-1"],
 				minTemp: -15,
 				maxTemp: 28,
 				minRain: 0,
 				minForestOrShrubs: 0.25,
-				companions: ["deserter-footman", "deserter-bannerman"],
+				//For now, we can't enforce a maxium number of bannermen per squad on world gen, so we are only going to spawn them at runtime.
+				companions: ["deserter-footman"],
 			},
 			runtime: {
 				group: "hostile",
