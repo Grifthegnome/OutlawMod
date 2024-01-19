@@ -1,29 +1,9 @@
 [
-  //Do not spawn unless you are in very dark areas.
+  //Do not spawn, ever
   {
-    "op": "replace",
-    "path": "/server/spawnconditions/runtime/maxLightLevel",
-    "value": 1,
-    "file": "entities/land/drifter.json"
-  },
-  //Use each local block's light values instead of daylight values.
-  {
-    "op": "replace",
-    "path": "/server/spawnconditions/runtime/lightLevelType",
-    "value": "onlyBlockLight",
-    "file": "entities/land/drifter.json"
-  },
-  //Prevent drifters from spawning on the surface.
-  {
-    "op": "replace",
-    "path": "/server/spawnconditions/runtime/maxYByType",
-    "value": {
-      "*-normal": 0.98,
-      "*-deep": 0.89,
-      "*-tainted": 0.55,
-      "*-corrupt": 0.35,
-      "*-nightmare": 0.23
-    },
-    "file": "entities/land/drifter.json"
+    "file": "entities/land/drifter.json",
+    "op": "add",
+    "path": "/enabled",
+    "value": false
   }
 ]

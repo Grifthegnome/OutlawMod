@@ -1,11 +1,11 @@
 {
   "type": "code",
-  "modid": "drifteroverhaul",
-  "name": "Drifter Overhaul Mod",
+  "modid": "drifterremoval",
+  "name": "Drifter Removal Mod",
   "authors": ["Grifthegnome"],
-  "description": "Modifies vanilla drifter logic so that drifters are stricktly cave dwellers who hate light.",
+  "description": "Blocks all drifter spawning at all times.",
   "version": "1.0.0",
   "dependencies": {
-    "game": "1.16.4"
+    "game": "1.19.1"
   }
 }

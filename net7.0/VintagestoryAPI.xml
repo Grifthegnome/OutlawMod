@@ -4213,12 +4213,6 @@
             </summary>
             <param name="api"></param>
         </member>
-        <member name="M:Vintagestory.API.Common.ModSystem.AssetsFinalize(Vintagestory.API.Common.ICoreAPI)">
-            <summary>
-            When called on a server, all Block.OnLoaded() methods etc. have already been called, this is for any final asset set-up steps to be done after that.  See VSSurvivalMod system BlockReinforcement.cs for an example.
-            </summary>
-            <param name="api"></param>
-        </member>
         <member name="M:Vintagestory.API.Common.ModSystem.StartClientSide(Vintagestory.API.Client.ICoreClientAPI)">
             <summary>
             Full start to the mod on the client side.
@@ -4230,8 +4224,8 @@
         <member name="M:Vintagestory.API.Common.ModSystem.StartServerSide(Vintagestory.API.Server.ICoreServerAPI)">
             <summary>
             Full start to the mod on the server side
-            <br/><br/>Note: preferably, your code which adds or updates behaviors or attributes or other fixed properties of any block, item or entity, should have been run before now.
-            For example, code which needs to do that could be placed in an overridden AssetsFinalize() method. See VSSurvivalMod system BlockReinforcement.cs for an example.
+            <br/><br/>In 1.17+ do NOT use this to add or update behaviors or attributes or other fixed properties of any block, item or entity, in code (additional to what is read from JSON). Do not register recipes either.
+            It is already too late to do that here, it will not be seen client-side. Instead, code which needs to do that should be placed in the overriden method AssetsFinalize(). See VSSurvivalMod system BlockReinforcement.cs for an example.
             </summary>
             <param name="api"></param>
         </member>
@@ -6213,6 +6207,7 @@
             <param name="startPos"></param>
             <param name="mode"></param>
             <param name="replaceMetaBlocks"></param>
+            <param name="resolveImports">Turn it off to spawn structures as they are. For example, in this mode, instead of traders, their meta spawners will spawn</param>
             <returns></returns>
         </member>
         <member name="M:Vintagestory.API.Common.BlockSchematic.TransformWhilePacked(Vintagestory.API.Common.IWorldAccessor,Vintagestory.API.Common.EnumOrigin,System.Int32,System.Nullable{Vintagestory.API.MathTools.EnumAxis})">
@@ -8076,9 +8071,6 @@
             <summary>IF true, this decor is NOT (at least) a full opaque face so that the parent block face still needs to be drawn</summary>
         </member>
         <member name="F:Vintagestory.API.Common.DecorFlags.Removable">
-            <summary>If true, this decor is removable using the players hands, without breaking the parent block</summary>
-        </member>
-        <member name="F:Vintagestory.API.Common.DecorFlags.HasSidedVariants">
             <summary>If true, this decor is removable using the players hands, without breaking the parent block</summary>
         </member>
         <member name="F:Vintagestory.API.Common.DecorSelectionBox.PosAdjust">
@@ -11121,7 +11113,6 @@
             </summary>
             <param name="stack"></param>
             <param name="forEntity"></param>
-            <param name="texturePrefixCode"></param>
             <returns>null for returning back to default behavior (read shape from attributes)</returns>
         </member>
         <member name="T:Vintagestory.API.Common.EntityAgent">
@@ -13595,14 +13586,6 @@
             The animations code identifier that we want to play
             </summary>
         </member>
-        <member name="F:Vintagestory.API.Common.AnimationMetaData.WeightCapFactor">
-            <summary>
-            This property can be used in cases where a animation with high weight is played alongside another animation with low element weight. In these cases, the easeIn become unaturally fast. Setting a value of 0.8f or similar here addresses this issue
-            0f = uncapped weight
-            0.5f = weight cannot exceed 2
-            1f = weight cannot exceed 1
-            </summary>
-        </member>
         <member name="F:Vintagestory.API.Common.AnimationMetaData.EaseInSpeed">
             <summary>
             A multiplier applied to the weight value to "ease in" the animation. Choose a high value for looping animations or it will be glitchy
@@ -13972,6 +13955,7 @@
             </summary>
             <param name="texturePrefixCode"></param>
             <param name="damageEffect"></param>
+            <param name="onTexture"></param>
             <returns></returns>
         </member>
         <member name="M:Vintagestory.API.Common.Shape.StepParentShape(Vintagestory.API.Common.Shape,System.String,System.String,System.String,Vintagestory.API.Common.ILogger,System.Action{System.String,Vintagestory.API.Common.AssetLocation},System.Single)">
@@ -13995,7 +13979,6 @@
             <param name="childLocationForLogging"></param>
             <param name="parentLocationForLogging"></param>
             <param name="logger"></param>
-            <param name="onTexture"></param>
             <returns></returns>
         </member>
         <member name="M:Vintagestory.API.Common.Shape.CollectElements(Vintagestory.API.Common.ShapeElement[],System.Collections.Generic.Dictionary{System.String,Vintagestory.API.Common.ShapeElement})">
@@ -15322,11 +15305,6 @@
         <member name="E:Vintagestory.API.Client.IClientEventAPI.BlockChanged">
             <summary>
             When a player block has been modified. OldBlock param may be null!
-            </summary>
-        </member>
-        <member name="E:Vintagestory.API.Client.IClientEventAPI.TestBlockAccess">
-            <summary>
-            When player tries to modify a block
             </summary>
         </member>
         <member name="E:Vintagestory.API.Client.IClientEventAPI.BeforeActiveSlotChanged">
@@ -18337,13 +18315,6 @@
             <summary>
             Gets the string the key would produce upon pressing it without considering any modifiers (but single keys get converted to uppercase).
             So GlKeys.W on QWERTY Keyboard layout returns W, GlKeys.Space returns Space etc.
-            </summary>
-            <param name="key"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Vintagestory.API.Client.GlKeyNames.GetPrintableChar(System.Int32)">
-            <summary>
-            Returns the printable character for a key. Does return null on none printable keys like <see cref="F:Vintagestory.API.Client.GlKeys.Enter"/>
             </summary>
             <param name="key"></param>
             <returns></returns>
@@ -26541,13 +26512,6 @@
             </summary>
             <param name="tree"></param>
         </member>
-        <member name="M:Vintagestory.API.Datastructures.ITreeAttribute.SortedCopy(System.Boolean)">
-            <summary>
-            Returns a ITreeAttribute sorted alphabetically by key. Does not modify the existing ITreeAttribute
-            </summary>
-            <param name="recursive"></param>
-            <returns></returns>
-        </member>
         <member name="T:Vintagestory.API.Datastructures.IAttribute">
             <summary>
             An attribute from an attribute tree
@@ -31804,7 +31768,6 @@
             <summary>
             Returns a square outline of given radius (only for odd lengths)
             </summary>
-            <param name="halflength"></param>
             <returns></returns>
         </member>
         <member name="T:Vintagestory.API.MathTools.Size2f">
@@ -33467,11 +33430,6 @@
             Triggered after a savegame has been created - i.e. when a new world was created
             </summary>
         </member>
-        <member name="E:Vintagestory.API.Server.IServerEventAPI.WorldgenStartup">
-            <summary>
-            Triggered when starting up worldgen during server startup (as the final stage of the WorldReady EnumServerRunPhase)
-            </summary>
-        </member>
         <member name="E:Vintagestory.API.Server.IServerEventAPI.GameWorldSave">
             <summary>
             Triggered before the game world data is being saved to disk 
@@ -34358,7 +34316,7 @@
         </member>
         <member name="F:Vintagestory.API.Server.EnumServerRunPhase.WorldReady">
             <summary>
-            Notifies mods that the world is ready, after all other loading steps. Following this, worldgen will start and spawn chunks loaded (no separate RunPhase in 1.19)
+            Spawn chunks now loaded.
             </summary>
         </member>
         <member name="F:Vintagestory.API.Server.EnumServerRunPhase.RunGame">
