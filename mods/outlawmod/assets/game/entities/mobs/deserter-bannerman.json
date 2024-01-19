@@ -173,7 +173,7 @@
 							{ code: "bandit-*", fearWeight: 0.1},
 							{ code: "yeoman-*", fearWeight: 0.1},
 							{ code: "deserter-*", fearWeight: -0.1},
-							{ code: "deserter-bannerman", fearWeight: -5.0},
+							{ code: "deserter-bannerman", fearWeight: -10.0},
 							{ code: "hound-feral", fearWeight: 0.05},
 						],
 						itemStackSourcesOfFear: [
