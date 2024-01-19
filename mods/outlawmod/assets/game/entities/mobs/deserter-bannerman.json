@@ -44,7 +44,7 @@
 		shape: { base: "entity/land/deserter-bannerman" },
 		textures: {
 			"deserter": { base: "entity/bandit/deserter_footman1", alternates: [ { base: "entity/bandit/deserter_footman2" }, { base: "entity/bandit/deserter_footman3" }, { base: "entity/bandit/deserter_footman4" } ] },
-			//"brim": { base: "entity/bandit/transparent", alternates: [ {base: "entity/bandit/blade"}, {base: "entity/bandit/transparent"}, {base: "entity/bandit/transparent"} ] },
+			"banner": { base: "item/weapon/deserter_banner_01", alternates: [ {base: "item/weapon/deserter_banner_02"} ] },
 		},
 		behaviors: [
 			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
