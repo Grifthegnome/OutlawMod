@@ -148,6 +148,10 @@ namespace ExpandedAiTasks
 
             if (ent is EntityAgent)
             {
+                //If we don't have AI Tasks, we cannot be in combat.
+                if ( !ent.HasBehavior<EntityBehaviorTaskAI>() )
+                    return false;
+
                 AiTaskManager taskManager = ent.GetBehavior<EntityBehaviorTaskAI>().TaskManager;
 
                 if (taskManager != null)
