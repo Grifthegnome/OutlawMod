@@ -5,7 +5,14 @@
 	hitboxSize: { x: 0.6, y: 1.75 },
 	deadHitboxSize: { x: 0.75, y: 0.5 },
 	eyeHeight: 1.7,
-	attributes: { reckless: false, classicVoice: "sounds/voice/tuba" },
+	attributes: { 
+		reckless: false, 
+		classicVoice: "sounds/voice/tuba",
+		companions: [
+			{ code: "deserter-archer", countMin: 4.0, countMax: 6.0 },
+			{ code: "deserter-footman", countMin: 4.0, countMax: 6.0 },
+		]
+	},
 
 	drops: [
 			{
@@ -352,6 +359,40 @@
 				]
 			}
 		],
+		spawnconditions: {
+			worldgen: {
+				TriesPerChunk: { avg: 0.007, var: 0 },
+				tryOnlySurface: true,
+				lightLevelType: "MaxTimeOfDayLight",					
+				groupSize: { dist: "stronginvexp", avg: 1, var: 0 },
+				insideBlockCodes: ["game:air", "game:tallgrass-*","game:snowlayer-1"],
+				minTemp: -15,
+				maxTemp: 28,
+				minRain: 0,
+				minForestOrShrubs: 0.25,
+				//For now, we can't enforce a maxium number of bannermen per squad on world gen, so we are only going to spawn them at runtime.
+				//companions: ["deserter-footman", "deserter-archer"],
+			},
+			runtime: {
+				group: "hostile",
+				tryOnlySurface: true,
+				chance: 0.0004,
+				maxQuantity: 2,
+				maxQuantityByGroup: { code: "deserter-bannerman", maxQuantity: 1 },
+				spawnCapPlayerScaling: 0.05,
+				"__comment": "Make them spawn away from artifical light and only at night/as the sun sets",
+				maxLightLevel: 3,
+				lightLevelType: "MaxTimeOfDayLight",					
+				groupSize: { dist: "stronginvexp", avg: 1, var: 0 },
+				insideBlockCodes: ["game:air", "game:tallgrass-*","game:snowlayer-1"],
+				minTemp: -15,
+				maxTemp: 28,
+				minRain: 0,
+				minForestOrShrubs: 0.25,
+				MinDistanceToPlayer: 50,
+				//companions: ["deserter-footman", "deserter-archer"],
+			}
+		}
 	},
 	sounds: {
 		idle: "creature/bandit/hrh",
