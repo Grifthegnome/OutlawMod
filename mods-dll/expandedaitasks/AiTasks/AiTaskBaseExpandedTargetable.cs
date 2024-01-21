@@ -38,8 +38,11 @@ namespace ExpandedAiTasks
             //We can never target our friends.
             if ( e != null && e is EntityAgent )
             {
-                if (((EntityAgent)e).HerdId == entity.HerdId)
-                    return false;
+                if( entity.HerdId > 0 )
+                {
+                    if (((EntityAgent)e).HerdId == entity.HerdId)
+                        return false;
+                }
             }
 
             //Don't target projectiles, even it they hit us.
