@@ -8,6 +8,7 @@ using Vintagestory.API.MathTools;
 using System;
 using brutalstory.src;
 using Vintagestory.API.Server;
+using System.Linq;
 
 
 namespace BrutalStory
@@ -33,6 +34,10 @@ namespace BrutalStory
 
             if ( __instance.Api.Side == EnumAppSide.Server )
             {
+
+                if (!BrutalUtility.DoesEntityAgentBleed(__instance))
+                    return;
+
                 long victimEntityID = -1;
                 long sourceEntityID = -1;
                 long causeEntityID  = -1;
@@ -66,11 +71,38 @@ namespace BrutalStory
                     damage              = damage 
                 };
 
-                BrutalBroadcast.serverCoreApi.Network.GetChannel("brutalPacket").BroadcastPacket(packet);
+                //Don't broadcast to the player dealing the damage.
+                IServerPlayer[] ignorePlayers = {};
+                if ( damageSource.SourceEntity is EntityPlayer )
+                {
+                    EntityPlayer player = (EntityPlayer)__instance;
+                    IServerPlayer attackerPlayer = (IServerPlayer)BrutalBroadcast.serverCoreApi.World.PlayerByUid(player.PlayerUID);
+                    ignorePlayers.Append(attackerPlayer);
+                }
+
+                BrutalBroadcast.serverCoreApi.Network.GetChannel("brutalPacket").BroadcastPacket(packet, ignorePlayers);
+
+                //Do screenshake for players on damage.
+                if ( __instance is EntityPlayer )
+                {
+                    EntityPlayer player = (EntityPlayer) __instance;
+
+                    IServerPlayer victimPlayer = (IServerPlayer)BrutalBroadcast.serverCoreApi.World.PlayerByUid( player.PlayerUID );
+
+                    float shakeStrength = 0.0125f;
+
+                    //This screen shake isn't right for our purposes, we will need our own brutal shake system.
+                    //We should mess around with it further and see what it can do.
+
+                    //BrutalBroadcast.serverCoreApi.Network.GetChannel("screenshake").SendPacket(new ScreenshakePacket() { Strength = shakeStrength }, victimPlayer);
+                }
             }
 
             if ( __instance.Api.Side == EnumAppSide.Client)
             {
+                if (!BrutalUtility.DoesEntityAgentBleed(__instance))
+                    return;
+
                 BloodFX.Bleed(__instance, damageSource, damage);
             }
         }
