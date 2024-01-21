@@ -211,18 +211,21 @@ namespace brutalstory.src
 
         private static bool ShouldPlayBloodFX( EntityAgent agent, DamageSource damageSource )
         {
-            //Add specal case for poison where we make players barf blood >:)
-            switch (damageSource.Type)
+            if ( agent.WatchedAttributes.HasAttribute("health") )
             {
-                //Fall and Splat
-                case EnumDamageType.Gravity:
-                case EnumDamageType.PiercingAttack:
-                case EnumDamageType.Injury:
-                case EnumDamageType.BluntAttack:
-                case EnumDamageType.Crushing:
-                case EnumDamageType.SlashingAttack:
-                    return true;
+                //Add specal case for poison where we make players barf blood >:)
+                switch (damageSource.Type)
+                {
+                    //Fall and Splat
+                    case EnumDamageType.Gravity:
+                    case EnumDamageType.PiercingAttack:
+                    case EnumDamageType.Injury:
+                    case EnumDamageType.BluntAttack:
+                    case EnumDamageType.Crushing:
+                    case EnumDamageType.SlashingAttack:
+                        return true;
 
+                }
             }
 
             return false;
