@@ -55,7 +55,14 @@ namespace ExpandedAiTasks.Managers
 
         public void AddEntityToLedger( Entity entity )
         {
-            Debug.Assert(entity.EntityId != lastEntIDAdded);
+            //We can run into situations where an object saved in a chunk has the same entity ID as a loaded entity in the world.
+            //In these cases, the loaded object is deleted on load. We need to handle the case where the entity IDs match, but the entities are diffrent.
+            //This is a native Vintage Story issue.
+            if (entity.EntityId == lastEntIDAdded)
+            {
+                Entity dupeEnt = entity.World.GetEntityById(lastEntIDAdded);
+                Debug.Assert(dupeEnt != entity, "We are trying to add Entity " + entity.Code.ToString() + " to Entity Ledger, but It Already Exists in the Ledger.");
+            }
 
             string codeStart = entity.FirstCodePart();
             AssetLocation searchCode = entity.Code;
@@ -75,11 +82,19 @@ namespace ExpandedAiTasks.Managers
         public void AddEntityItemToLedger( Entity entity )
         {
             Debug.Assert(entity is EntityItem);
-            Debug.Assert(entity.EntityId != lastEntItemIDAdded);
 
             EntityItem item = (EntityItem)entity;
             Debug.Assert(item.Itemstack != null);
 
+            //We can run into situations where an object saved in a chunk has the same entity ID as a loaded entity in the world.
+            //In these cases, the loaded object is deleted on load. We need to handle the case where the entity IDs match, but the entities are diffrent.
+            //This is a native Vintage Story issue.
+            if ( entity.EntityId == lastEntItemIDAdded )
+            {
+                Entity dupeEnt = entity.World.GetEntityById( lastEntItemIDAdded );
+                Debug.Assert(dupeEnt != entity, "We are trying to add EntityItem with Item Stack " + item.Itemstack + " to Entity Ledger, but It Already Exists in the Ledger.");
+            }
+            
             string codeStart = item.Itemstack.Block != null ? item.Itemstack.Block.Code.FirstCodePart() : item.Itemstack.Item.Code.FirstCodePart();
             AssetLocation searchCode = item.Itemstack.Block != null ? item.Itemstack.Block.Code : item.Itemstack.Item.Code;
 

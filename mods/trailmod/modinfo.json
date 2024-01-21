@@ -1,0 +1,11 @@
+{
+  "type": "code",
+  "modid": "trailmod",
+  "name": "Trail Mod",
+  "authors": ["Grifthegnome" ],
+  "description": "Adds dynamic trail behaviors.",
+  "version": "1.0.0",
+  "dependencies": {
+    "game": "1.19.1"
+  }
+}
