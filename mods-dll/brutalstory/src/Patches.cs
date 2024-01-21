@@ -72,15 +72,19 @@ namespace BrutalStory
                 };
 
                 //Don't broadcast to the player dealing the damage.
+                /*
                 IServerPlayer[] ignorePlayers = {};
                 if ( damageSource.SourceEntity is EntityPlayer )
                 {
                     EntityPlayer player = (EntityPlayer)__instance;
+
+
                     IServerPlayer attackerPlayer = (IServerPlayer)BrutalBroadcast.serverCoreApi.World.PlayerByUid(player.PlayerUID);
                     ignorePlayers.Append(attackerPlayer);
                 }
+                */
 
-                BrutalBroadcast.serverCoreApi.Network.GetChannel("brutalPacket").BroadcastPacket(packet, ignorePlayers);
+                BrutalBroadcast.serverCoreApi.Network.GetChannel("brutalPacket").BroadcastPacket(packet);
 
                 //Do screenshake for players on damage.
                 if ( __instance is EntityPlayer )
