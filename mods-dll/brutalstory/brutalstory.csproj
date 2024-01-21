@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>..\..\</OutputPath>
+    <IntermediateOutputPath>..\..\obj\Debug\expandedaitasksloader\</IntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>..\..\</OutputPath>
+    <IntermediateOutputPath>..\..\obj\Release\expandedaitasksloader\</IntermediateOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="modinfo.json" />
+    <Reference Include="0Harmony">
+      <HintPath>..\..\..\..\..\..\AppData\Roaming\Vintagestory\Lib\0Harmony.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="modinfo.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\anegostudios\vsapi\VintagestoryAPI.csproj" />
+    <ProjectReference Include="..\..\..\..\anegostudios\vscreativemod\VSCreativeMod.csproj" />
+    <ProjectReference Include="..\..\..\..\anegostudios\vsessentialsmod\VSEssentialsMod.csproj" />
+    <ProjectReference Include="..\..\..\..\anegostudios\vssurvivalmod\VSSurvivalMod.csproj" />
+  </ItemGroup>
+  <PropertyGroup>
+    <AssemblyTitle>expandedaitasksloader</AssemblyTitle>
+    <AssemblyVersion>1.0.%2a</AssemblyVersion>
+    <BaseOutputPath></BaseOutputPath>
+  </PropertyGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy &quot;$(OutputPath)brutalstory.dll&quot; &quot;$(SolutionDir)mods\brutalstory&quot;" />
+  </Target>
+</Project>

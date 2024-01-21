@@ -686,7 +686,15 @@ namespace ExpandedAiTasks.Managers
         public static void RegisterEntityProjectile( Entity entity )
         {
             Debug.Assert(entity is EntityProjectile);
-            Debug.Assert(entity.EntityId != lastProjectileEntIDAdded);
+
+            //We can run into situations where an object saved in a chunk has the same entity ID as a loaded entity in the world.
+            //In these cases, the loaded object is deleted on load. We need to handle the case where the entity IDs match, but the entities are diffrent.
+            //This is a native Vintage Story issue.
+            if (entity.EntityId == lastProjectileEntIDAdded)
+            {
+                Entity dupeEnt = entity.World.GetEntityById(lastProjectileEntIDAdded);
+                Debug.Assert(dupeEnt != entity, "We are trying to add EntityProjectile " + entity.Code.ToString() + " to Entity Manager Projectile Tracking, but It Already Exists in the system.");
+            }
 
             _meaEntityProjectiles.AddEntity(entity);
             _meaEntityProjectilesInFlight.AddEntity(entity);

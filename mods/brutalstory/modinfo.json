@@ -1,0 +1,11 @@
+{
+  "type": "code",
+  "modid": "brutalstory",
+  "name": "Brutal Story",
+  "authors": ["Grifthegnome" ],
+  "description": "Makes Vintage Story way more brutal.",
+  "version": "1.0.0",
+  "dependencies": {
+    "game": "1.19.1"
+  }
+}
