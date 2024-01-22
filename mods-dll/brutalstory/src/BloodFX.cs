@@ -13,121 +13,68 @@ using BrutalStory;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
 
-namespace brutalstory.src
+namespace BrutalStory
 {
-    public struct fxDataPackage
-    {
-        private float _minQuantity;
-        private float _maxQuantity;
-        private int _color;
-        private float _minVelocityScale;
-        private float _maxVelocityScale;
-        private float _lifeLength = 1f;
-        private float _gravityEffect = 1f;
-        private float _minSize = 1f;
-        private float _maxSize = 1f;
-        private EnumParticleModel _model = EnumParticleModel.Cube;
-
-        public fxDataPackage(float minQuantity, float maxQuantity, int color, float minVelocityScale, float maxVelocityScale, float lifeLength, float gravityEffect, float minSize, float maxSize, EnumParticleModel model)
-        {
-            this._minQuantity = minQuantity;
-            this._maxQuantity = maxQuantity;
-            this._color = color;
-            this._minVelocityScale = minVelocityScale;
-            this._maxVelocityScale = maxVelocityScale;
-            this._lifeLength = lifeLength;
-            this._gravityEffect = gravityEffect;
-            this._minSize = minSize;
-            this._maxSize = maxSize;
-            this._model = model;
-        }
-
-        public float minQuantity
-        {
-            get { return _minQuantity; }
-        }
-
-        public float maxQuantity
-        { 
-            get { return _maxQuantity; } 
-        }
-
-        public int color
-        { 
-            get { return _color; } 
-        }
-
-        public float minVelocityScale
-        {
-            get { return _minVelocityScale; }
-        }
-
-        public float maxVelocityScale
-        { 
-            get { return _maxVelocityScale; } 
-        }
-
-        public float lifeLength
-        { 
-            get { return _lifeLength; } 
-        }
-
-        public float gravityEffect
-        { 
-            get { return _gravityEffect; } 
-        }
-
-        public float minSize
-        {
-            get { return _minSize; } 
-        }
-
-        public float maxSize
-        {
-            get { return _maxSize; }
-        }
-
-        public EnumParticleModel model
-        { 
-            get { return _model; } 
-        }
-
-    }
     public static class BloodFX
     {
-        static int bloodColorDefault = ColorUtil.ColorFromRgba(26, 0, 128, 255);
+        static Vec4i bloodColorDefaultBGRA = new Vec4i(26, 0, 128, 255);
+        static int bloodColorDefaultCode = ColorUtil.ColorFromRgba(bloodColorDefaultBGRA.X, bloodColorDefaultBGRA.Y, bloodColorDefaultBGRA.Z, bloodColorDefaultBGRA.W);
 
-        static fxDataPackage bloodSprayProperties;
+        static Vec3d emptyVec3d = new Vec3d(0, 0, 0);
+        static Vec3f emptyVec3f = new Vec3f(0, 0, 0);
+        static int emptyColor = ColorUtil.ColorFromRgba(0,0,0,0);
+
+        static BrutalStandardFxData bloodSprayProperties;
+        static BrutalBloodyWaterFxData bloodyWaterProperties;
 
         public static void Init()
         {
-            Vec3f minVelocity = new Vec3f(5.0f, 5.0f, 5.0f);
-            Vec3f maxVelocity = new Vec3f(15.0f, 15.0f, 15.0f);
-            int bloodColorCode = bloodColorDefault;
+            //Create Bloodspray Settings
+            Vec3f bloodSprayMinVel = new Vec3f(5.0f, 5.0f, 5.0f);
+            Vec3f bloodSprayMaxVel = new Vec3f(15.0f, 15.0f, 15.0f);
+            int bloodSprayColorCode = bloodColorDefaultCode;
 
-            int minQuantity = 5;
-            int maxQuantity = 20;
+            int bloodSprayMinQuantity = 5;
+            int bloodSprayMaxQuantity = 20;
 
-            float minVelocityScale = 2;
-            float maxVelocityScale = 8;
+            float bloodSprayMinVelocityScale = 2;
+            float bloodSprayMaxVelocityScale = 8;
 
-            float lifeLength = 10f;
-            float gravityEffect = 1f;
+            float bloodSprayLifeLength = 10f;
+            float bloodSprayGravityEffect = 1f;
 
-            float minSize = 1f;
-            float maxSize = 1.5f;
+            float bloodSprayMinSize = 1f;
+            float bloodSprayMaxSize = 1.5f;
 
-            bloodSprayProperties = new fxDataPackage(
-                minQuantity,
-                maxQuantity, 
-                bloodColorCode,
-                minVelocityScale,
-                maxVelocityScale,
-                lifeLength,
-                gravityEffect,
-                minSize,
-                maxSize, 
+            bloodSprayProperties = new BrutalStandardFxData(
+                bloodSprayMinQuantity,
+                bloodSprayMaxQuantity, 
+                bloodSprayColorCode,
+                bloodSprayMinVelocityScale,
+                bloodSprayMaxVelocityScale,
+                bloodSprayLifeLength,
+                bloodSprayGravityEffect,
+                bloodSprayMinSize,
+                bloodSprayMaxSize, 
                 EnumParticleModel.Cube );
+
+
+            //Create Bloody Water Settings.
+            int bloodyWaterMinQuantity = 5;
+            int bloodyWaterMaxQuantity = 20;
+            int bloodyWaterColorCode = ColorUtil.ColorFromRgba(bloodColorDefaultBGRA.X, bloodColorDefaultBGRA.Y, bloodColorDefaultBGRA.Z, 191);
+            Vec3d bloodyWaterAddPos = emptyVec3d;
+            Vec3f bloodyWaterAddVel = emptyVec3f;
+
+
+            bloodyWaterProperties = new BrutalBloodyWaterFxData(
+                bloodyWaterMinQuantity,
+                bloodyWaterMaxQuantity,
+                bloodyWaterColorCode,
+                bloodyWaterAddPos,
+                bloodyWaterAddVel
+                );
+
         }
 
         public static void Bleed( EntityAgent agent, DamageSource damageSource, float damage)
@@ -157,7 +104,7 @@ namespace brutalstory.src
             Vec3f minVelocity = hitDir * bloodSprayProperties.minVelocityScale;
             Vec3f maxVelocity = hitDir * bloodSprayProperties.maxVelocityScale;
 
-            IParticlePropertiesProvider particleEffect = (IParticlePropertiesProvider)new SimpleParticleProperties(
+            SimpleParticleProperties bloodSprayParticleEffect = new SimpleParticleProperties(
                 quantity,
                 quantity, 
                 bloodSprayProperties.color,
@@ -171,7 +118,21 @@ namespace brutalstory.src
                 bloodSprayProperties.maxSize,
                 bloodSprayProperties.model);
 
-            agent.World.SpawnParticles(particleEffect, null);
+            bloodSprayParticleEffect.ShouldDieInLiquid = true;
+
+            agent.World.SpawnParticles(bloodSprayParticleEffect, null);
+
+            //Test Bloody Water Particles
+            BrutalFloatingBloodParticles bloodyWaterParticleEffect = new BrutalFloatingBloodParticles(
+                bloodyWaterProperties.minQuantity,
+                bloodyWaterProperties.color,
+                emptyColor,
+                minPos,
+                bloodyWaterProperties.addPos,
+                bloodyWaterProperties.addVelocity
+                );
+
+            agent.World.SpawnParticles(bloodyWaterParticleEffect, null);
 
         }
     
@@ -195,8 +156,6 @@ namespace brutalstory.src
 
             if (attacker != null)
             {
-                //if ( source )
-
                 if (attacker is EntityAgent)
                 {
                     Vec3d hitPos = GetHitPosition( agent, damageSource );
