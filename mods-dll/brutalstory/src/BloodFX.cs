@@ -95,12 +95,15 @@ namespace brutalstory.src
     }
     public static class BloodFX
     {
+        static int bloodColorDefault = ColorUtil.ColorFromRgba(26, 0, 128, 255);
+
         static fxDataPackage bloodSprayProperties;
+
         public static void Init()
         {
             Vec3f minVelocity = new Vec3f(5.0f, 5.0f, 5.0f);
             Vec3f maxVelocity = new Vec3f(15.0f, 15.0f, 15.0f);
-            int bloodColorCode = ColorUtil.ColorFromRgba(26, 0, 128, 255);
+            int bloodColorCode = bloodColorDefault;
 
             int minQuantity = 5;
             int maxQuantity = 20;
