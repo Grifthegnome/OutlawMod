@@ -15,7 +15,7 @@ namespace IdleKick
     public class IdleKickConfig
     {
         [ProtoMember(1)]
-        public int maxMinutesIdle = 15;
+        public int maxMillisecondsIdle = 600000;
 
     }
     public class IdleKickCore : ModSystem
@@ -25,11 +25,45 @@ namespace IdleKick
 
         IdleKickConfig config = new IdleKickConfig();
 
-        int maxMinutesIdle = 15;
+        int maxMillisecondsIdle = 600000;
 
         public override double ExecuteOrder()
         {
             return 0.0;
+        }
+
+        public override void StartPre(ICoreAPI api)
+        {
+            base.StartPre(api);
+
+            ReadConfigFromJson(api);
+        }
+
+        private void ReadConfigFromJson(ICoreAPI api)
+        {
+            try
+            {
+                IdleKickConfig modConfig = api.LoadModConfig<IdleKickConfig>("IdleKickConfig.json");
+
+                if (modConfig != null)
+                {
+                    config = modConfig;
+                }
+                else
+                {
+                    //We don't have a valid config.
+                    throw new Exception();
+                }
+
+            }
+            catch (Exception e)
+            {
+                api.World.Logger.Error("Failed loading IdleKickConfig.json, Will initialize new one", e);
+                config = new IdleKickConfig();
+                api.StoreModConfig(config, "IdleKickConfig.json");
+            }
+
+            // Called on both sides
         }
 
         public override void StartServerSide(ICoreServerAPI api)
@@ -64,7 +98,7 @@ namespace IdleKick
 
         private void ApplyConfig()
         {
-            maxMinutesIdle = config.maxMinutesIdle;
+            maxMillisecondsIdle = config.maxMillisecondsIdle;
         }
 
         private void FindIdlePlayers( float dt )
@@ -88,7 +122,8 @@ namespace IdleKick
                             (playerAgent.CurrentControls.HasFlag(EnumEntityActivity.Idle) ||
                             playerAgent.CurrentControls.HasFlag(EnumEntityActivity.FloorSitting) ||
                             playerAgent.CurrentControls.HasFlag(EnumEntityActivity.Dead) ||
-                            playerAgent.CurrentControls.HasFlag(EnumEntityActivity.None )))
+                            playerAgent.CurrentControls.HasFlag(EnumEntityActivity.None) ||
+                            playerAgent.CurrentControls.HasFlag(EnumEntityActivity.Mounted)))
                         {
                              KickIdlePlayer(player);
                         }
@@ -104,12 +139,16 @@ namespace IdleKick
                 }
             }
 
-            sapi.Event.RegisterCallback(FindIdlePlayers, (maxMinutesIdle * 60) * 1000);
+            sapi.Event.RegisterCallback(FindIdlePlayers, maxMillisecondsIdle );
         }
 
         private void KickIdlePlayer( IServerPlayer player )
         {
-            string kickReason = "Idle for " + maxMinutesIdle + " minutes.";
+            string minuteText = "minutes.";
+            if (maxMillisecondsIdle <= 60000)
+                minuteText = "minute.";
+
+            string kickReason = "Idle for " + (int)( (maxMillisecondsIdle / 1000 ) / 60 ) + " " + minuteText;
             player.Disconnect(kickReason);
         }
     }
