@@ -12,30 +12,6 @@ using Vintagestory.GameContent;
 
 namespace BrutalStory
 {
-    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
-    public class BrutalDamagePacket
-    {
-        public long victimEntityID;
-
-        public EnumDamageSource Source;
-        public EnumDamageType Type;
-        public Vec3d HitPosition;
-        public long SourceEntityID;
-        public long CauseEntityID;
-       // public BlockPos SourceBlockPos;
-        public Vec3d SourcePos;
-        public int DamageTier = 0;
-        public float KnockbackStrength = 1f;
-
-        public float damage;
-    }
-
-    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
-    public class BrutalNetworkTest
-    {
-
-    }
-
     public class BrutalStoryModCore : ModSystem
     {
 
@@ -68,8 +44,6 @@ namespace BrutalStory
             base.StartServerSide(api);
 
             Debug.Assert( api.Network.GetChannel( "brutalPacket" ) != null );
-
-            api.RegisterCommand("brutaltest", "Send a test network message", "", OnBrutalTestCmd, Privilege.controlserver);
         }
 
         private void OnBrutalTestCmd(IServerPlayer player, int groupId, CmdArgs args)
@@ -91,64 +65,10 @@ namespace BrutalStory
             Debug.Assert(api.Network.GetChannel("brutalPacket") != null);
 
             api.Network.GetChannel( "brutalPacket" )
-                .SetMessageHandler<BrutalDamagePacket>(HandleDamagePacket)
-                //.SetMessageHandler<BrutalNetworkTest>(HandleNetworkTest)
+                .SetMessageHandler<BrutalDamagePacket>(BrutalBroadcast.HandleDamagePacket)
+                //.SetMessageHandler<BrutalNetworkTest>(BrutalBroadcast.HandleNetworkTest)
                 ;
 
-            api.RegisterCommand("clienttest", "Send a test network message", "", OnBrutalClientTestCmd );
-
-        }
-
-        private void HandleDamagePacket(BrutalDamagePacket networkMessage)
-        {
-            Entity victimEntity = null;
-            Entity sourceEntity = null;
-            Entity causeEntity = null;
-            //Block sourceBlock = null;
-
-            EntityAgent victimAgent = null;
-            if ( networkMessage.victimEntityID != -1 )
-            {
-                victimEntity = BrutalBroadcast.clientCoreApi.World.GetEntityById(networkMessage.victimEntityID);
-
-                if (victimEntity == null)
-                    return;
-
-                Debug.Assert( victimEntity is EntityAgent );
-                victimAgent = (EntityAgent) victimEntity;
-            }
-                
-
-            if ( networkMessage.SourceEntityID != -1 ) 
-                sourceEntity = BrutalBroadcast.clientCoreApi.World.GetEntityById( networkMessage.SourceEntityID );
-
-            if ( networkMessage.CauseEntityID != -1 )
-                causeEntity = BrutalBroadcast.clientCoreApi.World.GetEntityById( networkMessage.CauseEntityID );
-
-            //sourceBlock = BrutalBroadcast.clientCoreApi.World.BlockAccessor.GetBlock(networkMessage.SourceBlockPos);
-
-            DamageSource damageSource       = new DamageSource();
-            damageSource.Source             = networkMessage.Source;
-            damageSource.Type               = networkMessage.Type;
-            damageSource.HitPosition        = networkMessage.HitPosition;
-            damageSource.SourceEntity       = sourceEntity;
-            damageSource.CauseEntity        = causeEntity;
-            //damageSource.SourceBlock        = sourceBlock;
-            damageSource.SourcePos          = networkMessage.SourcePos;
-            damageSource.DamageTier         = networkMessage.DamageTier;
-            damageSource.KnockbackStrength  = networkMessage.KnockbackStrength;
-
-            BloodFX.Bleed(victimAgent, damageSource, networkMessage.damage);
-        }
-
-        private void HandleNetworkTest(BrutalNetworkTest networkMessage) 
-        {
-            BrutalBroadcast.clientCoreApi.ShowChatMessage("BRUTAL MESSAGE RECIEVED FROM BRUTAL SERVER" );
-        }
-
-        private void OnBrutalClientTestCmd( int groupId, CmdArgs args)
-        {
-            ICoreClientAPI capi = BrutalBroadcast.clientCoreApi;
         }
 
         #endregion //Client
