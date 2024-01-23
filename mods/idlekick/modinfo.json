@@ -1,0 +1,13 @@
+{
+  "type": "code",
+  "modid": "idlekick",
+  "name": "Idle Kick",
+  "side": "Server",
+  "requiredOnClient": false,
+  "authors": [ "Grifthegnome" ],
+  "description": "Automatically kicks players who are detected idling.",
+  "version": "1.0.0",
+  "dependencies": {
+    "game": "1.19.1"
+  }
+}
