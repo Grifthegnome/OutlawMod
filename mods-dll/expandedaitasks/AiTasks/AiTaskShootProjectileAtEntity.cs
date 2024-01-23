@@ -626,6 +626,8 @@ namespace ExpandedAiTasks
 
         public override bool Notify(string key, object data)
         {
+            if (!AiUtility.CanRespondToNotify(entity))
+                return false;
 
             if (key == "attackEntity")
             {

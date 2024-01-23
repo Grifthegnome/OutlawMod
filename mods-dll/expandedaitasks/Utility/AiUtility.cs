@@ -82,14 +82,25 @@ namespace ExpandedAiTasks
 
             if (attacker is EntityPlayer)
             {
-                ent.Attributes.SetString("lastPlayerAttackerUid", (attacker as EntityPlayer).PlayerUID);
-                ent.Attributes.SetDouble("lastTimeAttackedMs", ent.World.ElapsedMilliseconds);
 
-                if (ent.Attributes.HasAttribute("lastEntAttackerEntityId"))
-                    ent.Attributes.RemoveAttribute("lastEntAttackerEntityId");
+                if (CanTargetPlayer(attacker as EntityPlayer))
+                {
+                    ent.Attributes.SetString("lastPlayerAttackerUid", (attacker as EntityPlayer).PlayerUID);
+                    ent.Attributes.SetDouble("lastTimeAttackedMs", ent.World.ElapsedMilliseconds);
+
+                    if (ent.Attributes.HasAttribute("lastEntAttackerEntityId"))
+                        ent.Attributes.RemoveAttribute("lastEntAttackerEntityId");
+                }
             }
             else if (attacker != null)
             {
+                if ( attacker is EntityAgent )
+                {
+                    EntityAgent attackerAgent = attacker as EntityAgent;
+                    if ( AiUtility.AreMembersOfSameHerd(attackerAgent, ent) );
+                        return;
+                }
+
                 ent.Attributes.SetLong("lastEntAttackerEntityId", attacker.EntityId);
                 ent.Attributes.SetDouble("lastTimeAttackedMs", ent.World.ElapsedMilliseconds);
 
@@ -427,7 +438,7 @@ namespace ExpandedAiTasks
             EntityAgent agent1 = ent1 as EntityAgent;
             EntityAgent agent2 = ent2 as EntityAgent;
 
-            return agent1.HerdId == agent2.HerdId;
+            return agent1.HerdId == agent2.HerdId && agent1.HerdId != 0;
         }
 
         public static List<Entity> GetHerdMembersInRangeOfPos(List<Entity> herdMembers, Vec3d pos, float range)
@@ -443,6 +454,15 @@ namespace ExpandedAiTasks
             return herdMembersInRange;
         }
 
+        public static bool CanRespondToNotify( Entity entity )
+        {
+
+            if (!entity.Alive)
+                return false;
+
+            return true;
+        }
+
         /*
           ____  _                         _   _ _   _ _ _ _         
          |  _ \| | __ _ _   _  ___ _ __  | | | | |_(_) (_) |_ _   _ 
@@ -451,6 +471,18 @@ namespace ExpandedAiTasks
          |_|   |_|\__,_|\__, |\___|_|     \___/ \__|_|_|_|\__|\__, |
                         |___/                                 |___/ 
          */
+
+        public static bool CanTargetPlayer( EntityPlayer player )
+        {
+            EnumGameMode currentGamemode = player.Player.WorldData.CurrentGameMode;
+            if (currentGamemode == EnumGameMode.Creative || currentGamemode == EnumGameMode.Spectator)
+                return false;
+
+            if (!player.Alive)
+                return false;
+
+            return true;
+        }
 
         public static bool IsPlayerWithinRangeOfPos(EntityPlayer player, Vec3d pos, float range)
         {
