@@ -28,6 +28,7 @@ namespace BrutalStory
         public Vec3d SourcePos;
         public int DamageTier = 0;
         public float KnockbackStrength = 1f;
+        public Vec3d ServerDamagePos;
 
         public float damage;
     }
@@ -91,7 +92,7 @@ namespace BrutalStory
             damageSource.DamageTier = networkMessage.DamageTier;
             damageSource.KnockbackStrength = networkMessage.KnockbackStrength;
 
-            BloodFX.Bleed(victimAgent, damageSource, networkMessage.damage);
+            BloodFX.Bleed(victimAgent, damageSource, networkMessage.damage, networkMessage.ServerDamagePos);
         }
 
         public static void HandleNetworkTest(BrutalNetworkTest networkMessage)

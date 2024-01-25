@@ -9,7 +9,7 @@ using Vintagestory.API.MathTools;
 
 namespace BrutalStory
 {
-    public class BrutalFloatingBloodParticles : ParticlesProviderBase
+    public class BrutalParticleFloatingBlood : ParticlesProviderBase
     {
         Random rand = new Random();
         public Vec3d BasePos = new Vec3d();
@@ -38,7 +38,7 @@ namespace BrutalStory
 
         public override EvolvingNatFloat OpacityEvolve => new EvolvingNatFloat(EnumTransformFunction.QUADRATIC, -32);
 
-        public BrutalFloatingBloodParticles(float quantity, int color, int waterColor, Vec3d basePos, Vec3d addPos, Vec3f addVelocity )
+        public BrutalParticleFloatingBlood(float quantity, int color, int waterColor, Vec3d basePos, Vec3d addPos, Vec3f addVelocity )
         {
             this.quantity = quantity;
             this.color = color;

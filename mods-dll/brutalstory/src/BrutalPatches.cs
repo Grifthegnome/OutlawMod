@@ -55,6 +55,11 @@ namespace BrutalStory
                 //if ( damageSource.SourceBlock != null )
                 //    sourceBlockPos = damageSource.SourceBlock.
 
+                //If we take fall damage and don't have a hit location, set it to the local origin of the victim.
+                if (damageSource.Type == EnumDamageType.Gravity && damageSource.HitPosition == null)
+                    damageSource.HitPosition = new Vec3d(0, 0, 0);
+                    
+                
                 BrutalDamagePacket packet = new BrutalDamagePacket() 
                 { 
                     victimEntityID      = victimEntityID,
@@ -67,10 +72,13 @@ namespace BrutalStory
                     SourcePos           = damageSource.SourcePos,
                     DamageTier          = damageSource.DamageTier,
                     KnockbackStrength   = damageSource.KnockbackStrength,
-                    damage              = damage 
+                    damage              = damage,
+                    ServerDamagePos     = __instance.ServerPos.XYZ
                 };
 
                 BrutalBroadcast.serverCoreApi.Network.GetChannel("brutalPacket").BroadcastPacket(packet);
+
+                BloodFX.HandleBrutalDamage_Server(__instance, damageSource, damage);
             }
 
             if ( __instance.Api.Side == EnumAppSide.Client)
@@ -78,7 +86,7 @@ namespace BrutalStory
                 if (!BrutalUtility.DoesEntityAgentBleed(__instance))
                     return;
 
-                BloodFX.Bleed(__instance, damageSource, damage);
+                BloodFX.Bleed(__instance, damageSource, damage, __instance.ServerPos.XYZ);
             }
         }
     }
