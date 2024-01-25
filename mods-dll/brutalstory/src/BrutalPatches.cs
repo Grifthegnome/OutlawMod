@@ -8,6 +8,8 @@ using Vintagestory.API.MathTools;
 using System;
 using Vintagestory.API.Server;
 using System.Linq;
+using Vintagestory.API.Datastructures;
+using System.Collections.Generic;
 
 
 namespace BrutalStory
@@ -87,6 +89,70 @@ namespace BrutalStory
                     return;
 
                 BloodFX.Bleed(__instance, damageSource, damage, __instance.ServerPos.XYZ);
+            }
+        }
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+    ///PATCHING TO STORE HARVESTABLE DROPS AS ATTRIBUTES SO WE CAN SPAWN THEM ON BRUTAL GIB//
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    [HarmonyPatch(typeof(EntityBehaviorHarvestable))]
+    public class HarvestableInitializeOverride
+    {
+        [HarmonyPrepare]
+        static bool Prepare(MethodBase original, Harmony harmony)
+        {
+            return true;
+        }
+
+        [HarmonyPatch("Initialize")]
+        [HarmonyPostfix]
+        static void OverrideInitialize(EntityBehaviorHarvestable __instance, EntityProperties properties, JsonObject typeAttributes)
+        {
+
+            if (__instance.entity.World.Api.Side == EnumAppSide.Server)
+            {
+
+                BlockDropItemStack[] drops = typeAttributes["drops"].AsObject<BlockDropItemStack[]>();
+                string[] dropCodes = new string[drops.Count()];
+                int[] dropQuantity = new int[drops.Count()];
+                string[] dropType = new string[drops.Count()];
+
+                TreeAttribute dropEntries = new TreeAttribute();
+
+                for (int i = 0; i < drops.Count(); i++)
+                {
+                    TreeAttribute dropEntry = new TreeAttribute();
+
+                    dropCodes[i] = drops[i].Code.ToString();
+
+                    dropQuantity[i] = GameMath.RoundRandom(__instance.entity.World.Rand, drops[i].Quantity.nextFloat());
+
+                    switch(drops[i].Type )
+                    {
+                        case EnumItemClass.Block:
+                            dropType[i] = "block";
+                            break;
+                        case EnumItemClass.Item:
+                            dropType[i] = "item";
+                            break;
+                    }
+                    
+                    dropEntry.SetInt("quantity", dropQuantity[i]);
+                    dropEntry.SetString( "type", dropType[i]);
+                    dropEntries.SetAttribute(drops[i].Code.FirstPathPart(), dropEntry);
+                }
+
+                int minBones = 4;
+                int maxBones = 6;
+
+                TreeAttribute boneEntry = new TreeAttribute();
+                boneEntry.SetInt("quantity", (int)MathUtility.GraphClampedValue(0, 1, minBones, maxBones, __instance.entity.World.Rand.NextDouble()));
+                boneEntry.SetString("type", "item");
+                dropEntries.SetAttribute("game:bone", boneEntry);
+
+                __instance.entity.Attributes.SetAttribute("brutalSplatDropCodes", dropEntries);
             }
         }
     }

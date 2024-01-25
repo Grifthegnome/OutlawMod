@@ -575,24 +575,59 @@ namespace BrutalStory
             if (!(ShouldPlayBloodFX(agent, damageSource)))
                 return;
 
+            if (agent.Attributes.GetAsBool("brutalSplatHasDropped", false))
+                return;
+
             ITreeAttribute treeAttribute = agent.WatchedAttributes.GetTreeAttribute("health");
             Debug.Assert(treeAttribute != null);
             float maxHealth = treeAttribute.GetFloat("maxhealth");
 
             if ( damage > maxHealth )
             {
-                //To Do: Spawn harvestable items on server, if the entity is harvestable.
                 if ( agent.HasBehavior("harvestable") )
                 {
-                    EntityBehaviorHarvestable behaviorHarvestable = (EntityBehaviorHarvestable)agent.GetBehavior("harvestable");
-                    //behaviorHarvestable
+                    IAttribute brutalSplatDrops = agent.Attributes.GetAttribute("brutalSplatDropCodes");
+                    TreeAttribute brutalSplatDropsTree = brutalSplatDrops?.GetValue() as TreeAttribute;
 
-                    //We need to look at generate drops and reading the drops directily from the json.
+                    for (  int i = 0; i < brutalSplatDropsTree.Count(); i++ )
+                    {
 
+                        IAttribute dropEntry = brutalSplatDropsTree[brutalSplatDropsTree.Keys[i]];
+                        TreeAttribute dropEntryTree = dropEntry?.GetValue() as TreeAttribute;
+
+                        Debug.Assert(dropEntryTree.HasAttribute("quantity"));
+                        Debug.Assert(dropEntryTree.HasAttribute("type"));
+
+                        AssetLocation code = new AssetLocation(brutalSplatDropsTree.Keys[i]);
+                        int quantity = dropEntryTree.GetAsInt("quantity");
+                        string type = dropEntryTree.GetAsString("type");
+
+                        for ( int j = 0; j < quantity; j++ )
+                        {
+                            Item item = agent.World.GetItem(code);
+                            ItemStack itemStack = new ItemStack(item);
+
+                            double velX = ((agent.World.Rand.NextDouble() - 0.5) / 8) * 1;
+                            double velY = ((agent.World.Rand.NextDouble() ) / 8 ) * 4;
+                            double velZ = ((agent.World.Rand.NextDouble() - 0.5) / 8) * 1;
+                            Vec3d itemMotion = new Vec3d(velX, velY, velZ);
+
+                            agent.World.SpawnItemEntity(itemStack, agent.ServerPos.XYZ, itemMotion);
+                        }
+                    }
+
+                    agent.Attributes.SetBool("brutalSplatHasDropped", true);
                 }
 
-                if (!(agent is EntityPlayer))
+                if ((agent is EntityPlayer))
+                {
+                    //To Do: Find a way to hide the player until they respawn.
+                }
+                else
+                {
                     agent.Die(EnumDespawnReason.Removed);
+                }    
+                    
             }            
         }
 

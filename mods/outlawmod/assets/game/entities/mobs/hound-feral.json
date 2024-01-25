@@ -82,11 +82,6 @@
 					type: "item", 
 					code: "fat", 
 					quantity: { avg: 1.25, var: 0 } 
-				},
-				{
-					type: "item", 
-					code: "bone", 
-					quantity: { avg: 2, var: 0.5 } 
 				}
 				],
 			},
