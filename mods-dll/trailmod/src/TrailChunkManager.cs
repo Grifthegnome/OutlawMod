@@ -520,7 +520,7 @@ namespace TrailMod
                     Block upBlock = world.BlockAccessor.GetBlock(upPos);
                     if ( upBlock != null ) 
                     {
-                        if (upBlock.BlockMaterial == EnumBlockMaterial.Plant)
+                        if (CanTramplePlant(upBlock))
                             world.BlockAccessor.BreakBlock(upPos, null);
                     }
 
@@ -592,6 +592,31 @@ namespace TrailMod
             long finalVal = (long)(value1 * Math.Ceiling(Math.Pow(10, dn))); //< ----because pow would give 99.999999(for some optimization modes)
             finalVal += value2;
             return finalVal;
+        }
+
+        private static bool CanTramplePlant( Block block )
+        {
+            if (block.BlockMaterial == EnumBlockMaterial.Plant)
+            {
+                if (block is BlockFern)
+                    return true;
+
+                if ( block is BlockTallGrass) 
+                    return true;
+
+                if (block is BlockLupine)
+                    return true;
+
+                string code = block.Code.FirstCodePart();
+
+                if (code == "flower" )
+                    return true;
+
+                if (code == "tallfern")
+                    return true;
+            }
+
+            return false;
         }
     }
 }
