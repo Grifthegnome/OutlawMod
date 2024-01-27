@@ -14,6 +14,7 @@ namespace TrailMod
     {
 
         private Harmony harmony;
+        private TrailChunkManager trailChunkManager;
 
         public override double ExecuteOrder()
         {
@@ -31,6 +32,20 @@ namespace TrailMod
         public override void StartServerSide(ICoreServerAPI api)
         {
             base.StartServerSide(api);
+
+            trailChunkManager = TrailChunkManager.GetTrailChunkManager();
+            trailChunkManager.InitData( api.World, api );
+
+            api.Event.RegisterCallback(trailChunkManager.Clean, (int)TrailChunkManager.TRAIL_POS_MONITOR_TIMEOUT);
+
+            api.Event.ChunkColumnUnloaded += trailChunkManager.OnChunkUnloaded;
+
+            api.Event.ServerRunPhase(EnumServerRunPhase.Shutdown, () => {
+                //Clean up all manager stuff.
+                //If we don't it persists between loads.
+                trailChunkManager.ShutdownCleanup();
+                trailChunkManager = null;
+            });
         }
     }
 }

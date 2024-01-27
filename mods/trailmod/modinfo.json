@@ -6,7 +6,7 @@
   "requiredOnClient": false,
   "authors": [ "Grifthegnome" ],
   "description": "Adds dynamic trail behaviors.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "dependencies": {
     "game": "1.19.1"
   }

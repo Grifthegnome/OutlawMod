@@ -29,13 +29,54 @@ namespace TrailMod
         static void OnEntityCollideOverride(Block __instance, IWorldAccessor world, Entity entity, BlockPos pos, BlockFacing facing, Vec3d collideSpeed, bool isImpact)
         {
 
+            if ( !entity.Alive )
+                return;
+
             if (!(entity is EntityAgent))
                 return;
 
+            //Only run trail logic within 100 blocks of a player.
+            if (entity.minRangeToClient > 100)
+                return;
+
+            if ( entity is EntityPlayer )
+            {
+                EntityPlayer entityPlayer = (EntityPlayer)entity;
+                if(entityPlayer.Player.WorldData.CurrentGameMode != EnumGameMode.Survival)
+                    return;
+            }
+               
             if (world.Side == EnumAppSide.Client)
                 return;
 
             if (!entity.Collided)
+                return;
+
+            TrailChunkManager trailChunkManager = TrailChunkManager.GetTrailChunkManager();
+
+            bool shouldTrackTrailData = trailChunkManager.ShouldTrackBlockTrailData(__instance);
+            bool touchedPreviously = false;
+
+            TrailBlockPosEntry trailBlockData;
+            if (shouldTrackTrailData && trailChunkManager.BlockPosHasTrailData(world, pos))
+            {
+                trailBlockData = trailChunkManager.GetBlockPosTrailData(world, pos);
+
+                if (trailBlockData.lastTouchEntID == entity.EntityId)
+                    touchedPreviously = true;
+
+                if (facing == BlockFacing.UP)
+                    trailChunkManager.AddOrUpdateBlockPosTrailData(world, __instance, pos, entity);
+
+            }
+            else if (shouldTrackTrailData)
+            {
+                if (facing == BlockFacing.UP)
+                    trailChunkManager.AddOrUpdateBlockPosTrailData(world, __instance, pos, entity);
+            }
+
+            //Check if the center of the block overlaps the entity bounding box.
+            if (!trailChunkManager.BlockCenterHorizontalInEntityBoundingBox(entity, pos))
                 return;
 
             float snowLevel = __instance.snowLevel;
