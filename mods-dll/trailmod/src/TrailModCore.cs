@@ -36,7 +36,7 @@ namespace TrailMod
             trailChunkManager = TrailChunkManager.GetTrailChunkManager();
             trailChunkManager.InitData( api.World, api );
 
-            api.Event.RegisterCallback(trailChunkManager.Clean, (int)TrailChunkManager.TRAIL_POS_MONITOR_TIMEOUT);
+            api.Event.RegisterCallback(trailChunkManager.Clean, (int)TrailChunkManager.TRAIL_CLEANUP_INTERVAL);
 
             api.Event.ChunkColumnUnloaded += trailChunkManager.OnChunkUnloaded;
 
