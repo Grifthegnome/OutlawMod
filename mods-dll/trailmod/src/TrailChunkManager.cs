@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -82,12 +83,14 @@ namespace TrailMod
         public readonly AssetLocation code; //Readable Block Code; 
         public readonly double transformChance = -1;
         public readonly int transformBlockID = -1;
+        public readonly bool transformByPlayerOnly = false;
 
-        public TrailBlockTouchTransformData(AssetLocation code, double transformChance, int transformBlockID )
+        public TrailBlockTouchTransformData(AssetLocation code, double transformChance, int transformBlockID, bool transformByPlayerOnly )
         {
             this.code = code;
             this.transformChance = transformChance;
             this.transformBlockID = transformBlockID;
+            this.transformByPlayerOnly = transformByPlayerOnly;
         }
     }
 
@@ -279,19 +282,29 @@ namespace TrailMod
             string[] soilFertilityBlockVariants = BuildSoilBlockVariantsFertilityOnly();
 
             double[] soilTransformChanceByVariant = new double[GRASS_VARIANTS.Length];
+            bool[] soilTransformByPlayerOnlyByVariant = new bool[GRASS_VARIANTS.Length];
             for( int i = 0; i < soilTransformChanceByVariant.Length; i++ ) 
             {
                 if ( i == 0 )
+                { 
                     soilTransformChanceByVariant[i] = 1.0; //100% Chance to start.
+                    soilTransformByPlayerOnlyByVariant[i] = false;
+                }
                 else if ( i == soilTransformChanceByVariant.Length - 1)
+                {
                     soilTransformChanceByVariant[i] = 0.05; //05% Chance to become packed dirt.
+                    soilTransformByPlayerOnlyByVariant[i] = true; //only players can make packed dirt trails.
+                }
                 else
+                {
                     soilTransformChanceByVariant[i] = 0.2; //20% Chance to lose grass.
+                    soilTransformByPlayerOnlyByVariant[i] = false;
+                }   
             }
 
             for ( int soilFertilityVariantIndex = 0; soilFertilityVariantIndex < soilFertilityBlockVariants.Length; soilFertilityVariantIndex++ ) 
             {
-                BuildTrailTouchBlockVariantProgression(world, soilFertilityBlockVariants[soilFertilityVariantIndex], GRASS_VARIANTS, soilTransformChanceByVariant, PACKED_DIRT_CODE);
+                BuildTrailTouchBlockVariantProgression(world, soilFertilityBlockVariants[soilFertilityVariantIndex], GRASS_VARIANTS, soilTransformChanceByVariant, soilTransformByPlayerOnlyByVariant, PACKED_DIRT_CODE);
             }
 
             ////////////////////////////////////////////////////////////////////
@@ -299,12 +312,14 @@ namespace TrailMod
             //We want cob to strip its grass layer, but to never change type. //
             ////////////////////////////////////////////////////////////////////
             double[] cobTransformChanceByVariants = new double[GRASS_VARIANTS.Length];
+            bool[] cobTransformByPlayerOnlyByVariants = new bool[GRASS_VARIANTS.Length];
             for( int i = 0; i < cobTransformChanceByVariants.Length; i++)
             {
                 cobTransformChanceByVariants[i] = 0.2; //20% Chance to lose grass.
+                cobTransformByPlayerOnlyByVariants[i] = false;
             }
 
-            BuildTrailTouchBlockVariantProgression(world, COB_CODE, GRASS_VARIANTS, cobTransformChanceByVariants, "");
+            BuildTrailTouchBlockVariantProgression(world, COB_CODE, GRASS_VARIANTS, cobTransformChanceByVariants, cobTransformByPlayerOnlyByVariants, "");
 
             /////////////////////////////////////////////////////////////////////
             //FOREST FLOOR                                                     //
@@ -317,17 +332,27 @@ namespace TrailMod
             }
 
             double[] forestFloorChanceByVariants = new double[FOREST_FLOOR_VARIATION_COUNT];
+            bool[] forestFloorTransfromByPlayerOnlyByVariants = new bool[FOREST_FLOOR_VARIATION_COUNT];
             for ( int i = 0; i < forestFloorChanceByVariants.Length; i++)
             {
                 if ( i == 0 )
+                {
                     forestFloorChanceByVariants[i] = 1.0; //100% Chance to start.
+                    forestFloorTransfromByPlayerOnlyByVariants[i] = false;
+                }
                 else if ( i == forestFloorChanceByVariants.Length - 1)
+                {
                     forestFloorChanceByVariants[i] = 0.2; //20% Chance to become soil-low-normal.
+                    forestFloorTransfromByPlayerOnlyByVariants[i] = false;
+                }
                 else
+                {
                     forestFloorChanceByVariants[i] = 0.2; //20% Chance to lose grass.
+                    forestFloorTransfromByPlayerOnlyByVariants[i] = false;
+                } 
             }
 
-            BuildTrailTouchBlockVariantProgression(world, FOREST_FLOOR_CODE, forestFloorVariants, forestFloorChanceByVariants, SOIL_LOW_NONE_CODE);
+            BuildTrailTouchBlockVariantProgression(world, FOREST_FLOOR_CODE, forestFloorVariants, forestFloorChanceByVariants, forestFloorTransfromByPlayerOnlyByVariants, SOIL_LOW_NONE_CODE);
 
             ////////////////////////////////////////////////////////////////
             //PACKED DIRT                                                 //
@@ -340,8 +365,8 @@ namespace TrailMod
             Block packedDirt = world.GetBlock(packedDirtAsset);
             Block stonePath = world.GetBlock(stonePathAsset);
 
-            //A 1% chance to turn packed dirt into a stonepath.
-            CreateTrailBlockTransform(packedDirtAsset, packedDirt.Id, 0.01, stonePath.Id);
+            //A 1% chance to turn packed dirt into a stonepath. Only players can make packed dirt trails.
+            CreateTrailBlockTransform(packedDirtAsset, packedDirt.Id, 0.01, stonePath.Id, true);
 
             //STONE PATH
             //This is as far as we go.
@@ -362,15 +387,15 @@ namespace TrailMod
             }
         }
 
-        private void CreateTrailBlockTransform( AssetLocation blockAsset, int blockID, double transformChance, int transformBlockID)
+        private void CreateTrailBlockTransform( AssetLocation blockAsset, int blockID, double transformChance, int transformBlockID, bool transformByPlayerOnly)
         {
             Debug.Assert( !trailBlockTouchTransforms.ContainsKey(blockID), "Block " + trailBlockTouchTransforms + " is already registered with the trail block transform system.");
 
-            TrailBlockTouchTransformData touchTransformData = new TrailBlockTouchTransformData(blockAsset, transformChance, transformBlockID);
+            TrailBlockTouchTransformData touchTransformData = new TrailBlockTouchTransformData(blockAsset, transformChance, transformBlockID, transformByPlayerOnly);
             trailBlockTouchTransforms.Add(blockID, touchTransformData);
         }
 
-        private void BuildTrailTouchBlockVariantProgression( IWorldAccessor world, string baseCode, string[] variantCodeProgression, double[] transformChanceByVariant, string variantExitTransformationBlockCode )
+        private void BuildTrailTouchBlockVariantProgression( IWorldAccessor world, string baseCode, string[] variantCodeProgression, double[] transformChanceByVariant, bool[] transformByPlayerOnlyByVariant, string variantExitTransformationBlockCode )
         {
             Debug.Assert(variantCodeProgression.Length > 0);
             Debug.Assert( variantCodeProgression.Length == transformChanceByVariant.Length );
@@ -397,7 +422,7 @@ namespace TrailMod
                 int blockID = block.BlockId;
                 int transformBlockID = transformBlock.BlockId;
 
-                CreateTrailBlockTransform(blockAsset, blockID, transformChanceByVariant[variantIndex], transformBlockID);
+                CreateTrailBlockTransform(blockAsset, blockID, transformChanceByVariant[variantIndex], transformBlockID, transformByPlayerOnlyByVariant[variantIndex]);
             }
         }
 
@@ -431,7 +456,7 @@ namespace TrailMod
 
                     if (shouldTryTransform)
                     {
-                        TryToTransformTrailBlock(world, blockPos, block.BlockId);
+                        TryToTransformTrailBlock(world, blockPos, block.BlockId, touchEnt);
                     }
                 }
                 else
@@ -439,7 +464,7 @@ namespace TrailMod
                     TrailBlockPosEntry trailBlockEntry = new TrailBlockPosEntry(touchEnt.EntityId, touchEnt.ServerPos, touchEnt.World.ElapsedMilliseconds);
                     trailChunkEntries[chunk].Add(blockTrailID, trailBlockEntry);
 
-                    TryToTransformTrailBlock(world, blockPos, block.BlockId);
+                    TryToTransformTrailBlock(world, blockPos, block.BlockId, touchEnt);
                 }
             }
             else
@@ -449,7 +474,7 @@ namespace TrailMod
                 trailChunkEntry.Add(blockTrailID, trailBlockEntry);
                 trailChunkEntries.Add(chunk, trailChunkEntry);
 
-                TryToTransformTrailBlock(world, blockPos, block.BlockId);
+                TryToTransformTrailBlock(world, blockPos, block.BlockId, touchEnt);
             }
         }
 
@@ -508,7 +533,7 @@ namespace TrailMod
         //Load From Mod Chunk
 
         //Utility
-        private void TryToTransformTrailBlock( IWorldAccessor world, BlockPos blockPos, int blockID )
+        private void TryToTransformTrailBlock( IWorldAccessor world, BlockPos blockPos, int blockID, Entity touchEnt )
         {
 
             if ( trailBlockTouchTransforms.ContainsKey( blockID ) )
@@ -516,12 +541,32 @@ namespace TrailMod
                 TrailBlockTouchTransformData trailBlockTransformData = trailBlockTouchTransforms[blockID];
                 if ( world.Rand.NextDouble() <= trailBlockTransformData.transformChance )
                 {
-                    BlockPos upPos = blockPos.UpCopy();
-                    Block upBlock = world.BlockAccessor.GetBlock(upPos);
-                    if ( upBlock != null ) 
+
+                    bool touchIsPlayer = false;
+                    bool touchIsSneaking = false;
+
+                    if ( touchEnt is EntityPlayer )
                     {
-                        if (CanTramplePlant(upBlock))
-                            world.BlockAccessor.BreakBlock(upPos, null, 0);
+                        touchIsPlayer = true;
+
+                        EntityPlayer touchPlayer = (EntityPlayer) touchEnt;
+
+                        if (touchPlayer.Controls.Sneak)
+                            touchIsSneaking = true;
+                    }
+
+                    if (trailBlockTransformData.transformByPlayerOnly && !touchIsPlayer)
+                        return;
+
+                    if ( !touchIsSneaking)
+                    {
+                        BlockPos upPos = blockPos.UpCopy();
+                        Block upBlock = world.BlockAccessor.GetBlock(upPos);
+                        if ( upBlock != null ) 
+                        {
+                            if (CanTramplePlant(upBlock))
+                                world.BlockAccessor.BreakBlock(upPos, null, 0);
+                        }
                     }
 
                     world.BlockAccessor.SetBlock(trailBlockTransformData.transformBlockID, blockPos);
