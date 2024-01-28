@@ -521,7 +521,7 @@ namespace TrailMod
                     if ( upBlock != null ) 
                     {
                         if (CanTramplePlant(upBlock))
-                            world.BlockAccessor.BreakBlock(upPos, null);
+                            world.BlockAccessor.BreakBlock(upPos, null, 0);
                     }
 
                     world.BlockAccessor.SetBlock(trailBlockTransformData.transformBlockID, blockPos);
