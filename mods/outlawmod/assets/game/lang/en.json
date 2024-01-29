@@ -58,6 +58,11 @@
 	"item-dead-creature-deserter-footman": "Dead Deserter Footman",
 	"deadcreature-eaten-deserterfootman": "Slain by human hands.\nThey were run-through with a polearm.\n",
 
+	"item-creature-deserter-bannerman": "Deserter Bannerman",
+	"itemdesc-creature-deserter-bannerman": "<font color=\"#99c9f9\"><i>Deserters once fought for their lord's army, now they fight for themselves. They are well equipped and versed in military matters. Bannermen carry the colors of their renagade regiment and inspire other deserters to fight for glory and plunder.</i></font><br>",
+	"item-dead-creature-deserter-bannerman": "Dead Deserter Bannerman",
+	"deadcreature-eaten-deserterbannerman": "Slain by human hands.\nBeaten to death with a banner.\n",
+
 	//HOUNDS
 	"item-creature-hound-feral": "Feral Hound",
 	"itemdesc-creature-hound-feral": "<font color=\"#99c9f9\"><i>Feral hounds have no owner to bring them to heel. They roam the lands in packs, attacking weak prey for easy meals.</i></font><br>",

@@ -8,6 +8,7 @@
 	attributes: { 
 		reckless: false, 
 		classicVoice: "sounds/voice/tuba",
+		killedByInfoText: "deadcreature-eaten-deserterbannerman",
 		companions: [
 			{ code: "deserter-archer", countMin: 4.0, countMax: 6.0 },
 			{ code: "deserter-footman", countMin: 4.0, countMax: 6.0 },

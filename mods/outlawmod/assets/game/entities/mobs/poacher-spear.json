@@ -8,6 +8,7 @@
 	attributes: { 
 		reckless: false, 
 		classicVoice: "sounds/voice/oboe",
+		killedByInfoText: "deadcreature-eaten-poacherspear",
 		companions: [
 			{ code: "hound-hunting", countMin: 1.0, countMax: 3.0 },
 		]
@@ -213,7 +214,7 @@
 					{
 						code: "melee",
 						entityCodes: ["wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "chicken-rooster", "chicken-hen", "chicken-baby", "hare-male", "hare-female", 
-							"fox-male", "fox-female", "fox-arctic-male", "fox-arctic-female", "pig-wild-male", "pig-wild-female", "raccoon-male", "raccoon-female", "sheep-bighorn-male", "sheep-bighorn-female",
+							"fox-male-red", "fox-female-red", "fox-male-arctic", "fox-female-arctic", "pig-wild-male", "pig-wild-female", "raccoon-male", "raccoon-female", "sheep-bighorn-male", "sheep-bighorn-female",
 							"deer-*", "goat-*"],
 						priority: 2.5,
 						damage: 5.0,
@@ -310,7 +311,7 @@
 					{
 						code: "engageentity",
 						entityCodes: [ "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "chicken-rooster", "chicken-hen", "chicken-baby", "hare-male", "hare-female", 
-							"fox-male", "fox-female", "fox-arctic-male", "fox-arctic-female", "pig-wild-male", "pig-wild-female", "raccoon-male", "raccoon-female", "sheep-bighorn-male", "sheep-bighorn-female",
+							"fox-male-red", "fox-female-red", "fox-male-arctic", "fox-female-arctic", "pig-wild-male", "pig-wild-female", "raccoon-male", "raccoon-female", "sheep-bighorn-male", "sheep-bighorn-female",
 							"deer-*", "goat-*"],
 						priority: 2.0,
 						mincooldown: 0, 

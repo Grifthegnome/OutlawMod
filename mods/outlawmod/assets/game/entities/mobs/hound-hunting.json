@@ -8,6 +8,7 @@
 	attributes:{ 
 		hasNightVision: true,
 		smellRange: 20.0,
+		killedByInfoText: "deadcreature-eaten-houndhunting",
 	},
 	client: {
 		renderer: "Shape",
