@@ -1320,7 +1320,7 @@
 			"name": "SneakIdle",
 			"code": "sneakidle",
 			"quantityframes": 35,
-			"onActivityStopped": "EaseOut",
+			"onActivityStopped": "Stop",
 			"onAnimationEnd": "Repeat",
 			"keyframes": [
 				{
