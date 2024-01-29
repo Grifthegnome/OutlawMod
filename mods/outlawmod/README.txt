@@ -16,6 +16,8 @@ EnableLooters: true/false
 EnablePoachers: true/false
 EnableBrigands: true/false
 EnableYeomen: true/false
+EnableDeserters: true/false	
+EnableBannermen: true/false 	(This only disables Deserter Bannermen, who lead large groups of deserters into battle)
 EnableFeralHounds: true/false
 EnableHuntingHounds: true/false
 

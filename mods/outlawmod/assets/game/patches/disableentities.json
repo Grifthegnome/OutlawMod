@@ -49,6 +49,27 @@
     "condition": {"when": "enableYeoman", "isValue": "false"}
 },
 {
+    "file": "entities/mobs/deserter-archer.json",
+    "op": "add",
+    "path": "/enabled",
+    "value": false,
+    "condition": {"when": "enableDeserters", "isValue": "false"}
+},
+{
+    "file": "entities/mobs/deserter-footman.json",
+    "op": "add",
+    "path": "/enabled",
+    "value": false,
+    "condition": {"when": "enableDeserters", "isValue": "false"}
+},
+{
+    "file": "entities/mobs/deserter-bannerman.json",
+    "op": "add",
+    "path": "/enabled",
+    "value": false,
+    "condition": {"when": "enableBannermen", "isValue": "false"}
+},
+{
     "file": "entities/mobs/hound-feral.json",
     "op": "add",
     "path": "/enabled",
