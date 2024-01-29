@@ -24,7 +24,7 @@ namespace TrailMod
         private EntityPos _lastTouchEntityPos = null;
         private int touchCount = 0;
 
-        const double TRAIL_COOLDOWN_MS = 300000; //Block touch count decays every 5 minutes.
+        const double TRAIL_COOLDOWN_MS = 900000; //Block touch count decays every 15 minutes.
 
         public long lastTouchTime
         {
@@ -114,12 +114,14 @@ namespace TrailMod
     public class TrailChunkManager
     {
         public const long TRAIL_CLEANUP_INTERVAL = 15000; //Run Cleanup every 15 seconds
-        public const long TRAIL_POS_MONITOR_TIMEOUT = 1200000; //Blocks time out and are cleared from the tracking system after 20 minutes.
+        public const long TRAIL_POS_MONITOR_TIMEOUT = 1800000; //Blocks time out and are cleared from the tracking system after 30 minutes.
 
         const string SOIL_CODE = "soil";
         const string SOIL_LOW_NONE_CODE = "soil-low-none";
         const string FOREST_FLOOR_CODE = "forestfloor";
         const string COB_CODE = "cob";
+        const string TRAIL_CODE = "trailmod:trail";
+        const string TRAIL_WEAR_VARIENT_PRETRAIL_CODE = "pretrail";
         const string PACKED_DIRT_CODE = "packeddirt";
         const string PACKED_DIRT_ARID_CODE = "drypackeddirt";
         const string STONE_PATH_CODE = "stonepath-free";
@@ -128,6 +130,7 @@ namespace TrailMod
 
         private static readonly string[] FERTILITY_VARIANTS = { "high", "compost", "medium", "low", "verylow" };
         private static readonly string[] GRASS_VARIANTS = { "normal", "sparse", "verysparse", "none" };
+        private static readonly string[] TRAIL_WEAR_VARIANTS = { "pretrail", "new", "established", "veryestablished", "old" };
 
         private static IWorldAccessor worldAccessor;
         private static ICoreServerAPI serverApi;
@@ -259,6 +262,17 @@ namespace TrailMod
             return soilVariants;
         }
 
+        private string[] BuildTrailBlockVariantsFertilityOnly()
+        {
+            string[] trailVariants = new string[FERTILITY_VARIANTS.Count()];
+            for (int fertilityIndex = 0; fertilityIndex < FERTILITY_VARIANTS.Length; fertilityIndex++)
+            {
+                trailVariants[fertilityIndex] = TRAIL_CODE + "-" + FERTILITY_VARIANTS[fertilityIndex];
+            }
+
+            return trailVariants;
+        }
+
         private string[] BuildCobBlockVariants()
         {
             string[] cobVariants = new string[GRASS_VARIANTS.Count()];
@@ -294,6 +308,35 @@ namespace TrailMod
             ValidateTrailBlocks(world, new string[] { PACKED_DIRT_CODE, PACKED_DIRT_ARID_CODE, STONE_PATH_CODE });
 
             //////////////////////////////////////////////////////////////////////////////////////////
+            //TRAIL                                                                                 //
+            //We want trails to stay in their fertility category, but to slowy evolve over time.    //
+            //It evolves until it reaches an old trail, then it stops                               //
+            //////////////////////////////////////////////////////////////////////////////////////////
+            string[] trailFertilityBlockVariants = BuildTrailBlockVariantsFertilityOnly();
+
+            int[] trailTransformTouchCountByVariant = new int[TRAIL_WEAR_VARIANTS.Length];
+            bool[] trailTransformByPlayerOnlyByVariant = new bool[TRAIL_WEAR_VARIANTS.Length];
+
+            for (int i = 0; i < TRAIL_WEAR_VARIANTS.Length; i++)
+            {
+                if (i == 0)
+                {
+                    trailTransformTouchCountByVariant[i] = 5; //touches to go from pre-trail to new trail.
+                    trailTransformByPlayerOnlyByVariant[i] = true;
+                }
+                else
+                {
+                    trailTransformTouchCountByVariant[i] = 10 * i; //10 * i touches to upgrade to the next trail level. (establised trail = 10, very established 20, old = 30)
+                    trailTransformByPlayerOnlyByVariant[i] = true;
+                }
+            }
+
+            for (int trailFertilityVariantIndex = 0; trailFertilityVariantIndex < trailFertilityBlockVariants.Length; trailFertilityVariantIndex++)
+            {
+                BuildTrailTouchBlockVariantProgression(world, trailFertilityBlockVariants[trailFertilityVariantIndex], TRAIL_WEAR_VARIANTS, trailTransformTouchCountByVariant, trailTransformByPlayerOnlyByVariant, "");
+            }
+
+            //////////////////////////////////////////////////////////////////////////////////////////
             //SOIL                                                                                  //
             //We want soil to stay in it's fertility category, but to slowy strip the grass layer.  //
             //Once it is fully stripped it becomes packed dirt.                                     //
@@ -311,8 +354,8 @@ namespace TrailMod
                 }
                 else if ( i == soilTransformTouchCountByVariant.Length - 1)
                 {
-                    soilTransformTouchCountByVariant[i] = 5; //5 touches to become packed dirt.
-                    soilTransformByPlayerOnlyByVariant[i] = true; //only players can make packed dirt trails.
+                    soilTransformTouchCountByVariant[i] = 1; //1 touches to become a pretrail.
+                    soilTransformByPlayerOnlyByVariant[i] = true; //only players can make new pretrails.
                 }
                 else
                 {
@@ -323,7 +366,8 @@ namespace TrailMod
 
             for ( int soilFertilityVariantIndex = 0; soilFertilityVariantIndex < soilFertilityBlockVariants.Length; soilFertilityVariantIndex++ ) 
             {
-                BuildTrailTouchBlockVariantProgression(world, soilFertilityBlockVariants[soilFertilityVariantIndex], GRASS_VARIANTS, soilTransformTouchCountByVariant, soilTransformByPlayerOnlyByVariant, PACKED_DIRT_CODE);
+                //To do rework this to turn into trails.
+                BuildTrailTouchBlockVariantProgression(world, soilFertilityBlockVariants[soilFertilityVariantIndex], GRASS_VARIANTS, soilTransformTouchCountByVariant, soilTransformByPlayerOnlyByVariant, trailFertilityBlockVariants[soilFertilityVariantIndex] + "-" + TRAIL_WEAR_VARIENT_PRETRAIL_CODE);
             }
 
             ////////////////////////////////////////////////////////////////////
@@ -334,7 +378,7 @@ namespace TrailMod
             bool[] cobTransformByPlayerOnlyByVariants = new bool[GRASS_VARIANTS.Length];
             for( int i = 0; i < cobTransformTouchCountByVariants.Length; i++)
             {
-                cobTransformTouchCountByVariants[i] = 1; //1 touche to lose grass.
+                cobTransformTouchCountByVariants[i] = 1; //1 touch to lose grass.
                 cobTransformByPlayerOnlyByVariants[i] = false;
             }
 
@@ -372,24 +416,6 @@ namespace TrailMod
             }
 
             BuildTrailTouchBlockVariantProgression(world, FOREST_FLOOR_CODE, forestFloorVariants, forestFloorTransformTouchCountByVariants, forestFloorTransfromByPlayerOnlyByVariants, SOIL_LOW_NONE_CODE);
-
-            ////////////////////////////////////////////////////////////////
-            //PACKED DIRT                                                 //
-            //We want packed dirt to upgrade to a path after extended use.//
-            ////////////////////////////////////////////////////////////////
-
-            AssetLocation packedDirtAsset = new AssetLocation(PACKED_DIRT_CODE);
-            AssetLocation stonePathAsset = new AssetLocation(STONE_PATH_CODE);
-
-            Block packedDirt = world.GetBlock(packedDirtAsset);
-            Block stonePath = world.GetBlock(stonePathAsset);
-
-            //10 touches to turn packed dirt into a stonepath. Only players can make packed dirt trails.
-            CreateTrailBlockTransform(packedDirtAsset, packedDirt.Id, 10, stonePath.Id, true);
-
-            //STONE PATH
-            //This is as far as we go.
-
         }
 
         private void ValidateTrailBlocks(IWorldAccessor world, string[] blockCodes )
@@ -464,6 +490,12 @@ namespace TrailMod
                 RemoveBlockPosTrailData(world, blockPos);
 
             long blockTrailID = ConvertBlockPositionToTrailPosID(blockPos);
+
+            if ( block is BlockTrail )
+            {
+                BlockTrail blockTrail = (BlockTrail)block;
+                blockTrail.TrailBlockTouched(touchEnt.World.ElapsedMilliseconds);
+            }
 
             if ( trailChunkEntries.ContainsKey( chunk ) ) 
             {

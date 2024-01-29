@@ -27,6 +27,8 @@ namespace TrailMod
 
             harmony = new Harmony("com.grifthegnome.trailmod.trailpatches");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
+
+            RegisterBlocksShared(api);
         }
 
         public override void StartServerSide(ICoreServerAPI api)
@@ -46,6 +48,11 @@ namespace TrailMod
                 trailChunkManager.ShutdownCleanup();
                 trailChunkManager = null;
             });
+        }
+
+        private void RegisterBlocksShared(ICoreAPI api)
+        {
+            api.RegisterBlockClass("BlockTrail", typeof(BlockTrail));
         }
     }
 }
