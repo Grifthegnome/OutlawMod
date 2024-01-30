@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -120,6 +121,8 @@ namespace TrailMod
         const string SOIL_LOW_NONE_CODE = "soil-low-none";
         const string FOREST_FLOOR_CODE = "forestfloor";
         const string COB_CODE = "cob";
+        const string PEAT_CODE = "peat";
+        const string CLAY_CODE = "rawclay";
         const string TRAIL_CODE = "trailmod:trail";
         const string TRAIL_WEAR_VARIENT_PRETRAIL_CODE = "pretrail";
         const string PACKED_DIRT_CODE = "packeddirt";
@@ -130,6 +133,8 @@ namespace TrailMod
 
         private static readonly string[] FERTILITY_VARIANTS = { "high", "compost", "medium", "low", "verylow" };
         private static readonly string[] GRASS_VARIANTS = { "normal", "sparse", "verysparse", "none" };
+        private static readonly string[] PEAT_AND_CLAY_GRASS_VARIANTS = { "verysparse", "none" };
+        private static readonly string[] CLAY_TYPE_VARIANTS = { "blue", "fire" };
         private static readonly string[] TRAIL_WEAR_VARIANTS = { "pretrail", "new", "established", "veryestablished", "old" };
 
         private static IWorldAccessor worldAccessor;
@@ -284,6 +289,17 @@ namespace TrailMod
             return cobVariants;
         }
 
+        private string[] BuildClayVariantsTypeOnly()
+        {
+            string[] clayVariants = new string[CLAY_TYPE_VARIANTS.Count()];
+            for (int typeIndex = 0; typeIndex < CLAY_TYPE_VARIANTS.Length; typeIndex++)
+            {
+                clayVariants[typeIndex] = CLAY_CODE + "-" + CLAY_TYPE_VARIANTS[typeIndex];
+            }
+
+            return clayVariants;
+        }
+
         private string[] BuildForestFloorVariants()
         {
             
@@ -383,6 +399,39 @@ namespace TrailMod
             }
 
             BuildTrailTouchBlockVariantProgression(world, COB_CODE, GRASS_VARIANTS, cobTransformTouchCountByVariants, cobTransformByPlayerOnlyByVariants, "");
+
+            /////////////////////////////////////////////////////////////////////
+            //PEAT                                                             //
+            //We want peat to strip its grass layer, but to never change type. //
+            /////////////////////////////////////////////////////////////////////
+            int[] peatTransformTouchCountByVariants = new int[PEAT_AND_CLAY_GRASS_VARIANTS.Length];
+            bool[] peatTransformByPlayerOnlyByVariants = new bool[PEAT_AND_CLAY_GRASS_VARIANTS.Length];
+            for( int i = 0; i < peatTransformTouchCountByVariants.Length; i++ )
+            {
+                peatTransformTouchCountByVariants[i] = 1; //1 touch to lose grass.
+                peatTransformByPlayerOnlyByVariants[i] = false;
+            }
+
+            BuildTrailTouchBlockVariantProgression(world, PEAT_CODE, PEAT_AND_CLAY_GRASS_VARIANTS, peatTransformTouchCountByVariants, peatTransformByPlayerOnlyByVariants, "");
+
+            /////////////////////////////////////////////////////////////////////
+            //CLAY                                                             //
+            //We want clay to strip its grass layer, but to never change type. //
+            /////////////////////////////////////////////////////////////////////
+
+            string[] clayTypeBlockVariants = BuildClayVariantsTypeOnly();
+            int[] clayTransformTouchCountByVariants = new int[PEAT_AND_CLAY_GRASS_VARIANTS.Length];
+            bool[] clayTransformByPlayerOnlyByVariants = new bool[PEAT_AND_CLAY_GRASS_VARIANTS.Length];
+            for( int i = 0; i < clayTransformTouchCountByVariants.Length; i++ )
+            {
+                clayTransformTouchCountByVariants[i] = 1; //1 touch to lose grass.
+                clayTransformByPlayerOnlyByVariants[i] = false;
+            }
+
+            for (int clayTypeVariantIndex = 0; clayTypeVariantIndex < clayTypeBlockVariants.Length; clayTypeVariantIndex++)
+            {
+                BuildTrailTouchBlockVariantProgression(world, clayTypeBlockVariants[clayTypeVariantIndex], PEAT_AND_CLAY_GRASS_VARIANTS, clayTransformTouchCountByVariants, clayTransformByPlayerOnlyByVariants, "");
+            }
 
             /////////////////////////////////////////////////////////////////////
             //FOREST FLOOR                                                     //
