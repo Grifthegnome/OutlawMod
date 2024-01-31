@@ -28,7 +28,12 @@ namespace TrailMod
         [HarmonyPostfix]
         static void OnEntityCollideOverride(Block __instance, IWorldAccessor world, Entity entity, BlockPos pos, BlockFacing facing, Vec3d collideSpeed, bool isImpact)
         {
+            if (world.Side.IsClient() )
+                return;
 
+            if (entity == null)
+                return;
+            
             if ( !entity.Alive )
                 return;
 
@@ -58,9 +63,9 @@ namespace TrailMod
             bool touchedPreviously = false;
 
             TrailBlockPosEntry trailBlockData;
-            if (shouldTrackTrailData && trailChunkManager.BlockPosHasTrailData(world, pos))
+            if (shouldTrackTrailData && trailChunkManager.BlockPosHasTrailData(pos))
             {
-                trailBlockData = trailChunkManager.GetBlockPosTrailData(world, pos);
+                trailBlockData = trailChunkManager.GetBlockPosTrailData(pos);
 
                 if (trailBlockData.lastTouchEntID == entity.EntityId)
                     touchedPreviously = true;

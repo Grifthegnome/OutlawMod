@@ -2,6 +2,7 @@
 using HarmonyLib;
 using System.Diagnostics;
 using System.Reflection;
+using System.Threading;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -40,9 +41,14 @@ namespace TrailMod
 
             api.Event.RegisterCallback(trailChunkManager.Clean, (int)TrailChunkManager.TRAIL_CLEANUP_INTERVAL);
 
-            api.Event.ChunkColumnUnloaded += trailChunkManager.OnChunkUnloaded;
+            api.Event.ChunkDirty += trailChunkManager.OnChunkDirty;
+            api.Event.ChunkColumnUnloaded += trailChunkManager.OnChunkColumnUnloaded;
+
+            api.Event.SaveGameLoaded += trailChunkManager.OnSaveGameLoading;
+            api.Event.GameWorldSave += trailChunkManager.OnSaveGameSaving;
 
             api.Event.ServerRunPhase(EnumServerRunPhase.Shutdown, () => {
+                trailChunkManager.ShutdownSaveState();
                 //Clean up all manager stuff.
                 //If we don't it persists between loads.
                 trailChunkManager.ShutdownCleanup();

@@ -11,19 +11,23 @@ using System.Threading.Tasks.Dataflow;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Config;
+using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
+using Vintagestory.ServerMods;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TrailMod
 {
     public struct TrailBlockPosEntry
     {
+        private BlockPos _blockPos;
         private long _lastTouchTime = -1;
         private long _lastTouchEntID = -1;
         private EntityPos _lastTouchEntityPos = null;
-        private int touchCount = 0;
+        private int _touchCount = 0;
 
         const double TRAIL_COOLDOWN_MS = 900000; //Block touch count decays every 15 minutes.
 
@@ -45,17 +49,37 @@ namespace TrailMod
             set { _lastTouchEntityPos = value;}
         }
 
-        public TrailBlockPosEntry( long newTouchEntID, EntityPos newTouchEntityPos, long newTouchTime )
+        public TrailBlockPosEntry( BlockPos blockPos, long newTouchEntID, EntityPos newTouchEntityPos, long newTouchTime, int touchCount )
         {
+            _blockPos = blockPos.Copy();
             lastTouchEntID= newTouchEntID;
             lastTouchTime = newTouchTime;
             lastTouchEntityPos= newTouchEntityPos;
-            touchCount = 1;
+            _touchCount = touchCount;
         }
 
+        public BlockPos GetBlockPos()
+        {
+            return _blockPos;
+        }
         public int GetTouchCount()
         {
-            return touchCount;
+            return _touchCount;
+        }
+
+        public void DecayTouchCount(long currentElapsedMS)
+        {
+            //Decrement touchCount based on delta between current and previous touch time.
+            long touchTimeDelta = currentElapsedMS - lastTouchTime;
+
+            //Decay Touch Count
+            int touchDecay = (int)(touchTimeDelta / TRAIL_COOLDOWN_MS);
+            _touchCount = Math.Max(0, _touchCount - touchDecay);
+        }
+
+        public void ClearTouchCount()
+        {
+            _touchCount = 0;
         }
 
         public bool BlockTouched(long newTouchEntID, EntityPos newTouchEntityPos, long newTouchTime)
@@ -71,9 +95,9 @@ namespace TrailMod
             {
                 //Decay Touch Count
                 int touchDecay = (int)(touchTimeDelta / TRAIL_COOLDOWN_MS);
-                touchCount = Math.Max(0, touchCount - touchDecay);
+                _touchCount = Math.Max(0, _touchCount - touchDecay);
 
-                touchCount++;
+                _touchCount++;
                 return true;
             }
 
@@ -83,7 +107,7 @@ namespace TrailMod
 
         public void BlockTransformed()
         {
-            touchCount = 0;
+            _touchCount = 0;
         }
     }
 
@@ -115,7 +139,13 @@ namespace TrailMod
     public class TrailChunkManager
     {
         public const long TRAIL_CLEANUP_INTERVAL = 15000; //Run Cleanup every 15 seconds
-        public const long TRAIL_POS_MONITOR_TIMEOUT = 1800000; //Blocks time out and are cleared from the tracking system after 30 minutes.
+        public const long TRAIL_POS_MONITOR_TIMEOUT = 900000; //Blocks time out and are cleared from the tracking system after 15 minutes.
+
+        const string TRAIL_MOD_DATA_SAVE_KEY_TOUCH_COUNT = "trailModChunkData_TouchCount";
+        const string TRAIL_MOD_DATA_SAVE_KEY_BLOCK_POS = "trailModChunkData_BlockPos";
+
+        public const string TRAIL_MOD_DATA_SAVE_KEY_BLOCK_TRAIL_LAST_TOUCH_DAY = "trailModChunkData_LastTouchDay";
+        public const string TRAIL_MOD_DATA_SAVE_KEY_BLOCK_TRAIL_BLOCK_POS = "trailModChunkData_BlockTrailBlockPos";
 
         const string SOIL_CODE = "soil";
         const string SOIL_LOW_NONE_CODE = "soil-low-none";
@@ -137,8 +167,8 @@ namespace TrailMod
         private static readonly string[] CLAY_TYPE_VARIANTS = { "blue", "fire" };
         private static readonly string[] TRAIL_WEAR_VARIANTS = { "pretrail", "new", "established", "veryestablished", "old" };
 
-        private static IWorldAccessor worldAccessor;
-        private static ICoreServerAPI serverApi;
+        public IWorldAccessor worldAccessor;
+        private ICoreServerAPI serverApi;
 
         //Callbacks based on number of block touches, stored by block ID;
         private static Dictionary<int, TrailBlockTouchTransformData> trailBlockTouchTransforms = new Dictionary<int, TrailBlockTouchTransformData>();
@@ -182,6 +212,178 @@ namespace TrailMod
             trailChunkManagerSingleton = null;
         }
 
+        public void ShutdownSaveState()
+        {
+            OnSaveGameSaving();
+        }
+
+        public void OnSaveGameLoading()
+        {
+            
+        }
+
+        public void OnSaveGameSaving()
+        {
+            foreach ( IWorldChunk chunk in trailChunkEntries.Keys ) 
+            {
+                WriteTrailSaveStateForChunk(chunk);
+            }
+        }
+
+        public void OnChunkDirty(Vec3i chunkCoord, IWorldChunk chunk, EnumChunkDirtyReason reason)
+        {
+            if (reason == EnumChunkDirtyReason.NewlyLoaded )
+            {
+                ReadTrailSaveStateForChunk(chunk);
+            }
+        }
+
+        public void OnChunkColumnUnloaded(Vec3i chunkCoord)
+        {
+            IWorldChunk chunk = worldAccessor.BlockAccessor.GetChunk(chunkCoord.X, chunkCoord.Y, chunkCoord.Z);
+
+            if (trailChunkEntries.ContainsKey(chunk))
+            {
+                WriteTrailSaveStateForChunk(chunk);
+                trailChunkEntries[chunk].Clear();
+                trailChunkEntries.Remove(chunk);
+            }
+
+        }
+
+        private void WriteTrailSaveStateForChunk( IWorldChunk chunk )
+        {
+            Debug.Assert(chunk is IServerChunk);
+            IServerChunk serverChunk = (IServerChunk)chunk;
+
+            //Store Last Touch Day For Trail Devolution
+            List<double> saveBlockTrailLastTouchDay = new List<double>();
+            List<BlockPos> saveBlockTrailPos = new List<BlockPos>();
+
+            //Store Touch Count For Trail Evolution
+            List<int> saveBlockTouchCounts = new List<int>();
+            List<BlockPos> saveBlockPos = new List<BlockPos>();
+
+            Dictionary<long, TrailBlockPosEntry> trailBlockPosEntries = trailChunkEntries[chunk];
+
+            foreach (long trailBlockPosID in trailBlockPosEntries.Keys)
+            {
+                //Decay our touch count before saving so that we can strip out any non-trail blocks with a fully decayed touch count.
+                trailBlockPosEntries[trailBlockPosID].DecayTouchCount(worldAccessor.ElapsedMilliseconds);
+                int touchCount = trailBlockPosEntries[trailBlockPosID].GetTouchCount();
+
+                Block blockToSave = chunk.GetLocalBlockAtBlockPos(worldAccessor, trailBlockPosEntries[trailBlockPosID].GetBlockPos());
+                if (blockToSave is BlockTrail)
+                {
+                    BlockTrail blockTrailToSave = (BlockTrail)blockToSave;
+                    saveBlockTrailLastTouchDay.Add(blockTrailToSave.GetLastTouchDay());
+                    saveBlockTrailPos.Add(trailBlockPosEntries[trailBlockPosID].GetBlockPos());
+                }
+                else
+                {
+                    if (touchCount == 0 )
+                        continue;
+                }
+
+                saveBlockTouchCounts.Add(touchCount);
+                saveBlockPos.Add(trailBlockPosEntries[trailBlockPosID].GetBlockPos());
+            }
+
+            if (saveBlockTrailPos.Count > 0)
+            {
+                double[] blockTrailSaveLastTouchDay = saveBlockTrailLastTouchDay.ToArray();
+                BlockPos[] blockTrailSaveBlockPos = saveBlockTrailPos.ToArray();
+
+                byte[] lastTouchDayByte = SerializerUtil.Serialize(blockTrailSaveLastTouchDay);
+                byte[] blockTrailBlockPosByte = SerializerUtil.Serialize(blockTrailSaveBlockPos);
+
+                serverChunk.SetServerModdata( TRAIL_MOD_DATA_SAVE_KEY_BLOCK_TRAIL_LAST_TOUCH_DAY, lastTouchDayByte );
+                serverChunk.SetServerModdata( TRAIL_MOD_DATA_SAVE_KEY_BLOCK_TRAIL_BLOCK_POS, blockTrailBlockPosByte );
+            }
+
+            if (saveBlockPos.Count > 0)
+            {
+                int[] trailBlockSaveTouchCount = saveBlockTouchCounts.ToArray();
+                BlockPos[] trailBlockSaveBlockPos = saveBlockPos.ToArray();
+
+                byte[] touchCountByte = SerializerUtil.Serialize<int[]>(trailBlockSaveTouchCount);
+                byte[] blockPosByte = SerializerUtil.Serialize<BlockPos[]>(trailBlockSaveBlockPos);
+
+
+                serverChunk.SetServerModdata(TRAIL_MOD_DATA_SAVE_KEY_TOUCH_COUNT, touchCountByte);
+                serverChunk.SetServerModdata(TRAIL_MOD_DATA_SAVE_KEY_BLOCK_POS, blockPosByte);
+            }
+        }
+
+        private void ReadTrailSaveStateForChunk( IWorldChunk chunk )
+        {
+            Debug.Assert(chunk is IServerChunk);
+            IServerChunk serverChunk = (IServerChunk)chunk;
+
+            byte[] touchCountToLoad = serverChunk.GetServerModdata(TRAIL_MOD_DATA_SAVE_KEY_TOUCH_COUNT);
+            byte[] blockPosToLoad = serverChunk.GetServerModdata(TRAIL_MOD_DATA_SAVE_KEY_BLOCK_POS);
+
+            if (touchCountToLoad == null)
+                return;
+
+            if ( blockPosToLoad == null) 
+                return;
+
+            int[] loadedTouchCount = SerializerUtil.Deserialize<int[]>(touchCountToLoad);
+            BlockPos[] loadedBlockPos = SerializerUtil.Deserialize<BlockPos[]>(blockPosToLoad);
+
+            for ( int i = 0; i < loadedBlockPos.Length; i++)
+            {
+                
+                int touchCount = loadedTouchCount[i];
+                BlockPos blockPos = loadedBlockPos[i];
+
+                if ( trailChunkEntries.ContainsKey(chunk) )
+                {
+                    long trailBlockPosID = ConvertBlockPositionToTrailPosID(blockPos);
+                    if (trailChunkEntries[chunk].ContainsKey(trailBlockPosID) ) 
+                    {
+                        Debug.Assert(false, "We should not be loading a duplicate of this data.");
+                    }
+                    else
+                    {
+                        TrailBlockPosEntry trailBlockPosEntry = new TrailBlockPosEntry(blockPos, -1, new EntityPos(0, 0, 0), 0, touchCount);
+                        trailChunkEntries[chunk].Add(trailBlockPosID, trailBlockPosEntry);
+                    }
+                }
+                else
+                {
+                    long trailBlockPosID = ConvertBlockPositionToTrailPosID(blockPos);
+                    Dictionary<long,TrailBlockPosEntry> trailBlockPosEntries = new Dictionary<long,TrailBlockPosEntry>();
+                    trailBlockPosEntries.Add(trailBlockPosID, new TrailBlockPosEntry(blockPos, -1, new EntityPos(0, 0, 0), 0, touchCount));
+                    trailChunkEntries.Add(chunk, trailBlockPosEntries);
+                }  
+            }
+
+            //LOAD LAST TOUCH DAY FOR TRAIL BLOCKS IN THIS CHUNK.
+            byte[] lastTouchDayToLoad = serverChunk.GetServerModdata(TrailChunkManager.TRAIL_MOD_DATA_SAVE_KEY_BLOCK_TRAIL_LAST_TOUCH_DAY);
+            byte[] blockTrailPosToLoad = serverChunk.GetServerModdata(TrailChunkManager.TRAIL_MOD_DATA_SAVE_KEY_BLOCK_TRAIL_BLOCK_POS);
+
+            if (lastTouchDayToLoad == null)
+                return;
+
+            if (blockTrailPosToLoad == null)
+                return;
+
+            //We are storing this data in a dictionary so we can access it quickly, but we are not holding onto it once it is loaded.
+            double[] loadedLastTouchDay = SerializerUtil.Deserialize<double[]>(lastTouchDayToLoad);
+            BlockPos[] loadedBlockTrailPos = SerializerUtil.Deserialize<BlockPos[]>(blockTrailPosToLoad);
+
+            for (  int i = 0; i < loadedBlockTrailPos.Length; i++)
+            {
+                Block loadedBlock = worldAccessor.BlockAccessor.GetBlock(loadedBlockTrailPos[i]);
+                if ( loadedBlock is BlockTrail)
+                {
+                    BlockTrail loadedTrailBlock = (BlockTrail) loadedBlock;
+                    loadedTrailBlock.UpdateLastTrailTouchDayFromLoadedData(loadedLastTouchDay[i], loadedBlockTrailPos[i]);
+                }
+            }
+        }
 
         private static List<long> timedOutBlocks = new List<long>();
         private static List<IWorldChunk> chunksToRemove = new List<IWorldChunk>();
@@ -196,6 +398,10 @@ namespace TrailMod
                 foreach ( long blockTrailID in trailChunkEntries[chunk].Keys )
                 {
                     TrailBlockPosEntry blockPosEntry = trailChunkEntries[chunk].GetValueSafe( blockTrailID );
+                    
+                    //We never time out trail blocks.
+                    if (worldAccessor.BlockAccessor.GetBlock(blockPosEntry.GetBlockPos()) is BlockTrail)
+                        continue;
 
                     //If the block hasn't been touched in the timeout time, clean it up.
                     if( (worldAccessor.ElapsedMilliseconds - blockPosEntry.lastTouchTime) > TRAIL_POS_MONITOR_TIMEOUT)
@@ -203,9 +409,6 @@ namespace TrailMod
                         timedOutBlocks.Add(blockTrailID);
                     }
                 }
-
-                //THIS FUNCTION IS NOT REMOVING TIMED OUT BLOCKS EVEN THOUGH IT IS TRYING.
-                //I THINK THE NESTED DICTIONARY MAY BE CAUSING PROBLEMS FOR US. WE NEED TO SEE HOW WE CAN REFACTOR!
 
                 Dictionary<long, TrailBlockPosEntry> trailEntries = trailChunkEntries.GetValueSafe(chunk);
 
@@ -226,18 +429,6 @@ namespace TrailMod
             }
 
             serverApi.Event.RegisterCallback(Clean, ((int)TRAIL_CLEANUP_INTERVAL));
-        }
-
-        public void OnChunkUnloaded(Vec3i chunkCoord)
-        {
-            IWorldChunk chunk = worldAccessor.BlockAccessor.GetChunk(chunkCoord.X, chunkCoord.Y, chunkCoord.Z);
-
-            if (trailChunkEntries.ContainsKey(chunk))
-            {
-                trailChunkEntries[chunk].Clear();
-                trailChunkEntries.Remove(chunk);
-            }
-
         }
 
         private string[] BuildSoilBlockVariants()
@@ -342,7 +533,7 @@ namespace TrailMod
                 }
                 else
                 {
-                    trailTransformTouchCountByVariant[i] = 10 * i; //10 * i touches to upgrade to the next trail level. (establised trail = 10, very established 20, old = 30)
+                    trailTransformTouchCountByVariant[i] = 25 * i; //25 * i touches to upgrade to the next trail level. (establised trail = 25, very established 50, old = 75)
                     trailTransformByPlayerOnlyByVariant[i] = true;
                 }
             }
@@ -543,7 +734,7 @@ namespace TrailMod
             if ( block is BlockTrail )
             {
                 BlockTrail blockTrail = (BlockTrail)block;
-                blockTrail.TrailBlockTouched(touchEnt.World.ElapsedMilliseconds);
+                blockTrail.TrailBlockTouched(world);
             }
 
             if ( trailChunkEntries.ContainsKey( chunk ) ) 
@@ -563,7 +754,7 @@ namespace TrailMod
                 }
                 else
                 {
-                    TrailBlockPosEntry trailBlockEntry = new TrailBlockPosEntry(touchEnt.EntityId, touchEnt.ServerPos, touchEnt.World.ElapsedMilliseconds);
+                    TrailBlockPosEntry trailBlockEntry = new TrailBlockPosEntry(blockPos, touchEnt.EntityId, touchEnt.ServerPos, touchEnt.World.ElapsedMilliseconds, 1);
                     trailChunkEntries[chunk].Add(blockTrailID, trailBlockEntry);
 
                     if( TryToTransformTrailBlock(world, blockPos, block.BlockId, touchEnt, trailBlockEntry.GetTouchCount() ) )
@@ -576,7 +767,7 @@ namespace TrailMod
             }
             else
             {
-                TrailBlockPosEntry trailBlockEntry = new TrailBlockPosEntry(touchEnt.EntityId, touchEnt.ServerPos, touchEnt.World.ElapsedMilliseconds);
+                TrailBlockPosEntry trailBlockEntry = new TrailBlockPosEntry(blockPos, touchEnt.EntityId, touchEnt.ServerPos, touchEnt.World.ElapsedMilliseconds, 1);
                 Dictionary<long, TrailBlockPosEntry> trailChunkEntry = new Dictionary<long, TrailBlockPosEntry>();
                 trailChunkEntry.Add(blockTrailID, trailBlockEntry);
                 trailChunkEntries.Add(chunk, trailChunkEntry);
@@ -589,7 +780,7 @@ namespace TrailMod
             }
         }
 
-        public void RemoveBlockPosTrailData( IWorldAccessor world, BlockPos blockPos )
+        private void RemoveBlockPosTrailData( IWorldAccessor world, BlockPos blockPos )
         {
             IWorldChunk chunk = world.BlockAccessor.GetChunkAtBlockPos(blockPos);
             Debug.Assert(chunk != null);
@@ -605,9 +796,22 @@ namespace TrailMod
                 trailChunkEntries.Remove(chunk);
         }
 
-        public bool BlockPosHasTrailData(IWorldAccessor world, BlockPos blockPos)
+        public void ClearBlockTouchCount( BlockPos blockPos )
         {
-            IWorldChunk chunk = world.BlockAccessor.GetChunkAtBlockPos(blockPos);
+            IWorldChunk chunk = worldAccessor.BlockAccessor.GetChunkAtBlockPos(blockPos);
+            Debug.Assert(chunk != null);
+
+            long blockTrailID = ConvertBlockPositionToTrailPosID(blockPos);
+
+            Debug.Assert(trailChunkEntries.ContainsKey(chunk));
+            Debug.Assert(trailChunkEntries[chunk].ContainsKey(blockTrailID));
+
+            trailChunkEntries[chunk][blockTrailID].ClearTouchCount();
+        }
+
+        public bool BlockPosHasTrailData( BlockPos blockPos)
+        {
+            IWorldChunk chunk = worldAccessor.BlockAccessor.GetChunkAtBlockPos(blockPos);
             Debug.Assert(chunk != null);
 
             long blockTrailID = ConvertBlockPositionToTrailPosID(blockPos);
@@ -621,9 +825,9 @@ namespace TrailMod
             return false;
         }
 
-        public TrailBlockPosEntry GetBlockPosTrailData( IWorldAccessor world, BlockPos blockPos )
+        public TrailBlockPosEntry GetBlockPosTrailData( BlockPos blockPos )
         {
-            IWorldChunk chunk = world.BlockAccessor.GetChunkAtBlockPos( blockPos );
+            IWorldChunk chunk = worldAccessor.BlockAccessor.GetChunkAtBlockPos( blockPos );
             Debug.Assert(chunk != null);
 
             if (trailChunkEntries.ContainsKey(chunk))
@@ -682,11 +886,6 @@ namespace TrailMod
 
                     world.BlockAccessor.SetBlock(trailBlockTransformData.transformBlockID, blockPos);
 
-                    //If our new block doesn't have a transform, clear it.
-                    //We need to find a place to call this where it won't break logic later in the call.
-                    //if (!trailBlockTouchTransforms.ContainsKey(trailBlockTransformData.transformBlockID))
-                    //    RemoveBlockPosTrailData( world, blockPos );
-
                     return true;
                 }
             }
@@ -696,9 +895,9 @@ namespace TrailMod
 
         public bool BlockCenterHorizontalInEntityBoundingBox(Entity ent, BlockPos blockPos ) 
         {
-            if( BlockPosHasTrailData( ent.World, blockPos ) )
+            if( BlockPosHasTrailData( blockPos ) )
             {
-                TrailBlockPosEntry blockTrailEntry = GetBlockPosTrailData( ent.World, blockPos );
+                TrailBlockPosEntry blockTrailEntry = GetBlockPosTrailData( blockPos );
                 
                 EntityProperties agentProperties = ent.World.GetEntityType(ent.Code);
 
@@ -739,7 +938,7 @@ namespace TrailMod
             long XY = AppendDigits(blockPos.X, blockPos.Y);
             long XYZ = AppendDigits(XY, blockPos.Z);
 
-            //This string concat is slow, we need a better method.
+            //Remove this when we are confindent this function returns good values consistently.
             long concatTest = (blockPos.X.ToString() + blockPos.Y.ToString() + blockPos.Z.ToString()).ToLong();
            
             Debug.Assert(XYZ == concatTest);
@@ -753,6 +952,18 @@ namespace TrailMod
             long finalVal = (long)(value1 * Math.Ceiling(Math.Pow(10, dn))); //< ----because pow would give 99.999999(for some optimization modes)
             finalVal += value2;
             return finalVal;
+        }
+
+        private static int CountDigits( long number )
+        {
+            int digits = 0;
+            while ( number > 0 )
+            {
+                number /= 10;
+                digits++;
+            }
+
+            return digits;
         }
 
         private static bool CanTramplePlant( Block block )
