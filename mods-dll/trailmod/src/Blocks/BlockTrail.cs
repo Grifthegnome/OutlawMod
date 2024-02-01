@@ -17,10 +17,12 @@ namespace TrailMod
     public class BlockTrail : Block
     {
         private const double PRETRAIL_DEVOLVE_DAYS = 3; //after 3 game days a pretrail block devolves back into a regular soil block.
-        private const double TRAIL_DEVOLVE_DAYS = 7; //after 7 days a trail devolves one level.
+        private const double TRAIL_DEVOLVE_DAYS = 14; //after 14 days a trail devolves one level.
         private const string SOIL_CODE = "soil";
         private const string SOIL_GRASS_NONE_CODE = "none";
         private const string SOIL_GRASS_SPARSE_CODE = "sparse";
+        private const string PRETRAIL_START_CODE = "soil"; //We are intentionally not including the trailmod: domain here becauase it is appended to the string at runtime.
+        private const string PRETRAIL_END_CODE = "pretrail";
 
         private readonly string[] trailVariants = { "pretrail", "new", "established", "veryestablished", "old" };
 
@@ -42,47 +44,53 @@ namespace TrailMod
             {
                 TrailChunkManager trailChunkManager = TrailChunkManager.GetTrailChunkManager();
 
-                if ( endVariant == "pretrail" )
+                //Devolve the block to the previous level.
+                int wearVariantID = GetTrailWearIndexFromWearCode(endVariant);
+
+                double daysSinceTouched = trailChunkManager.worldAccessor.Calendar.ElapsedDays - lastTrailTouchDay;
+
+                double devolveDays = GetTrailDevolveDays(endVariant);
+                int devolveLevels = (int)(daysSinceTouched / devolveDays); //This should round down, not up.
+
+                if (devolveLevels == 0)
+                    return;
+
+                int startingLevel = GetTrailWearIndexFromWearCode(endVariant);
+                int finalLevel = startingLevel - devolveLevels;
+                string devolveBlockCode = "";
+
+                //If we are a new trail devolving to pretrail.
+                if (finalLevel > 0)
+                {
+                     string baseCode = this.CodeWithoutParts(1);
+                     string newWearVariantCode = trailVariants[finalLevel];
+                     devolveBlockCode = this.Code.ShortDomain() + ":" + baseCode + "-" + newWearVariantCode;
+                }
+                else if (finalLevel == 0 ) 
                 {
                     string fertilityVariantCode = this.Code.SecondCodePart();
-
-                    string devolveToSoilCode =  SOIL_CODE + "-" + fertilityVariantCode + "-" + SOIL_GRASS_NONE_CODE;
-
-                    AssetLocation devolveSoilBlockAsset = new AssetLocation(devolveToSoilCode);
-
-                    Block devolveSoilBlock = world.GetBlock(devolveSoilBlockAsset);
-
-                    Debug.Assert( devolveSoilBlock != null );
-
-                    lastTrailTouchDay = world.Calendar.ElapsedDays;
-                    world.BlockAccessor.SetBlock(devolveSoilBlock.Id, pos);
-
-                    if (trailChunkManager.BlockPosHasTrailData(pos) )
-                        trailChunkManager.ClearBlockTouchCount(pos);
-
+                    devolveBlockCode = this.Code.ShortDomain() + ":" + PRETRAIL_START_CODE + "-" + fertilityVariantCode + "-" + PRETRAIL_END_CODE;
                 }
-                else
+                else if ( finalLevel < 0 ) 
                 {
-                    //Devolve the block to the previous level.
-                    int wearVariantID = GetTrailWearIndexFromWearCode(endVariant);
-
-                    string baseCode = this.CodeWithoutParts(1);
-                    string newWearVariantCode = trailVariants[wearVariantID - 1];
-                    string devolveBlockCode = baseCode + "-" + newWearVariantCode;
-
-                    AssetLocation devolveBlockAsset = new AssetLocation(this.Code.ShortDomain() + ":" + devolveBlockCode);
-                    Block devolveBlock = world.GetBlock(devolveBlockAsset);
-
-                    Debug.Assert( devolveBlock != null );
-
-                    lastTrailTouchDay = world.ElapsedMilliseconds;
-                    world.BlockAccessor.SetBlock(devolveBlock.Id, pos);
-
-                    if (trailChunkManager.BlockPosHasTrailData(pos) )
-                        trailChunkManager.ClearBlockTouchCount(pos);
+                    string fertilityVariantCode = this.Code.SecondCodePart();
+                    devolveBlockCode = SOIL_CODE + "-" + fertilityVariantCode + "-" + SOIL_GRASS_NONE_CODE;
                 }
-            }
 
+                Debug.Assert(devolveBlockCode != "");
+
+                AssetLocation devolveBlockAsset = new AssetLocation(devolveBlockCode);
+                Block devolveBlock = world.GetBlock(devolveBlockAsset);
+                
+                Debug.Assert( devolveBlock != null );
+
+                SetLastTrailTouchDay(world.Calendar.ElapsedDays);
+                world.BlockAccessor.SetBlock(devolveBlock.Id, pos);
+
+                if (trailChunkManager.BlockPosHasTrailData(pos) )
+                    trailChunkManager.ClearBlockTouchCount(pos);
+   
+            }
         }
 
         public override bool ShouldReceiveServerGameTicks(IWorldAccessor world, BlockPos pos, Random offThreadRandom, out object extra)
@@ -95,7 +103,7 @@ namespace TrailMod
         public void UpdateLastTrailTouchDayFromLoadedData( double lastTouchDay, BlockPos pos )
         {
             //Make sure this only ever runs on the server.
-
+            
             lastTrailTouchDay = lastTouchDay;
 
             TrailChunkManager trailChunkManager = TrailChunkManager.GetTrailChunkManager();
@@ -112,13 +120,13 @@ namespace TrailMod
             int startingLevel = GetTrailWearIndexFromWearCode(endVariant);
             int finalLevel = startingLevel - devolveLevels;
 
-            if (finalLevel >= 0 ) 
+            if (finalLevel > 0 ) 
             {
                 //Devolve the block to the previous level.
                 int wearVariantID = GetTrailWearIndexFromWearCode(endVariant);
 
                 string baseCode = this.CodeWithoutParts(1);
-                string newWearVariantCode = trailVariants[wearVariantID - 1];
+                string newWearVariantCode = trailVariants[finalLevel];
                 string devolveBlockCode = baseCode + "-" + newWearVariantCode;
 
                 AssetLocation devolveBlockAsset = new AssetLocation(this.Code.ShortDomain() + ":" + devolveBlockCode);
@@ -126,12 +134,30 @@ namespace TrailMod
 
                 Debug.Assert(devolveBlock != null);
 
-                lastTrailTouchDay = trailChunkManager.worldAccessor.ElapsedMilliseconds;
+                SetLastTrailTouchDay(trailChunkManager.worldAccessor.Calendar.ElapsedDays);
                 trailChunkManager.worldAccessor.BlockAccessor.SetBlock(devolveBlock.Id, pos);
 
                 if (trailChunkManager.BlockPosHasTrailData(pos))
                     trailChunkManager.ClearBlockTouchCount(pos);
             }
+            //if we are new trail devolving to pretrail.
+            else if ( finalLevel == 0 )
+            {
+                string fertilityVariantCode = this.Code.SecondCodePart();
+                string devolveBlockCode = PRETRAIL_START_CODE + "-" + fertilityVariantCode + "-" + PRETRAIL_END_CODE;
+
+                AssetLocation devolveBlockAsset = new AssetLocation(this.Code.ShortDomain() + ":" + devolveBlockCode);
+                Block devolveBlock = trailChunkManager.worldAccessor.GetBlock(devolveBlockAsset);
+
+                Debug.Assert(devolveBlock != null);
+
+                SetLastTrailTouchDay(trailChunkManager.worldAccessor.Calendar.ElapsedDays);
+                trailChunkManager.worldAccessor.BlockAccessor.SetBlock(devolveBlock.Id, pos);
+
+                if (trailChunkManager.BlockPosHasTrailData(pos))
+                    trailChunkManager.ClearBlockTouchCount(pos);
+            }
+            //if we are native soil
             else if(finalLevel < 0 )
             {
                 string fertilityVariantCode = this.Code.SecondCodePart();
@@ -144,7 +170,7 @@ namespace TrailMod
 
                 Debug.Assert(devolveSoilBlock != null);
 
-                lastTrailTouchDay = trailChunkManager.worldAccessor.Calendar.ElapsedDays;
+                SetLastTrailTouchDay(trailChunkManager.worldAccessor.Calendar.ElapsedDays);
                 trailChunkManager.worldAccessor.BlockAccessor.SetBlock(devolveSoilBlock.Id, pos);
 
                 if (trailChunkManager.BlockPosHasTrailData(pos))
@@ -182,9 +208,14 @@ namespace TrailMod
             return -1;
         }
 
+        private void SetLastTrailTouchDay( double lastTouchDay ) 
+        {
+            lastTrailTouchDay = lastTouchDay;
+        }
+
         public void TrailBlockTouched( IWorldAccessor world )
         {
-            lastTrailTouchDay = world.Calendar.ElapsedDays;
+            SetLastTrailTouchDay(world.Calendar.ElapsedDays);
         }
 
         public double GetLastTouchDay()

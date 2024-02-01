@@ -1,30 +1,30 @@
 {	
 	//BLOCKS
-	"block-trail-verylow-pretrail": "Barren soil (trampled)",
+	"block-soil-verylow-pretrail": "Barren soil (trampled)",
 	"block-trail-verylow-new": "Wilderness trail (Barren soil)",
 	"block-trail-verylow-established": "Established trail (Barren soil)",
 	"block-trail-verylow-veryestablished": "Dirt road (Barren soil)",
 	"block-trail-verylow-old": "Highway (Barren soil)",
 	
-	"block-trail-low-pretrail": "Low fertility soil (trampled)",
+	"block-soil-low-pretrail": "Low fertility soil (trampled)",
 	"block-trail-low-new": "Wilderness trail (Low fertility soil)",
 	"block-trail-low-established": "Established trail (Low fertility soil)",
 	"block-trail-low-veryestablished": "Dirt road (Low fertility soil)",
 	"block-trail-low-old": "Highway (Low fertility soil)",
 
-	"block-trail-medium-pretrail": "Medium fertility soil (trampled)",
+	"block-soil-medium-pretrail": "Medium fertility soil (trampled)",
 	"block-trail-medium-new": "Wilderness trail (Medium fertility soil)",
 	"block-trail-medium-established": "Established trail (Medium fertility soil)",
 	"block-trail-medium-veryestablished": "Dirt road (Medium fertility soil)",
 	"block-trail-medium-old": "Highway (Medium fertility soil)",
 
-	"block-trail-compost-pretrail": "High fertility soil (trampled)",
+	"block-soil-compost-pretrail": "High fertility soil (trampled)",
 	"block-trail-compost-new": "Wilderness trail (High fertility soil)",
 	"block-trail-compost-established": "Established trail (High fertility soil)",
 	"block-trail-compost-veryestablished": "Dirt road (High fertility soil)",
 	"block-trail-compost-old": "Highway (High fertility soil)",
 
-	"block-trail-high-pretrail": "Terra preta (trampled)",
+	"block-soil-high-pretrail": "Terra preta (trampled)",
 	"block-trail-high-new": "Wilderness trail (terra preta)",
 	"block-trail-high-established": "Established trail (terra preta)",
 	"block-trail-high-veryestablished": "Dirt road (terra preta)",

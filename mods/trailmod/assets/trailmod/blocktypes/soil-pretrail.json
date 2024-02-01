@@ -1,9 +1,9 @@
 {
-	code: "trail",
+	code: "soil",
 	class: "BlockTrail",
 	variantgroups: [
 		{ loadFromProperties: "abstract/fertility" },
-		{ code: "trailwear", states: ["new", "established", "veryestablished", "old"] }
+		{ code: "trailwear", states: ["pretrail"] }
 	],
 	behaviors: [],
 	creativeinventory: { "general": ["*"], "flora": ["*"], "terrain": ["*"] },
@@ -25,14 +25,6 @@
 	attributes: {
 		mapColorCode: "land",
 		ignoreTintInventory: true,
-		//growthBlockLayer: "l1soilwithgrass",
-		//growthLightLevel: 7,
-		//preventsDecay: true
-		//tallGrassGrowthChance: 0.3,
-		//spreadsGrassByType: {
-		//	"*-none": false,
-		//	"*": true
-		//}
 	},
 	texturesInventory: {
 		down: {base: "game:block/soil/fert{fertility}"},
@@ -45,46 +37,17 @@
 			overlays: ["block/trail/trailwear/inventory/top_{trailwear}"]
 		}
 	},
-	walkspeedmultiplierByType:{
-		"*-new" : 1.1,
-		"*-established" : 1.15,
-		"*-veryestablished" : 1.20,
-		"*-old": 1.25	
-	},
-	/*
-	climateColorMapByType: {
-		"*-old": null,
-		"*": "climatePlantTint",
-	},
-	seasonColorMapByType: {
-		"*-old": null,
-		"*": "seasonalGrass",
-	},
-	*/
 	snowCoverage: true,
-	frostableByType: {
-		"*-pretrail": false,
-		"*": true,
-	},
+	frostable: false,
 	replaceable: 400,
 	fertility: 100,
 	resistance: 1.5,
-	soundsByType: 
+	sounds: 
 	{
-		"*-pretrail":
-		{
-			place: "game:block/dirt",
-			break: "game:block/dirt",
-			hit: "game:block/dirt",
-			walk: "game:walk/grass"
-		},
-		"*":
-		{
-			place: "game:block/dirt",
-			break: "game:block/dirt",
-			hit: "game:block/dirt",
-			walk: "game:walk/gravel"
-		}
+		place: "game:block/dirt",
+		break: "game:block/dirt",
+		hit: "game:block/dirt",
+		walk: "game:walk/grass"	
 	},
 	drops: [ {
 		type: "block",

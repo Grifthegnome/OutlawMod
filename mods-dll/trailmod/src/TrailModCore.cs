@@ -60,5 +60,11 @@ namespace TrailMod
         {
             api.RegisterBlockClass("BlockTrail", typeof(BlockTrail));
         }
+
+        public override void Dispose()
+        {
+            harmony.UnpatchAll(harmony.Id);
+            base.Dispose();
+        }
     }
 }

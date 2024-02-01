@@ -154,7 +154,9 @@ namespace TrailMod
         const string PEAT_CODE = "peat";
         const string CLAY_CODE = "rawclay";
         const string TRAIL_CODE = "trailmod:trail";
-        const string TRAIL_WEAR_VARIENT_PRETRAIL_CODE = "pretrail";
+        const string TRAIL_WEAR_VARIANT_NEW_CODE = "new";
+        const string PRETRAIL_START_CODE = "trailmod:soil";
+        const string TRAIL_PRETRAIL_END_CODE = "pretrail";
         const string PACKED_DIRT_CODE = "packeddirt";
         const string PACKED_DIRT_ARID_CODE = "drypackeddirt";
         const string STONE_PATH_CODE = "stonepath-free";
@@ -165,7 +167,7 @@ namespace TrailMod
         private static readonly string[] GRASS_VARIANTS = { "normal", "sparse", "verysparse", "none" };
         private static readonly string[] PEAT_AND_CLAY_GRASS_VARIANTS = { "verysparse", "none" };
         private static readonly string[] CLAY_TYPE_VARIANTS = { "blue", "fire" };
-        private static readonly string[] TRAIL_WEAR_VARIANTS = { "pretrail", "new", "established", "veryestablished", "old" };
+        private static readonly string[] TRAIL_WEAR_VARIANTS = { "new", "established", "veryestablished", "old" };
 
         public IWorldAccessor worldAccessor;
         private ICoreServerAPI serverApi;
@@ -469,6 +471,17 @@ namespace TrailMod
             return trailVariants;
         }
 
+        private string[] BuildPretrailBlockVariants()
+        {
+            string[] pretrailVariants = new string[FERTILITY_VARIANTS.Count()];
+            for (int fertilityIndex = 0; fertilityIndex < FERTILITY_VARIANTS.Length; fertilityIndex++)
+            {
+                pretrailVariants[fertilityIndex] = PRETRAIL_START_CODE + "-" + FERTILITY_VARIANTS[fertilityIndex] + "-" + TRAIL_PRETRAIL_END_CODE;
+            }
+
+            return pretrailVariants;
+        }
+
         private string[] BuildCobBlockVariants()
         {
             string[] cobVariants = new string[GRASS_VARIANTS.Count()];
@@ -515,6 +528,33 @@ namespace TrailMod
             ValidateTrailBlocks(world, new string[] { PACKED_DIRT_CODE, PACKED_DIRT_ARID_CODE, STONE_PATH_CODE });
 
             //////////////////////////////////////////////////////////////////////////////////////////
+            //PRETRAIL                                                                              //
+            //We want pretrails to stay in their fertility category, become trails if walked on     //
+            //It evolves until it reaches an old trail, then it stops                               //
+            //////////////////////////////////////////////////////////////////////////////////////////
+            string[] pretrailFertilityBlockVariants = BuildPretrailBlockVariants();
+
+            int[] pretrailTransformTouchCountByVariant = new int[FERTILITY_VARIANTS.Length];
+            bool[] pretrailTransformByPlayerOnlyByVarian = new bool[FERTILITY_VARIANTS.Length];
+
+            for (int i = 0; i < pretrailFertilityBlockVariants.Length; i++ )
+            {
+                AssetLocation blockAsset = new AssetLocation(pretrailFertilityBlockVariants[i]);
+                Block block = world.GetBlock(blockAsset);
+
+                Debug.Assert(block != null);
+
+                string transformCode = TRAIL_CODE + "-" + FERTILITY_VARIANTS[i] + "-" + TRAIL_WEAR_VARIANT_NEW_CODE;
+                AssetLocation transformBlockAsset = new AssetLocation(transformCode);
+                Block transformBlock = world.GetBlock(transformBlockAsset);
+
+                Debug.Assert(transformBlock != null);
+
+                CreateTrailBlockTransform(blockAsset, block.BlockId, 5, transformBlock.BlockId, true);
+            }
+
+
+            //////////////////////////////////////////////////////////////////////////////////////////
             //TRAIL                                                                                 //
             //We want trails to stay in their fertility category, but to slowy evolve over time.    //
             //It evolves until it reaches an old trail, then it stops                               //
@@ -528,12 +568,12 @@ namespace TrailMod
             {
                 if (i == 0)
                 {
-                    trailTransformTouchCountByVariant[i] = 5; //touches to go from pre-trail to new trail.
+                    trailTransformTouchCountByVariant[i] = 25; //touches to go from new-trail to established trail.
                     trailTransformByPlayerOnlyByVariant[i] = true;
                 }
                 else
                 {
-                    trailTransformTouchCountByVariant[i] = 25 * i; //25 * i touches to upgrade to the next trail level. (establised trail = 25, very established 50, old = 75)
+                    trailTransformTouchCountByVariant[i] = 25 * (i + 1); //25 * (i + 1) touches to upgrade to the next trail level. (very established 50, old = 75)
                     trailTransformByPlayerOnlyByVariant[i] = true;
                 }
             }
@@ -574,7 +614,7 @@ namespace TrailMod
             for ( int soilFertilityVariantIndex = 0; soilFertilityVariantIndex < soilFertilityBlockVariants.Length; soilFertilityVariantIndex++ ) 
             {
                 //To do rework this to turn into trails.
-                BuildTrailTouchBlockVariantProgression(world, soilFertilityBlockVariants[soilFertilityVariantIndex], GRASS_VARIANTS, soilTransformTouchCountByVariant, soilTransformByPlayerOnlyByVariant, trailFertilityBlockVariants[soilFertilityVariantIndex] + "-" + TRAIL_WEAR_VARIENT_PRETRAIL_CODE);
+                BuildTrailTouchBlockVariantProgression(world, soilFertilityBlockVariants[soilFertilityVariantIndex], GRASS_VARIANTS, soilTransformTouchCountByVariant, soilTransformByPlayerOnlyByVariant, pretrailFertilityBlockVariants[soilFertilityVariantIndex]);
             }
 
             ////////////////////////////////////////////////////////////////////

@@ -71,6 +71,12 @@ namespace BrutalStory
 
         }
 
+        public override void Dispose()
+        {
+            harmony.UnpatchAll(harmony.Id);
+            base.Dispose();
+        }
+
         #endregion //Client
     }
 }

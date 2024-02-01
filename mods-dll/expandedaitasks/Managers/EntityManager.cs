@@ -95,6 +95,22 @@ namespace ExpandedAiTasks.Managers
                 Debug.Assert(dupeEnt != entity, "We are trying to add EntityItem with Item Stack " + item.Itemstack + " to Entity Ledger, but It Already Exists in the Ledger.");
             }
             
+            if ( item.Itemstack.Block == null )
+            {
+                Debug.Assert(item.Itemstack.Item != null);
+
+                //If we loaded an item that has a garbage code, early out, we won't be able to search it anyways.
+                if (item.Itemstack.Item.Code == null)
+                    return;
+
+            }
+            else 
+            {
+                //If we loaded an item that has a garbage code, early out, we won't be able to search it anyways.
+                if (item.Itemstack.Block.Code == null)
+                    return;
+            }
+
             string codeStart = item.Itemstack.Block != null ? item.Itemstack.Block.Code.FirstCodePart() : item.Itemstack.Item.Code.FirstCodePart();
             AssetLocation searchCode = item.Itemstack.Block != null ? item.Itemstack.Block.Code : item.Itemstack.Item.Code;
 
