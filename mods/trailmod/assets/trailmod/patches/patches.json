@@ -31,5 +31,5 @@
     "file": "blocktypes/soil-pretrail.json",
     "condition": { "when": "blockGravity", "isValue": "sandgravelsoil" },
     "side": "Server"
-  } 
+  }
 ]
