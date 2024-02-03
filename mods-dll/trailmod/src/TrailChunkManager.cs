@@ -551,7 +551,7 @@ namespace TrailMod
 
                 Debug.Assert(transformBlock != null);
 
-                CreateTrailBlockTransform(blockAsset, block.BlockId, 5, transformBlock.BlockId, true);
+                CreateTrailBlockTransform(blockAsset, block.BlockId, 2, transformBlock.BlockId, true);
             }
 
 
