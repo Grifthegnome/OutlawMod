@@ -16,8 +16,8 @@ namespace TrailMod
 
     public class BlockTrail : Block
     {
-        private const double PRETRAIL_DEVOLVE_DAYS = 3; //after 3 game days a pretrail block devolves back into a regular soil block.
-        private const double TRAIL_DEVOLVE_DAYS = 14; //after 14 days a trail devolves one level.
+        private const double PRETRAIL_DEVOLVE_DAYS = 7; //after 7 game days a pretrail block devolves back into a regular soil block.
+        private const double TRAIL_DEVOLVE_DAYS = 60; //after 60 days a trail devolves one level.
         private const string SOIL_CODE = "soil";
         private const string SOIL_GRASS_NONE_CODE = "none";
         private const string SOIL_GRASS_SPARSE_CODE = "sparse";
