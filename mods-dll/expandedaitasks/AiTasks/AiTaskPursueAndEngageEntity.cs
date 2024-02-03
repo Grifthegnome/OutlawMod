@@ -670,6 +670,9 @@ namespace ExpandedAiTasks
             if ( pursueAnimation != null)
                 entity.AnimManager.StopAnimation(pursueAnimation);
 
+            if (swimAnimation != null)
+                entity.AnimManager.StopAnimation(swimAnimation);
+
             targetEntity = null;
             lastKnownMotion = null;
             lastKnownPos = null;
