@@ -155,6 +155,7 @@ namespace TrailMod
         const string CLAY_CODE = "rawclay";
         const string TRAIL_CODE = "trailmod:trail";
         const string TRAIL_WEAR_VARIANT_NEW_CODE = "new";
+        const string TRAIL_WEAR_VARIANT_OLD_CODE = "old";
         const string PRETRAIL_START_CODE = "trailmod:soil";
         const string TRAIL_PRETRAIL_END_CODE = "pretrail";
         const string PACKED_DIRT_CODE = "packeddirt";
@@ -578,9 +579,10 @@ namespace TrailMod
                 }
             }
 
+            //Note: we are intentially assigning the final old trail variant to cyclically trasform into old trail, this is to fix an issue where it degrades because it has not entry and is not counting touches.
             for (int trailFertilityVariantIndex = 0; trailFertilityVariantIndex < trailFertilityBlockVariants.Length; trailFertilityVariantIndex++)
             {
-                BuildTrailTouchBlockVariantProgression(world, trailFertilityBlockVariants[trailFertilityVariantIndex], TRAIL_WEAR_VARIANTS, trailTransformTouchCountByVariant, trailTransformByPlayerOnlyByVariant, "");
+                BuildTrailTouchBlockVariantProgression(world, trailFertilityBlockVariants[trailFertilityVariantIndex], TRAIL_WEAR_VARIANTS, trailTransformTouchCountByVariant, trailTransformByPlayerOnlyByVariant, trailFertilityBlockVariants[trailFertilityVariantIndex] + "-" + TRAIL_WEAR_VARIANT_OLD_CODE);
             }
 
             //////////////////////////////////////////////////////////////////////////////////////////
