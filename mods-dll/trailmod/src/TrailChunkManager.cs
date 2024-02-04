@@ -21,6 +21,12 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TrailMod
 {
+    public enum ETrailTrampleType
+    {
+        NO_TRAMPLE,
+        DEFAULT,
+        TALLGRASS,
+    }
     public struct TrailBlockPosEntry
     {
         private BlockPos _blockPos;
@@ -147,12 +153,14 @@ namespace TrailMod
         public const string TRAIL_MOD_DATA_SAVE_KEY_BLOCK_TRAIL_LAST_TOUCH_DAY = "trailModChunkData_LastTouchDay";
         public const string TRAIL_MOD_DATA_SAVE_KEY_BLOCK_TRAIL_BLOCK_POS = "trailModChunkData_BlockTrailBlockPos";
 
+        const string AIR_CODE = "game:air";
         const string SOIL_CODE = "soil";
         const string SOIL_LOW_NONE_CODE = "soil-low-none";
         const string FOREST_FLOOR_CODE = "forestfloor";
         const string COB_CODE = "cob";
         const string PEAT_CODE = "peat";
         const string CLAY_CODE = "rawclay";
+        const string TALLGRASS_END_CODE = "free";
         const string TRAIL_CODE = "trailmod:trail";
         const string TRAIL_WEAR_VARIANT_NEW_CODE = "new";
         const string TRAIL_WEAR_VARIANT_OLD_CODE = "old";
@@ -161,14 +169,17 @@ namespace TrailMod
         const string PACKED_DIRT_CODE = "packeddirt";
         const string PACKED_DIRT_ARID_CODE = "drypackeddirt";
         const string STONE_PATH_CODE = "stonepath-free";
+        const string TALLGRASS_SHORT_CODE = "tallgrass-short-free";
+        const string TALLGRASS_EATEN_CODE = "tallgrass-eaten-free";
 
         const int FOREST_FLOOR_VARIATION_COUNT = 8;
 
         private static readonly string[] FERTILITY_VARIANTS = { "high", "compost", "medium", "low", "verylow" };
-        private static readonly string[] GRASS_VARIANTS = { "normal", "sparse", "verysparse", "none" };
+        private static readonly string[] SOIL_GRASS_VARIANTS = { "normal", "sparse", "verysparse", "none" };
         private static readonly string[] PEAT_AND_CLAY_GRASS_VARIANTS = { "verysparse", "none" };
         private static readonly string[] CLAY_TYPE_VARIANTS = { "blue", "fire" };
         private static readonly string[] TRAIL_WEAR_VARIANTS = { "new", "established", "veryestablished", "old" };
+        private static readonly string[] TALLGRASS_LENGTH_VARIANTS = { "verytall", "tall", "medium", "mediumshort", "short", "veryshort" };
 
         public IWorldAccessor worldAccessor;
         private ICoreServerAPI serverApi;
@@ -437,12 +448,12 @@ namespace TrailMod
         private string[] BuildSoilBlockVariants()
         {
             int variantIndex = 0;
-            string[] soilVariants = new string[FERTILITY_VARIANTS.Count() * GRASS_VARIANTS.Count()];
+            string[] soilVariants = new string[FERTILITY_VARIANTS.Count() * SOIL_GRASS_VARIANTS.Count()];
             for ( int fertilityIndex = 0; fertilityIndex < FERTILITY_VARIANTS.Length; fertilityIndex++ ) 
             {
-                for (int grassIndex = 0; grassIndex < GRASS_VARIANTS.Length; grassIndex++ )
+                for (int grassIndex = 0; grassIndex < SOIL_GRASS_VARIANTS.Length; grassIndex++ )
                 {
-                    soilVariants[variantIndex] = SOIL_CODE + "-" + FERTILITY_VARIANTS[fertilityIndex] + "-" + GRASS_VARIANTS[grassIndex];
+                    soilVariants[variantIndex] = SOIL_CODE + "-" + FERTILITY_VARIANTS[fertilityIndex] + "-" + SOIL_GRASS_VARIANTS[grassIndex];
                     variantIndex++;
                 }
             }
@@ -485,10 +496,10 @@ namespace TrailMod
 
         private string[] BuildCobBlockVariants()
         {
-            string[] cobVariants = new string[GRASS_VARIANTS.Count()];
-            for (int grassIndex = 0; grassIndex < GRASS_VARIANTS.Length; grassIndex++ )
+            string[] cobVariants = new string[SOIL_GRASS_VARIANTS.Count()];
+            for (int grassIndex = 0; grassIndex < SOIL_GRASS_VARIANTS.Length; grassIndex++ )
             {
-                cobVariants[grassIndex] = COB_CODE + "-" + GRASS_VARIANTS[grassIndex];
+                cobVariants[grassIndex] = COB_CODE + "-" + SOIL_GRASS_VARIANTS[grassIndex];
             }
 
             return cobVariants;
@@ -592,8 +603,8 @@ namespace TrailMod
             //////////////////////////////////////////////////////////////////////////////////////////
             string[] soilFertilityBlockVariants = BuildSoilBlockVariantsFertilityOnly();
 
-            int[] soilTransformTouchCountByVariant = new int[GRASS_VARIANTS.Length];
-            bool[] soilTransformByPlayerOnlyByVariant = new bool[GRASS_VARIANTS.Length];
+            int[] soilTransformTouchCountByVariant = new int[SOIL_GRASS_VARIANTS.Length];
+            bool[] soilTransformByPlayerOnlyByVariant = new bool[SOIL_GRASS_VARIANTS.Length];
             for( int i = 0; i < soilTransformTouchCountByVariant.Length; i++ ) 
             {
                 if ( i == 0 )
@@ -616,22 +627,22 @@ namespace TrailMod
             for ( int soilFertilityVariantIndex = 0; soilFertilityVariantIndex < soilFertilityBlockVariants.Length; soilFertilityVariantIndex++ ) 
             {
                 //To do rework this to turn into trails.
-                BuildTrailTouchBlockVariantProgression(world, soilFertilityBlockVariants[soilFertilityVariantIndex], GRASS_VARIANTS, soilTransformTouchCountByVariant, soilTransformByPlayerOnlyByVariant, pretrailFertilityBlockVariants[soilFertilityVariantIndex]);
+                BuildTrailTouchBlockVariantProgression(world, soilFertilityBlockVariants[soilFertilityVariantIndex], SOIL_GRASS_VARIANTS, soilTransformTouchCountByVariant, soilTransformByPlayerOnlyByVariant, pretrailFertilityBlockVariants[soilFertilityVariantIndex]);
             }
 
             ////////////////////////////////////////////////////////////////////
             //COB                                                             //
             //We want cob to strip its grass layer, but to never change type. //
             ////////////////////////////////////////////////////////////////////
-            int[] cobTransformTouchCountByVariants = new int[GRASS_VARIANTS.Length];
-            bool[] cobTransformByPlayerOnlyByVariants = new bool[GRASS_VARIANTS.Length];
+            int[] cobTransformTouchCountByVariants = new int[SOIL_GRASS_VARIANTS.Length];
+            bool[] cobTransformByPlayerOnlyByVariants = new bool[SOIL_GRASS_VARIANTS.Length];
             for( int i = 0; i < cobTransformTouchCountByVariants.Length; i++)
             {
                 cobTransformTouchCountByVariants[i] = 1; //1 touch to lose grass.
                 cobTransformByPlayerOnlyByVariants[i] = false;
             }
 
-            BuildTrailTouchBlockVariantProgression(world, COB_CODE, GRASS_VARIANTS, cobTransformTouchCountByVariants, cobTransformByPlayerOnlyByVariants, "");
+            BuildTrailTouchBlockVariantProgression(world, COB_CODE, SOIL_GRASS_VARIANTS, cobTransformTouchCountByVariants, cobTransformByPlayerOnlyByVariants, "");
 
             /////////////////////////////////////////////////////////////////////
             //PEAT                                                             //
@@ -771,6 +782,18 @@ namespace TrailMod
             if ( !ShouldTrackBlockTrailData(block) )
                 RemoveBlockPosTrailData(world, blockPos);
 
+            bool touchIsPlayer = (touchEnt is EntityPlayer);
+
+            if (TMGlobalConstants.onlyPlayersCreateTrails && !touchIsPlayer)
+                return;
+
+            //If the block is only trasformable by players do not count touches or transform when touched by a non-player.
+            if (trailBlockTouchTransforms.ContainsKey(block.BlockId))
+            {
+                if (trailBlockTouchTransforms[block.BlockId].transformByPlayerOnly && !touchIsPlayer)
+                    return;
+            }
+
             long blockTrailID = ConvertBlockPositionToTrailPosID(blockPos);
 
             if ( block is BlockTrail )
@@ -896,36 +919,40 @@ namespace TrailMod
             if ( trailBlockTouchTransforms.ContainsKey( blockID ) )
             {
                 TrailBlockTouchTransformData trailBlockTransformData = trailBlockTouchTransforms[blockID];
-                if (touchCount >= trailBlockTransformData.transformOnTouchCount)
+
+                bool touchIsPlayer = false;
+                bool touchIsSneaking = false;
+
+                if (touchEnt is EntityPlayer)
                 {
+                    touchIsPlayer = true;
 
-                    bool touchIsPlayer = false;
-                    bool touchIsSneaking = false;
+                    EntityPlayer touchPlayer = (EntityPlayer)touchEnt;
 
-                    if ( touchEnt is EntityPlayer )
+                    if (touchPlayer.Controls.Sneak)
+                        touchIsSneaking = true;
+                }
+
+                if (!touchIsSneaking)
+                {
+                    BlockPos upPos = blockPos.UpCopy();
+                    Block upBlock = world.BlockAccessor.GetBlock(upPos);
+                    Block groundBlock = world.BlockAccessor.GetBlock(blockPos);
+                    if (upBlock != null)
                     {
-                        touchIsPlayer = true;
-
-                        EntityPlayer touchPlayer = (EntityPlayer) touchEnt;
-
-                        if (touchPlayer.Controls.Sneak)
-                            touchIsSneaking = true;
-                    }
-
-                    if (trailBlockTransformData.transformByPlayerOnly && !touchIsPlayer)
-                        return false;
-
-                    if ( !touchIsSneaking)
-                    {
-                        BlockPos upPos = blockPos.UpCopy();
-                        Block upBlock = world.BlockAccessor.GetBlock(upPos);
-                        if ( upBlock != null ) 
+                        ETrailTrampleType trampleType = CanTramplePlant(upBlock, groundBlock);
+                        if (trampleType != ETrailTrampleType.NO_TRAMPLE)
                         {
-                            if (CanTramplePlant(upBlock))
-                                world.BlockAccessor.BreakBlock(upPos, null, 0);
+                            ResolveTrampleType(world, trampleType, upPos, upBlock, groundBlock);
                         }
                     }
+                }
 
+                if (trailBlockTransformData.transformByPlayerOnly && !touchIsPlayer)
+                    return false;
+
+                if (touchCount >= trailBlockTransformData.transformOnTouchCount)
+                {
                     world.BlockAccessor.SetBlock(trailBlockTransformData.transformBlockID, blockPos);
 
                     return true;
@@ -1008,29 +1035,114 @@ namespace TrailMod
             return digits;
         }
 
-        private static bool CanTramplePlant( Block block )
+        private static ETrailTrampleType CanTramplePlant( Block plantBlock, Block groundBlock)
+        {
+            bool groundIsTrail = groundBlock is BlockTrail;
+
+            if (plantBlock.BlockMaterial == EnumBlockMaterial.Plant)
+            {
+                if (plantBlock is BlockFern)
+                    return ETrailTrampleType.DEFAULT;
+
+                if (plantBlock is BlockTallGrass)
+                    return ETrailTrampleType.TALLGRASS;
+
+                if (TMGlobalConstants.flowerTrampling)
+                {
+                    if (plantBlock is BlockLupine && groundIsTrail)
+                        return ETrailTrampleType.DEFAULT;
+                }
+
+                string code = plantBlock.Code.FirstCodePart();
+
+                if (TMGlobalConstants.flowerTrampling)
+                {
+                    if (code == "flower" && groundIsTrail)
+                        return ETrailTrampleType.DEFAULT;
+                }
+
+                if (code == "tallfern")
+                    return ETrailTrampleType.DEFAULT;
+            }
+
+            return ETrailTrampleType.NO_TRAMPLE;
+        }
+
+        private static bool ShouldDropPlantOnTrample(Block block)
         {
             if (block.BlockMaterial == EnumBlockMaterial.Plant)
             {
                 if (block is BlockFern)
-                    return true;
+                    return false;
 
-                if ( block is BlockTallGrass) 
-                    return true;
+                if (block is BlockTallGrass)
+                    return false;
 
                 if (block is BlockLupine)
                     return true;
 
                 string code = block.Code.FirstCodePart();
 
-                if (code == "flower" )
+                if (code == "flower")
                     return true;
 
                 if (code == "tallfern")
-                    return true;
+                    return false;
             }
 
             return false;
         }
+        private static void ResolveTrampleType(IWorldAccessor world, ETrailTrampleType trampleType, BlockPos upPos, Block upBlock, Block groundBlock )
+        {
+
+            switch(trampleType)
+            {
+                case ETrailTrampleType.DEFAULT:
+                    float dropRate = ShouldDropPlantOnTrample(upBlock) ? 1.0f : 0.0f;
+                    if (TMGlobalConstants.foliageTrampleSounds || dropRate > 0)
+                    {
+                        world.BlockAccessor.BreakBlock(upPos, null, dropRate);
+                    }
+                    else
+                    {
+                        AssetLocation assetLocation = new AssetLocation(AIR_CODE);
+                        Block airBlock = world.GetBlock(assetLocation);
+                        world.BlockAccessor.SetBlock(airBlock.Id, upPos);
+                    }
+                    break;
+
+                case ETrailTrampleType.TALLGRASS:
+
+                    bool groundIsTrail = groundBlock is BlockTrail;
+
+
+                    if ( groundIsTrail)
+                    {
+                        if (TMGlobalConstants.foliageTrampleSounds)
+                        {
+                            world.BlockAccessor.BreakBlock(upPos, null, 0);
+                        }
+                        else
+                        {
+                            AssetLocation assetLocation = new AssetLocation(AIR_CODE);
+                            Block airBlock = world.GetBlock(assetLocation);
+                            world.BlockAccessor.SetBlock(airBlock.Id, upPos);
+                        }                        
+                    }
+                    else
+                    {
+                        if ( upBlock.Code.Path != TALLGRASS_EATEN_CODE )
+                        {
+                            AssetLocation assetLocation = new AssetLocation(TALLGRASS_EATEN_CODE);
+                            Block grassBlock = world.GetBlock(assetLocation);
+                            world.BlockAccessor.SetBlock(grassBlock.Id, upPos);
+                        }                        
+                    }
+
+                    break;
+
+            }
+        }
+
     }
 }

@@ -17,6 +17,15 @@ namespace TrailMod
     {
         [ProtoMember(1)]
         public bool dirtRoadsOnly = false;
+
+        [ProtoMember(2)]
+        public bool foliageTrampleSounds = true;
+
+        [ProtoMember(3)]
+        public bool onlyPlayersCreateTrails = false;
+
+        [ProtoMember(4)]
+        public bool flowerTrampling = true;
     }
     public class TrailModCore : ModSystem
     {
@@ -39,6 +48,7 @@ namespace TrailMod
             {
                 ReadConfigFromJson(api);
                 ApplyConfigPatchFlags(api);
+                ApplyConfigGlobalConsts();
             }
             
         }
@@ -112,6 +122,13 @@ namespace TrailMod
         {
             //Enable/Disable Config Settngs
             api.World.Config.SetBool("dirtRoadsOnly", config.dirtRoadsOnly);
+        }
+
+        private void ApplyConfigGlobalConsts()
+        {
+            TMGlobalConstants.foliageTrampleSounds = config.foliageTrampleSounds;
+            TMGlobalConstants.onlyPlayersCreateTrails = config.onlyPlayersCreateTrails;
+            TMGlobalConstants.flowerTrampling = config.flowerTrampling;
         }
 
         public override void Dispose()

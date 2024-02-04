@@ -12,4 +12,7 @@ If you are experiencing any kind of weird behavior, always check your config fir
 So what's in the config?
 
 //ENABLE/DISABLE
-dirtRoadsOnly: true/false //Enables/Disables stone and cobble road visuals.
+dirtRoadsOnly: true/false 		//Enables/Disables stone and cobble road visuals.
+foliageTrampleSounds: true/false 	//Enables/Disables foliage making a noise when it breaks from trampeling.
+onlyPlayersCreateTrails: true/false 	//Enables/Disables creatures other than players trampling foliage and trampled grass.
+flowerTrampling: true/false		//Enables/Disables flowers breaking when trails are created underneath them.
