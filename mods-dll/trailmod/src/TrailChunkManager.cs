@@ -964,10 +964,14 @@ namespace TrailMod
 
         public bool BlockCenterHorizontalInEntityBoundingBox(Entity ent, BlockPos blockPos ) 
         {
+            if (blockPos == null )
+                return false;
+
+            if ( ent == null )
+                return false;
+
             if( BlockPosHasTrailData( blockPos ) )
-            {
-                TrailBlockPosEntry blockTrailEntry = GetBlockPosTrailData( blockPos );
-                
+            {                
                 EntityProperties agentProperties = ent.World.GetEntityType(ent.Code);
 
                 //Hande the case where the entry is invalid, or has been disabled by mod flags.

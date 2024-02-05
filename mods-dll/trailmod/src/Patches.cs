@@ -6,6 +6,7 @@ using Vintagestory.API.Common.Entities;
 using Vintagestory.GameContent;
 using Vintagestory.API.MathTools;
 using System;
+using Vintagestory.API.Client;
 
 
 namespace TrailMod
@@ -58,23 +59,9 @@ namespace TrailMod
                 return;
 
             TrailChunkManager trailChunkManager = TrailChunkManager.GetTrailChunkManager();
-
             bool shouldTrackTrailData = trailChunkManager.ShouldTrackBlockTrailData(__instance);
-            bool touchedPreviously = false;
 
-            TrailBlockPosEntry trailBlockData;
-            if (shouldTrackTrailData && trailChunkManager.BlockPosHasTrailData(pos))
-            {
-                trailBlockData = trailChunkManager.GetBlockPosTrailData(pos);
-
-                if (trailBlockData.lastTouchEntID == entity.EntityId)
-                    touchedPreviously = true;
-
-                if (facing == BlockFacing.UP)
-                    trailChunkManager.AddOrUpdateBlockPosTrailData(world, __instance, pos, entity);
-
-            }
-            else if (shouldTrackTrailData)
+            if (shouldTrackTrailData)
             {
                 if (facing == BlockFacing.UP)
                     trailChunkManager.AddOrUpdateBlockPosTrailData(world, __instance, pos, entity);
