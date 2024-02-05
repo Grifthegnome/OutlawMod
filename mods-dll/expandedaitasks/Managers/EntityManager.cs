@@ -81,10 +81,13 @@ namespace ExpandedAiTasks.Managers
 
         public void AddEntityItemToLedger( Entity entity )
         {
+            if (entity == null)
+                return;
+            
             Debug.Assert(entity is EntityItem);
 
             EntityItem item = (EntityItem)entity;
-            Debug.Assert(item.Itemstack != null);
+            Debug.Assert(item.Itemstack != null, "Cannot add item to ledger, Itemstack is null!");
 
             //We can run into situations where an object saved in a chunk has the same entity ID as a loaded entity in the world.
             //In these cases, the loaded object is deleted on load. We need to handle the case where the entity IDs match, but the entities are diffrent.
