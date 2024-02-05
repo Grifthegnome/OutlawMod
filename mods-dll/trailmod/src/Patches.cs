@@ -65,82 +65,82 @@ namespace TrailMod
             {
                 if (facing == BlockFacing.UP)
                     trailChunkManager.AddOrUpdateBlockPosTrailData(world, __instance, pos, entity);
-            }
+            
+                //Check if the center of the block overlaps the entity bounding box.
+                if (!trailChunkManager.BlockCenterHorizontalInEntityBoundingBox(entity, pos))
+                    return;
 
-            //Check if the center of the block overlaps the entity bounding box.
-            if (!trailChunkManager.BlockCenterHorizontalInEntityBoundingBox(entity, pos))
-                return;
+                float snowLevel = __instance.snowLevel;
 
-            float snowLevel = __instance.snowLevel;
+                switch (__instance.BlockMaterial)
+                {
 
-            switch (__instance.BlockMaterial)
-            {
+                    case EnumBlockMaterial.Snow:
 
-                case EnumBlockMaterial.Snow:
-
-                    if (snowLevel > 0)
-                    {
-                        if (__instance is BlockSnowLayer)
+                        if (snowLevel > 0)
                         {
-                            BlockSnowLayer snowLayer = (BlockSnowLayer)__instance;
-
-                            if (snowLevel == 1)
+                            if (__instance is BlockSnowLayer)
                             {
-                                Block baseSnowBlock = world.GetBlock(snowLayer.CodeWithVariant("height", "" + 1));
-                                world.BlockAccessor.SetBlock(baseSnowBlock.Id, pos);
-                                return;
+                                BlockSnowLayer snowLayer = (BlockSnowLayer)__instance;
+
+                                if (snowLevel == 1)
+                                {
+                                    Block baseSnowBlock = world.GetBlock(snowLayer.CodeWithVariant("height", "" + 1));
+                                    world.BlockAccessor.SetBlock(baseSnowBlock.Id, pos);
+                                    return;
+                                }
+
+                                Block block = world.GetBlock(snowLayer.CodeWithVariant("height", "" + (snowLevel - 1)));
+                                world.BlockAccessor.SetBlock(block.Id, pos);
+
+                                __instance.snowLevel = Math.Clamp(snowLevel - 1, 0, snowLevel);
+
                             }
 
-                            Block block = world.GetBlock(snowLayer.CodeWithVariant("height", "" + (snowLevel - 1)));
-                            world.BlockAccessor.SetBlock(block.Id, pos);
+                            if (__instance is BlockTallGrass)
+                            {
+                                BlockTallGrass tallGrass = (BlockTallGrass)__instance;
+                                Block baseTallGrassBlock = world.GetBlock(tallGrass.CodeWithVariant("cover", "snow"));
+                                world.BlockAccessor.SetBlock(baseTallGrassBlock.Id, pos);
+                                __instance.snowLevel = 1;
+                                return;                         
+                            }
 
-                            __instance.snowLevel = Math.Clamp(snowLevel - 1, 0, snowLevel);
-
-                        }
-
-                        if (__instance is BlockTallGrass)
-                        {
-                            BlockTallGrass tallGrass = (BlockTallGrass)__instance;
-                            Block baseTallGrassBlock = world.GetBlock(tallGrass.CodeWithVariant("cover", "snow"));
-                            world.BlockAccessor.SetBlock(baseTallGrassBlock.Id, pos);
-                            __instance.snowLevel = 1;
-                            return;                         
+                            break;
                         }
 
                         break;
-                    }
 
-                    break;
+                    case EnumBlockMaterial.Ice:
 
-                case EnumBlockMaterial.Ice:
-
-                    if (__instance is BlockLakeIce)
-                    {
-                        if (world.Rand.NextDouble() < 0.001)
+                        if (__instance is BlockLakeIce)
                         {
-                            BlockFacing[] horizontals = BlockFacing.HORIZONTALS;
-
-                            foreach (BlockFacing blockFacing in horizontals)
+                            if (world.Rand.NextDouble() < 0.001)
                             {
-                                BlockPos possibleIcePos = pos.AddCopy(blockFacing);
-                                Block possibleIceBlock = world.BlockAccessor.GetBlock(possibleIcePos);
+                                BlockFacing[] horizontals = BlockFacing.HORIZONTALS;
 
-                                if (possibleIceBlock == null)
-                                    continue;
-
-                                if (possibleIceBlock is BlockLakeIce)
+                                foreach (BlockFacing blockFacing in horizontals)
                                 {
-                                    world.BlockAccessor.BreakBlock(possibleIcePos, null);
+                                    BlockPos possibleIcePos = pos.AddCopy(blockFacing);
+                                    Block possibleIceBlock = world.BlockAccessor.GetBlock(possibleIcePos);
+
+                                    if (possibleIceBlock == null)
+                                        continue;
+
+                                    if (possibleIceBlock is BlockLakeIce)
+                                    {
+                                        world.BlockAccessor.BreakBlock(possibleIcePos, null);
+                                    }
                                 }
+
+                                world.BlockAccessor.BreakBlock(pos, null);
+
                             }
-
-                            world.BlockAccessor.BreakBlock(pos, null);
-
                         }
-                    }
 
-                    break;
+                        break;
 
+                }
             }
         }
     }

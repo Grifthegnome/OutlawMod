@@ -970,24 +970,29 @@ namespace TrailMod
             if ( ent == null )
                 return false;
 
-            if( BlockPosHasTrailData( blockPos ) )
-            {                
-                EntityProperties agentProperties = ent.World.GetEntityType(ent.Code);
+            if ( ent.Code == null )
+                return false;
 
-                //Hande the case where the entry is invalid, or has been disabled by mod flags.
-                if (agentProperties == null)
-                    return false;
+            EntityProperties agentProperties = ent.World.GetEntityType(ent.Code);
 
-                Vec2f selBox = agentProperties.SelectionBoxSize;
-                Vec3d posDeltaFlat = blockPos.ToVec3d() - ent.ServerPos.XYZ;
+            //Hande the case where the entry is invalid, or has been disabled by mod flags.
+            if (agentProperties == null)
+                return false;
 
-                float boundsMin = -Math.Max( 1, selBox.X);
-                float boundsMax = Math.Max(1, selBox.X);
+            Vec2f selBox = agentProperties.SelectionBoxSize;
 
-                if (boundsMin < posDeltaFlat.X && boundsMax > posDeltaFlat.X &&
-                    boundsMin < posDeltaFlat.Z && boundsMax > posDeltaFlat.Z)
-                    return true;
-            }
+            //Selection box defaults to null, so an entity agent with no selection box would crash this, unless we early out.
+            if ( selBox == null )
+                return false;
+
+            Vec3d posDeltaFlat = blockPos.ToVec3d() - ent.ServerPos.XYZ;
+
+            float boundsMin = -Math.Max(1, selBox.X);
+            float boundsMax = Math.Max(1, selBox.X);
+
+            if (boundsMin < posDeltaFlat.X && boundsMax > posDeltaFlat.X &&
+                boundsMin < posDeltaFlat.Z && boundsMax > posDeltaFlat.Z)
+                return true;
 
             return false;
         }
