@@ -26,6 +26,51 @@ namespace TrailMod
 
         [ProtoMember(4)]
         public bool flowerTrampling = true;
+
+        [ProtoMember(5)]
+        public bool onlyTrampleFoliageOnTrailCreation = false;
+
+        [ProtoMember(6)]
+        public float trampledSoilDevolveDays = 7.0f;
+
+        [ProtoMember(7)]
+        public float trailDevolveDays = 60.0f;
+
+        [ProtoMember(8)]
+        public int normalToSparseGrassTouchCount = 1;
+
+        [ProtoMember(9)]
+        public int sparseToVerySparseGrassTouchCount = 1;
+
+        [ProtoMember(10)]
+        public int verySparseToSoilTouchCount = 1;
+
+        [ProtoMember(11)]
+        public int soilToTrampledSoilTouchCount = 1;
+
+        [ProtoMember(12)]
+        public int trampledSoilToNewTrailTouchCount = 3;
+
+        [ProtoMember(13)]
+        public int newToEstablishedTrailTouchCount = 25;
+
+        [ProtoMember(14)]
+        public int establishedToDirtRoadTouchCount = 50;
+
+        [ProtoMember(15)]
+        public int dirtRoadToHighwayTouchCount = 75;
+
+        [ProtoMember(16)]
+        public int forestFloorToSoilTouchCount = 2;
+
+        [ProtoMember(17)]
+        public int cobLoseGrassTouchCount = 1;
+
+        [ProtoMember(18)]
+        public int peatLoseGrassTouchCount = 1;
+
+        [ProtoMember(19)]
+        public int clayLoseGrassTouchCount = 1;
     }
     public class TrailModCore : ModSystem
     {
@@ -126,10 +171,34 @@ namespace TrailMod
 
         private void ApplyConfigGlobalConsts()
         {
-            TMGlobalConstants.foliageTrampleSounds = config.foliageTrampleSounds;
-            TMGlobalConstants.onlyPlayersCreateTrails = config.onlyPlayersCreateTrails;
-            TMGlobalConstants.flowerTrampling = config.flowerTrampling;
-        }
+            //GENERAL SETTINGS
+            TMGlobalConstants.foliageTrampleSounds              = config.foliageTrampleSounds;
+            TMGlobalConstants.onlyPlayersCreateTrails           = config.onlyPlayersCreateTrails;
+            TMGlobalConstants.flowerTrampling                   = config.flowerTrampling;
+            TMGlobalConstants.onlyTrampleFoliageOnTrailCreation = config.onlyTrampleFoliageOnTrailCreation;
+
+            //TRAIL DEVOLVE TIMES
+            TMGlobalConstants.trampledSoilDevolveDays   = config.trampledSoilDevolveDays;
+            TMGlobalConstants.trailDevolveDays          = config.trailDevolveDays;
+
+            //SOIL
+            TMGlobalConstants.normalToSparseGrassTouchCount     = config.normalToSparseGrassTouchCount;
+            TMGlobalConstants.sparseToVerySparseGrassTouchCount = config.sparseToVerySparseGrassTouchCount;
+            TMGlobalConstants.verySparseToSoilTouchCount        = config.verySparseToSoilTouchCount;
+            TMGlobalConstants.soilToTrampledSoilTouchCount      = config.soilToTrampledSoilTouchCount;
+
+            //TRAILS
+            TMGlobalConstants.trampledSoilToNewTrailTouchCount  = config.trampledSoilToNewTrailTouchCount;
+            TMGlobalConstants.newToEstablishedTrailTouchCount   = config.newToEstablishedTrailTouchCount;
+            TMGlobalConstants.establishedToDirtRoadTouchCount   = config.establishedToDirtRoadTouchCount;
+            TMGlobalConstants.dirtRoadToHighwayTouchCount       = config.dirtRoadToHighwayTouchCount;
+            TMGlobalConstants.forestFloorToSoilTouchCount       = config.forestFloorToSoilTouchCount;
+
+            //COB, PEAT, CLAY
+            TMGlobalConstants.cobLoseGrassTouchCount  = config.cobLoseGrassTouchCount;
+            TMGlobalConstants.peatLoseGrassTouchCount = config.peatLoseGrassTouchCount;
+            TMGlobalConstants.clayLoseGrassTouchCount = config.clayLoseGrassTouchCount;
+    }
 
         public override void Dispose()
         {

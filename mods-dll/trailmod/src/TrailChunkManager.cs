@@ -562,7 +562,7 @@ namespace TrailMod
 
                 Debug.Assert(transformBlock != null);
 
-                CreateTrailBlockTransform(blockAsset, block.BlockId, 3, transformBlock.BlockId, true);
+                CreateTrailBlockTransform(blockAsset, block.BlockId, TMGlobalConstants.trampledSoilToNewTrailTouchCount, transformBlock.BlockId, true);
             }
 
 
@@ -578,15 +578,27 @@ namespace TrailMod
 
             for (int i = 0; i < TRAIL_WEAR_VARIANTS.Length; i++)
             {
-                if (i == 0)
+                switch( i )
                 {
-                    trailTransformTouchCountByVariant[i] = 25; //touches to go from new-trail to established trail.
-                    trailTransformByPlayerOnlyByVariant[i] = true;
-                }
-                else
-                {
-                    trailTransformTouchCountByVariant[i] = 25 * (i + 1); //25 * (i + 1) touches to upgrade to the next trail level. (very established 50, old = 75)
-                    trailTransformByPlayerOnlyByVariant[i] = true;
+                    case 0: //New Trail to Established
+                        trailTransformTouchCountByVariant[i] = TMGlobalConstants.newToEstablishedTrailTouchCount;
+                        trailTransformByPlayerOnlyByVariant[i] = true;
+                        break;
+                    case 1: //Established Trail to Very Established
+                        trailTransformTouchCountByVariant[i] = TMGlobalConstants.establishedToDirtRoadTouchCount;
+                        trailTransformByPlayerOnlyByVariant[i] = true;
+                        break;
+                    case 2: //Very Established Trail to Old Trail
+                        trailTransformTouchCountByVariant[i] = TMGlobalConstants.dirtRoadToHighwayTouchCount;
+                        trailTransformByPlayerOnlyByVariant[i] = true;
+                        break;
+                    case 3: //Old Trail to Old Trail
+                        trailTransformTouchCountByVariant[i] = 100;
+                        trailTransformByPlayerOnlyByVariant[i] = true;
+                        break;
+                    default:
+                        Debug.Assert(false, "invalid index");
+                        break;
                 }
             }
 
@@ -607,21 +619,29 @@ namespace TrailMod
             bool[] soilTransformByPlayerOnlyByVariant = new bool[SOIL_GRASS_VARIANTS.Length];
             for( int i = 0; i < soilTransformTouchCountByVariant.Length; i++ ) 
             {
-                if ( i == 0 )
-                { 
-                    soilTransformTouchCountByVariant[i] = 1; //one touch to start.
-                    soilTransformByPlayerOnlyByVariant[i] = false;
-                }
-                else if ( i == soilTransformTouchCountByVariant.Length - 1)
+                switch( i )
                 {
-                    soilTransformTouchCountByVariant[i] = 1; //1 touches to become a pretrail.
-                    soilTransformByPlayerOnlyByVariant[i] = true; //only players can make new pretrails.
-                }
-                else
-                {
-                    soilTransformTouchCountByVariant[i] = 1; //one touch to lose grass.
-                    soilTransformByPlayerOnlyByVariant[i] = false;
-                }   
+                    case 0: //Normal to Sparse
+                        soilTransformTouchCountByVariant[i] = TMGlobalConstants.normalToSparseGrassTouchCount;
+                        soilTransformByPlayerOnlyByVariant[i] = false;
+                        break;
+                    case 1: //Sparse to Very Sparse
+                        soilTransformTouchCountByVariant[i] = TMGlobalConstants.sparseToVerySparseGrassTouchCount;
+                        soilTransformByPlayerOnlyByVariant[i] = false;
+                        break;
+                    case 2: //Very Sparse to None
+                        soilTransformTouchCountByVariant[i] = TMGlobalConstants.verySparseToSoilTouchCount;
+                        soilTransformByPlayerOnlyByVariant[i] = false;
+                        break;
+                    case 3: //None to pretrail
+                        soilTransformTouchCountByVariant[i] = TMGlobalConstants.soilToTrampledSoilTouchCount;
+                        soilTransformByPlayerOnlyByVariant[i] = true; //only players can make new pretrails.
+                        break;
+                    default:
+                        Debug.Assert(false, "invalid index");
+                        break;
+
+                }  
             }
 
             for ( int soilFertilityVariantIndex = 0; soilFertilityVariantIndex < soilFertilityBlockVariants.Length; soilFertilityVariantIndex++ ) 
@@ -638,7 +658,8 @@ namespace TrailMod
             bool[] cobTransformByPlayerOnlyByVariants = new bool[SOIL_GRASS_VARIANTS.Length];
             for( int i = 0; i < cobTransformTouchCountByVariants.Length; i++)
             {
-                cobTransformTouchCountByVariants[i] = 1; //1 touch to lose grass.
+                //Cob just loses grass over time but never evolves.
+                cobTransformTouchCountByVariants[i] = TMGlobalConstants.cobLoseGrassTouchCount;
                 cobTransformByPlayerOnlyByVariants[i] = false;
             }
 
@@ -652,7 +673,8 @@ namespace TrailMod
             bool[] peatTransformByPlayerOnlyByVariants = new bool[PEAT_AND_CLAY_GRASS_VARIANTS.Length];
             for( int i = 0; i < peatTransformTouchCountByVariants.Length; i++ )
             {
-                peatTransformTouchCountByVariants[i] = 1; //1 touch to lose grass.
+                //Peat just loses surface grass but never evolves.
+                peatTransformTouchCountByVariants[i] = TMGlobalConstants.peatLoseGrassTouchCount;
                 peatTransformByPlayerOnlyByVariants[i] = false;
             }
 
@@ -668,7 +690,8 @@ namespace TrailMod
             bool[] clayTransformByPlayerOnlyByVariants = new bool[PEAT_AND_CLAY_GRASS_VARIANTS.Length];
             for( int i = 0; i < clayTransformTouchCountByVariants.Length; i++ )
             {
-                clayTransformTouchCountByVariants[i] = 1; //1 touch to lose grass.
+                //Clay just loses surface grass but never evolves.
+                clayTransformTouchCountByVariants[i] = TMGlobalConstants.clayLoseGrassTouchCount;
                 clayTransformByPlayerOnlyByVariants[i] = false;
             }
 
@@ -693,17 +716,20 @@ namespace TrailMod
             {
                 if ( i == 0 )
                 {
-                    forestFloorTransformTouchCountByVariants[i] = 1; //1 touch Chance to start.
+                    //Forest Floor Full to forest floor sparse.
+                    forestFloorTransformTouchCountByVariants[i] = TMGlobalConstants.normalToSparseGrassTouchCount;
                     forestFloorTransfromByPlayerOnlyByVariants[i] = false;
                 }
                 else if ( i == forestFloorTransformTouchCountByVariants.Length - 1)
                 {
-                    forestFloorTransformTouchCountByVariants[i] = 2; //2 touch to become soil-low-none.
+                    //Forest floor to low tier soil.
+                    forestFloorTransformTouchCountByVariants[i] = TMGlobalConstants.forestFloorToSoilTouchCount;
                     forestFloorTransfromByPlayerOnlyByVariants[i] = false;
                 }
                 else
                 {
-                    forestFloorTransformTouchCountByVariants[i] = 1; //1 touch to lose grass.
+                    //Progression through forest floor sparse
+                    forestFloorTransformTouchCountByVariants[i] = TMGlobalConstants.sparseToVerySparseGrassTouchCount;
                     forestFloorTransfromByPlayerOnlyByVariants[i] = false;
                 } 
             }
@@ -1048,13 +1074,20 @@ namespace TrailMod
         {
             bool groundIsTrail = groundBlock is BlockTrail;
 
+            //If we are configured not to crush any plants until a trail is created.
+            if (TMGlobalConstants.onlyTrampleFoliageOnTrailCreation && !groundIsTrail)
+                return ETrailTrampleType.NO_TRAMPLE;
+
             if (plantBlock.BlockMaterial == EnumBlockMaterial.Plant)
             {
                 if (plantBlock is BlockFern)
                     return ETrailTrampleType.DEFAULT;
 
                 if (plantBlock is BlockTallGrass)
+                {
                     return ETrailTrampleType.TALLGRASS;
+                }
+                    
 
                 if (TMGlobalConstants.flowerTrampling)
                 {
@@ -1140,6 +1173,23 @@ namespace TrailMod
                     }
                     else
                     {
+                        //We want to imediately trample grass on clay and peat deposits.
+                        if ( groundBlock is BlockSoilDeposit )
+                        {
+                            if (TMGlobalConstants.foliageTrampleSounds)
+                            {
+                                world.BlockAccessor.BreakBlock(upPos, null, 0);
+                            }
+                            else
+                            {
+                                AssetLocation assetLocation = new AssetLocation(AIR_CODE);
+                                Block airBlock = world.GetBlock(assetLocation);
+                                world.BlockAccessor.SetBlock(airBlock.Id, upPos);
+                            }
+
+                            return;
+                        }
+
                         if ( upBlock.Code.Path != TALLGRASS_EATEN_CODE )
                         {
                             AssetLocation assetLocation = new AssetLocation(TALLGRASS_EATEN_CODE);

@@ -16,8 +16,6 @@ namespace TrailMod
 
     public class BlockTrail : Block
     {
-        private const double PRETRAIL_DEVOLVE_DAYS = 7; //after 7 game days a pretrail block devolves back into a regular soil block.
-        private const double TRAIL_DEVOLVE_DAYS = 60; //after 60 days a trail devolves one level.
         private const string SOIL_CODE = "soil";
         private const string SOIL_GRASS_NONE_CODE = "none";
         private const string SOIL_GRASS_SPARSE_CODE = "sparse";
@@ -182,9 +180,9 @@ namespace TrailMod
         {
 
             if ( wearVariant == "pretrail")
-                return PRETRAIL_DEVOLVE_DAYS;
+                return TMGlobalConstants.trampledSoilDevolveDays;
 
-            return TRAIL_DEVOLVE_DAYS;
+            return TMGlobalConstants.trailDevolveDays;
         }
 
         private int GetTrailWearIndexFromWearCode( string wearCode )
