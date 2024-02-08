@@ -18,6 +18,9 @@ namespace ExpandedAiTasks
         Entity _entityTargeting;
         Entity _targetEntity;
 
+        Vec3d _lastPathUpdatePos = null;
+        Vec3d _lastKnownPos = null;
+        Vec3d _lastKnownMotion = null;
         public Entity entityTargeting
         {
             get { return _entityTargeting; }
@@ -30,10 +33,31 @@ namespace ExpandedAiTasks
             set { _targetEntity = value; }
         }
 
-        public EntityTargetPairing( Entity entityTargeting, Entity targetEntity)
+        public Vec3d lastPathUpdatePos
+        {
+            get { return _lastPathUpdatePos; }
+            private set { _lastPathUpdatePos = value; }
+        }
+
+        public Vec3d lastKnownPos
+        {
+            get { return _lastKnownPos; }
+            set { _lastKnownPos = value; }
+        }
+
+        public Vec3d lastKnownMotion
+        {
+            get { return _lastKnownMotion; }
+            set { _lastKnownMotion = value; }
+        }
+
+        public EntityTargetPairing( Entity entityTargeting, Entity targetEntity, Vec3d lastPathUpdatePos, Vec3d lastKnownPos, Vec3d lastKnownMotion )
         {
             _entityTargeting = entityTargeting;
             _targetEntity = targetEntity;
+            _lastPathUpdatePos = lastPathUpdatePos;
+            _lastKnownPos = lastKnownPos;
+            _lastKnownMotion = lastKnownMotion == null ? null : lastKnownMotion.Clone();
         }
     }
 
@@ -365,7 +389,7 @@ namespace ExpandedAiTasks
             
         }
 
-        public static void TryNotifyHerdMembersToAttack(EntityAgent alertEntity, Entity targetEntity, float alertRange, bool requireAwarenessToNotify )
+        public static void TryNotifyHerdMembersToAttack(EntityAgent alertEntity, Entity targetEntity, Vec3d lastPathUpdatePos, Vec3d lastKnownPos, Vec3d lastKnownMotion, float alertRange, bool requireAwarenessToNotify )
         {
             if ( alertEntity.HerdId > 0 )
             {
@@ -376,7 +400,7 @@ namespace ExpandedAiTasks
                     {
                         if ( !requireAwarenessToNotify || AwarenessManager.IsAwareOfTarget(herdMember, alertEntity, alertRange, alertRange) )
                         {
-                            EntityTargetPairing targetPairing = new EntityTargetPairing(alertEntity, targetEntity);
+                            EntityTargetPairing targetPairing = new EntityTargetPairing(alertEntity, targetEntity, lastPathUpdatePos, lastKnownPos, lastKnownMotion);
                             herdMember.Notify("attackEntity", targetPairing);
                         } 
                     }

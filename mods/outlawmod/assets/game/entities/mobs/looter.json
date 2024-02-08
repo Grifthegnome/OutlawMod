@@ -254,6 +254,8 @@
 						ammoRegenIntervalMs: 10000,
 						maxAmmo: 3,
 
+						advanceAfterShooting: true,
+
 						durationMs: 500,
 						releaseAtMs: 250,
 						animationSpeed: 1.0,
@@ -336,21 +338,7 @@
 						consolidationRange: 40,
 						consolidationEntityCodes: ["looter"],
 					},
-					/*
-					{
-						code: "idle",
-						priority: 0.7,
-						minduration: 5000,
-						maxduration: 30000,
-						mincooldown: 2000,
-						maxcooldown: 120000,
-						priorityForCancel: 1.33,
-						animation: "Sit",
-						whenNotInEmotionState: "aggressiveondamage",
-						stopOnNearbyEntityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "poacher-*", "yeoman-*", "hound-*"],
-						stopRange: 5
-					},
-					*/
+
 					{
 						code: "wander", 
 						priority: 0.5, 

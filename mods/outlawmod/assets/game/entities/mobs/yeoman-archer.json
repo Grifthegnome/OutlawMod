@@ -278,6 +278,8 @@
 						fireOnLastKnownPosition: true,
 						lastKnownPositionTimeoutMs: 5000,
 
+						advanceAfterShooting: true,
+
 						durationMs: 2000,
 						releaseAtMs: 1000,
 						animationSpeed: 1.0,

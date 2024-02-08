@@ -766,9 +766,9 @@ namespace ExpandedAiTasks
                     {
                         targetEntity = newTarget;
                         targetPos = targetEntity.ServerPos.XYZ;
-                        lastPathUpdatePos = targetEntity.ServerPos.XYZ;
-                        lastKnownPos = targetEntity.ServerPos.XYZ;
-                        lastKnownMotion = targetEntity.ServerPos.Motion.Clone();
+                        lastPathUpdatePos = targetPairing.lastPathUpdatePos == null ? targetEntity.ServerPos.XYZ : targetPairing.lastPathUpdatePos;
+                        lastKnownPos = targetPairing.lastKnownPos == null ? targetEntity.ServerPos.XYZ : targetPairing.lastKnownPos;
+                        lastKnownMotion = targetPairing.lastKnownMotion == null ? targetEntity.ServerPos.Motion.Clone() : targetPairing.lastKnownMotion;
                         lastTimeSawTarget = entity.World.ElapsedMilliseconds;
 
                         if (infoUpdateFromTeammate)
@@ -1173,7 +1173,7 @@ namespace ExpandedAiTasks
 
         private void TryAlarmHerd()
         {
-            AiUtility.TryNotifyHerdMembersToAttack(entity, targetEntity, AiUtility.GetHerdAlertRangeForEntity(entity), true);
+            AiUtility.TryNotifyHerdMembersToAttack(entity, targetEntity, lastPathUpdatePos, lastKnownPos, lastKnownMotion, AiUtility.GetHerdAlertRangeForEntity(entity), true);
         }
     }
 }

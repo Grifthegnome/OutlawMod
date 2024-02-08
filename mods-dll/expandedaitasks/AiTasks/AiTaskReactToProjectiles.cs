@@ -58,10 +58,10 @@ namespace ExpandedAiTasks
             {
                 if (reactionProjectile != null)
                 {
-                    EntityTargetPairing targetPairing = new EntityTargetPairing(entity, reactionProjectile.FiredBy);
+                    EntityTargetPairing targetPairing = new EntityTargetPairing(entity, reactionProjectile.FiredBy, null, null, null);
                     entity.Notify("attackEntity", targetPairing);
 
-                    AiUtility.TryNotifyHerdMembersToAttack(entity, reactionProjectile.FiredBy, AiUtility.GetHerdAlertRangeForEntity(entity), true);
+                    AiUtility.TryNotifyHerdMembersToAttack(entity, reactionProjectile.FiredBy, null, null, null, AiUtility.GetHerdAlertRangeForEntity(entity), true);
                     lastReactTime = entity.World.ElapsedMilliseconds;
                 }
             }

@@ -77,7 +77,7 @@ namespace ExpandedAiTasks
                 Entity newAttacker = AiUtility.GetLastAttacker(__instance);
 
                 if (newAttacker != null && newAttacker != prevAttacker)
-                    AiUtility.TryNotifyHerdMembersToAttack( __instance, AiUtility.GetLastAttacker(__instance), AiUtility.GetHerdAlertRangeForEntity(__instance), true );
+                    AiUtility.TryNotifyHerdMembersToAttack( __instance, AiUtility.GetLastAttacker(__instance), null, null, null, AiUtility.GetHerdAlertRangeForEntity(__instance), true );
             }
         }
     }

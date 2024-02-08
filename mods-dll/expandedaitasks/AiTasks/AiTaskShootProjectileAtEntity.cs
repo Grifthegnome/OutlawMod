@@ -46,6 +46,10 @@ namespace ExpandedAiTasks
         bool fireOnLastKnownPosition = true;
         float lastKnownPositionTimeoutMs = 5000f;
 
+        //Advance After Shooting Behavior
+        bool advanceAfterShooting = true;
+
+        //Ammo
         bool hasLimitedAmmo = false;
         bool ammoRegenDuringCombat = false;
         int ammoRegenIntervalMs = 0;
@@ -110,6 +114,9 @@ namespace ExpandedAiTasks
             this.fireOnLastKnownPosition = taskConfig["fireOnLastKnownPosition"].AsBool(true);
             this.lastKnownPositionTimeoutMs = taskConfig["lastKnownPositionTimeoutMs"].AsFloat(5000f);
 
+            this.advanceAfterShooting = taskConfig["advanceAfterShooting"].AsBool(true);
+
+            //Ammo
             this.hasLimitedAmmo = taskConfig["hasLimitedAmmo"].AsBool(false);
             this.ammoRegenDuringCombat = taskConfig["ammoRegenDuringCombat"].AsBool(false);
             this.ammoRegenIntervalMs = taskConfig["ammoRegenIntervalMs"].AsInt(0);
@@ -509,6 +516,13 @@ namespace ExpandedAiTasks
                 entity.AnimManager.StopAnimation(animMeta.Code);
             }
 
+            //Advance on the location we fired upon.
+            if (advanceAfterShooting)
+            {
+                EntityTargetPairing targetPairing = new EntityTargetPairing(entity, targetEntity, null, targetLKP, null);
+                entity.Notify("pursueEntity", targetPairing);
+            }
+            
             targetEntity = null;
         }
 
@@ -652,7 +666,7 @@ namespace ExpandedAiTasks
                     {
                         targetEntity = newTarget;
 
-                        targetLKP          = targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0);
+                        targetLKP          = targetPairing.lastKnownPos == null ? targetEntity.ServerPos.XYZ.Add(0, targetEntity.LocalEyePos.Y, 0) : targetPairing.lastKnownPos;
                         lastTimeSeenTarget = entity.World.ElapsedMilliseconds;
 
                         return true;
