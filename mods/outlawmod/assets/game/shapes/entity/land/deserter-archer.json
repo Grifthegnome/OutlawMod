@@ -1,6 +1,6 @@
 {
 	"editor": {
-		"collapsedPaths": "Root/LowerTorso/UpperTorso/UpperArmR/LowerArmR/billhook",
+		"collapsedPaths": "Root/LowerTorso/UpperTorso/UpperArmR/LowerArmR/origin,Root/LowerTorso/UpperTorso/UpperArmR/LowerArmR/billhook",
 		"allAngles": true,
 		"entityTextureMode": true
 	},
@@ -1811,6 +1811,85 @@
 						"LowerArmL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
 						"UpperArmR": { "offsetX": 0.0, "offsetY": 0.0, "offsetZ": 0.0, "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
 						"LowerArmR": { "offsetX": 0.0, "offsetY": 0.0, "offsetZ": 0.0, "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 }
+					}
+				}
+			]
+		},
+
+		{
+			"name": "hurt",
+			"code": "hurt",
+			"quantityframes": 30,
+			"onActivityStopped": "PlayTillEnd",
+			"onAnimationEnd": "Stop",
+			"keyframes": [
+				{
+					"frame": 0,
+					"elements": {
+						"UpperTorso": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"Neck": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"LowerArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperArmL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"LowerArmL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 }
+					}
+				},
+				{
+					"frame": 1,
+					"elements": {
+
+					}
+				},
+				{
+					"frame": 2,
+					"elements": {
+
+					}
+				},
+				{
+					"frame": 3,
+					"elements": {
+						"UpperTorso": { "rotationX": 0.0, "rotationY": 8.0, "rotationZ": 8.0 },
+						"Neck": { "rotationX": 0.0, "rotationY": 14.0, "rotationZ": 6.0 },
+						"UpperArmL": { "rotationX": -11.0, "rotationY": 3.0, "rotationZ": 0.0 },
+						"LowerArmL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -53.0 },
+						"UpperArmR": { "rotationX": 0.0, "rotationY": -33.0, "rotationZ": -17.0 },
+						"LowerArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -44.0 }
+					}
+				},
+				{
+					"frame": 4,
+					"elements": {
+
+					}
+				},
+				{
+					"frame": 7,
+					"elements": {
+
+					}
+				},
+				{
+					"frame": 13,
+					"elements": {
+
+					}
+				},
+				{
+					"frame": 16,
+					"elements": {
+
+					}
+				},
+				{
+					"frame": 29,
+					"elements": {
+						"UpperTorso": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"Neck": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperArmL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"LowerArmL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"LowerArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 }
 					}
 				}
 			]

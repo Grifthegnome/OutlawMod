@@ -75,7 +75,7 @@
 				animation: "hurt", 
 				animationSpeed: 2,
 				weight: 8,
-				blendMode: "AddAverage" 
+				blendMode: "Add" 
 			},
 			{ 
 				code: "wander", 
@@ -265,6 +265,7 @@
 
 						arriveRange: 15,
 						arriveVerticalRange: 1.0,
+						arriveAnimation: "idle",
 
 						withdrawIfNoPath: true,
 						withdrawDist: 15.0,
@@ -295,6 +296,7 @@
 
 						arriveRange: 15,
 						arriveVerticalRange: 1.0,
+						arriveAnimation: "idle",
 
 						withdrawIfNoPath: true,
 						withdrawDist: 15.0,

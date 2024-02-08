@@ -15,68 +15,58 @@ using Vintagestory.API.Client;
 
 namespace ExpandedAiTasks
 {
-    public class AiTaskExpandedMeleeAttack : AiTaskBaseExpandedTargetable
+    public class AiTaskPlayAnimationAtRangeFromTarget : AiTaskBaseExpandedTargetable
     {
-        protected long lastCheckOrAttackMs;
-
-        protected float damage = 2f;
-        protected float knockbackStrength = 1f;
+        protected string[] cancelAnimations = null;
         protected float minDist = 1.5f;
         protected float minVerDist = 1f;
 
-        protected bool damageInflicted = false;
-
-        protected int attackDurationMs = 1500;
-        protected int damagePlayerAtMs = 500;
-
-        public EnumDamageType damageType = EnumDamageType.BluntAttack;
-        public int damageTier = 0;
+        protected float easeIn = 0.0f;
+        protected float easeOut = 0.0f;
 
         Entity guardTargetAttackedByEntity = null;
 
         bool stopNow;
 
-        public AiTaskExpandedMeleeAttack(EntityAgent entity) : base(entity)
+        public AiTaskPlayAnimationAtRangeFromTarget(EntityAgent entity) : base(entity)
         {
         }
 
         public override void LoadConfig(JsonObject taskConfig, JsonObject aiConfig)
         {
             base.LoadConfig(taskConfig, aiConfig);
-
-            this.damage = taskConfig["damage"].AsFloat(2);
-            this.knockbackStrength = taskConfig["knockbackStrength"].AsFloat(GameMath.Sqrt(damage / 2f));
-            this.attackDurationMs = taskConfig["attackDurationMs"].AsInt(1500);
-            this.damagePlayerAtMs = taskConfig["damagePlayerAtMs"].AsInt(1000);
-
+            
+            this.cancelAnimations = taskConfig["cancelAnimations"].AsArray<string>(new string[] { });
             this.minDist = taskConfig["minDist"].AsFloat(2f);
             this.minVerDist = taskConfig["minVerDist"].AsFloat(1f);
+            this.easeIn = taskConfig["easeIn"].AsFloat(0.0f);
+            this.easeOut = taskConfig["easeOut"].AsFloat(0.0f);
 
-            string strdt = taskConfig["damageType"].AsString();
-            if (strdt != null)
-            {
-                this.damageType = (EnumDamageType)Enum.Parse(typeof(EnumDamageType), strdt, true);
-            }
-            this.damageTier = taskConfig["damageTier"].AsInt(0);
-
-            ITreeAttribute tree = entity.WatchedAttributes.GetTreeAttribute("extraInfoText");
-            tree.SetString("dmgTier", Lang.Get("Damage tier: {0}", damageTier));
+            animMeta.EaseInSpeed = this.easeIn;
+            animMeta.EaseOutSpeed = this.easeOut;
         }
 
         public override bool ShouldExecute()
         {
             long ellapsedMs = entity.World.ElapsedMilliseconds;
 
-            if (ellapsedMs - lastCheckOrAttackMs < attackDurationMs || cooldownUntilMs > ellapsedMs)
-            {
+            if ( cooldownUntilMs > ellapsedMs)
                 return false;
-            }
 
             if (whenInEmotionState != null && bhEmo?.IsInEmotionState(whenInEmotionState) != true) 
                 return false;
             
             if (whenNotInEmotionState != null && bhEmo?.IsInEmotionState(whenNotInEmotionState) == true) 
                 return false;
+
+            if (cancelAnimations != null)
+            {
+                foreach ( string animation in cancelAnimations )
+                {
+                    if (entity.AnimManager.IsAnimationActive(animation))
+                        return false;
+                }
+            }
 
             Vec3d pos = entity.ServerPos.XYZ.Add(0, entity.SelectionBox.Y2 / 2, 0).Ahead(entity.SelectionBox.XSize / 2, 0, entity.ServerPos.Yaw);
             targetEntity = null;
@@ -102,25 +92,22 @@ namespace ExpandedAiTasks
 
             if (targetEntity == null || !targetEntity.Alive )
             {
-                bestMeleeTarget = null;
-                bestMeleeDist = -1;
-                partitionUtil.WalkEntityPartitions(entity.ServerPos.XYZ, minDist, (e) => GetBestMeleeTarget(e, minDist));
-                targetEntity = bestMeleeTarget;
+                bestTarget = null;
+                bestTargetDist = -1;
+                partitionUtil.WalkEntityPartitions(entity.ServerPos.XYZ, minDist, (e) => GetBestTarget(e, minDist));
+                targetEntity = bestTarget;
             }
 
-            lastCheckOrAttackMs = entity.World.ElapsedMilliseconds;
-            damageInflicted = false;
-
             if (targetEntity != null)
-                return IsInMeleeRange(targetEntity);
+                return IsInRange(targetEntity);
 
             return false;
         }
 
-        Entity bestMeleeTarget = null;
-        double bestMeleeDist = -1;
+        Entity bestTarget = null;
+        double bestTargetDist = -1;
 
-        private bool GetBestMeleeTarget(Entity ent, float range)
+        private bool GetBestTarget(Entity ent, float range)
         {
             double verticalDist = ent.ServerPos.Y - entity.ServerPos.Y;
 
@@ -136,89 +123,47 @@ namespace ExpandedAiTasks
             if ( isTargetable && isAware )
             {
                 double distSqr = ent.ServerPos.SquareDistanceTo(entity.ServerPos.XYZ);
-                if ( bestMeleeTarget == null )
+                if ( bestTarget == null )
                 {
-                    bestMeleeTarget = ent;
-                    bestMeleeDist = distSqr;
+                    bestTarget = ent;
+                    bestTargetDist = distSqr;
                 }
-                else if (distSqr < bestMeleeDist)
+                else if (distSqr < bestTargetDist)
                 {
-                    bestMeleeTarget = ent;
-                    bestMeleeDist = distSqr;
+                    bestTarget = ent;
+                    bestTargetDist = distSqr;
                 }
             }
 
             return true;
         }
 
-        float curTurnRadPerSec;
-        bool didStartAnim;
-
         public override void StartExecute()
         {
-            didStartAnim = false;
             stopNow = false;
-            curTurnRadPerSec = entity.GetBehavior<EntityBehaviorTaskAI>().PathTraverser.curTurnRadPerSec;
-            entity.PlayEntitySound("melee", null, true);
+
+            //Play Anim, Etc.
+            base.StartExecute();
         }
 
         public override bool ContinueExecute(float dt)
         {
-            AiUtility.UpdateLastTimeEntityInCombatMs(entity);
-
             if (targetEntity == null)
                 return false;
 
-            EntityPos own = entity.ServerPos;
-            EntityPos his = targetEntity.ServerPos;
+            if (!targetEntity.Alive)
+                return false;
 
-            float desiredYaw = (float)Math.Atan2(his.X - own.X, his.Z - own.Z);
-            float yawDist = GameMath.AngleRadDistance(entity.ServerPos.Yaw, desiredYaw);
-            entity.ServerPos.Yaw += GameMath.Clamp(yawDist, -curTurnRadPerSec * dt * GlobalConstants.OverallSpeedMultiplier, curTurnRadPerSec * dt * GlobalConstants.OverallSpeedMultiplier);
-            entity.ServerPos.Yaw = entity.ServerPos.Yaw % GameMath.TWOPI;
-
-            bool correctYaw = Math.Abs(yawDist) < 20 * GameMath.DEG2RAD;
-            if (correctYaw && !didStartAnim)
+            if (cancelAnimations != null)
             {
-                didStartAnim = true;
-                base.StartExecute();
-            }
-
-            if (lastCheckOrAttackMs + damagePlayerAtMs > entity.World.ElapsedMilliseconds) 
-                return true;
-
-            if (!damageInflicted && correctYaw && IsInMeleeRange(targetEntity))
-            {
-                //To do: We should test if this check is really needed anymore.
-                if (!IsTargetableEntity(targetEntity, minDist, true) || !AwarenessManager.IsAwareOfTarget(entity, targetEntity, minDist, minVerDist)) 
-                    return false;
-
-                bool alive = targetEntity.Alive;
-
-                targetEntity.ReceiveDamage(
-                    new DamageSource()
-                    {
-                        Source = EnumDamageSource.Entity,
-                        SourceEntity = entity,
-                        Type = damageType,
-                        DamageTier = damageTier,
-                        KnockbackStrength = knockbackStrength
-                    },
-                    damage * GlobalConstants.CreatureDamageModifier
-                );
-
-                if (alive && !targetEntity.Alive)
+                foreach (string animation in cancelAnimations)
                 {
-                    bhEmo?.TryTriggerState("saturated", targetEntity.EntityId);
+                    if (entity.AnimManager.IsAnimationActive(animation))
+                        return false;
                 }
-
-                damageInflicted = true;
             }
 
-            if (lastCheckOrAttackMs + attackDurationMs > entity.World.ElapsedMilliseconds) 
-                return true && !stopNow;
-            
-            return false;
+            return IsInRange(targetEntity) && stopNow != true;
         }
 
         public override void FinishExecute(bool cancelled)
@@ -227,7 +172,7 @@ namespace ExpandedAiTasks
             targetEntity = null;
         }
 
-        protected bool IsInMeleeRange( Entity targetEnt )
+        protected bool IsInRange( Entity targetEnt )
         {
             bool inHorizontalRange = entity.ServerPos.SquareHorDistanceTo(targetEnt.ServerPos.XYZ) <= minDist * minDist;
 

@@ -100,8 +100,8 @@
 				code: "walk",
 				animation: "WalkSpearShouldered",
 				blendMode: "AddAverage",
-				//easeInSpeed: 4,
-				//easeOutSpeed: 4,
+				easeInSpeed: 0.05,
+				easeOutSpeed: 0.05,
 				SupressDefaultAnimation: true
 			},
 			{
@@ -296,19 +296,6 @@
 						animation: "look",
 						whenNotInEmotionState: "aggressiveondamage",
 						stopOnNearbyEntityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "deserter-*", "hound-feral", "humanoid-villager-*"],
-						stopRange: 5
-					},
-					{
-						code: "idle",
-						priority: 0.7,
-						minduration: 5000,
-						maxduration: 30000,
-						mincooldown: 2000,
-						maxcooldown: 120000,
-						priorityForCancel: 1.33,
-						animation: "idle",
-						whenNotInEmotionState: "aggressiveondamage",
-						stopOnNearbyEntityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "deserter-*", "humanoid-villager-*"],
 						stopRange: 5
 					},
 					{

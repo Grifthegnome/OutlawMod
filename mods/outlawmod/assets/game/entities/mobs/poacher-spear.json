@@ -359,20 +359,6 @@
 						stopRange: 5
 					},
 					{
-						code: "idle",
-						priority: 0.7,
-						minduration: 5000,
-						maxduration: 30000,
-						mincooldown: 2000,
-						maxcooldown: 120000,
-						priorityForCancel: 1.33,
-						animation: "idle",
-						whenNotInEmotionState: "aggressiveondamage",
-						whenNotInEmotionState: "fleeondamage",
-						stopOnNearbyEntityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "humanoid-villager-*"],
-						stopRange: 5
-					},
-					{
 						code: "wander", 
 						priority: 0.5, 
 						priorityForCancel: 1.35,

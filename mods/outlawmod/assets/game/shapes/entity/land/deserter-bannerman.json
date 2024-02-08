@@ -1771,6 +1771,88 @@
 				},
 
 			]
+		},
+
+		{
+			"name": "hurt",
+			"code": "hurt",
+			"quantityframes": 30,
+			"onActivityStopped": "PlayTillEnd",
+			"onAnimationEnd": "Stop",
+			"keyframes": [
+				{
+					"frame": 0,
+					"elements": {
+						"Neck": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperArmL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"LowerArmL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"LowerArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 }
+					}
+				},
+				{
+					"frame": 1,
+					"elements": {
+
+					}
+				},
+				{
+					"frame": 3,
+					"elements": {
+						"Neck": { "rotationX": 6.0, "rotationY": -3.0, "rotationZ": -25.0 },
+						"UpperArmL": { "rotationX": -22.0, "rotationY": 0.0, "rotationZ": 8.0 },
+						"LowerArmL": { "rotationX": 0.0, "rotationY": -19.0, "rotationZ": -44.0 },
+						"UpperArmR": { "rotationX": 6.0, "rotationY": -6.0, "rotationZ": 22.0 },
+						"LowerArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -47.0 }
+					}
+				},
+				{
+					"frame": 7,
+					"elements": {
+
+					}
+				},
+				{
+					"frame": 10,
+					"elements": {
+
+					}
+				},
+				{
+					"frame": 11,
+					"elements": {
+
+					}
+				},
+				{
+					"frame": 15,
+					"elements": {
+
+					}
+				},
+				{
+					"frame": 21,
+					"elements": {
+
+					}
+				},
+				{
+					"frame": 28,
+					"elements": {
+
+					}
+				},
+				{
+					"frame": 29,
+					"elements": {
+						"Neck": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperArmL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"LowerArmL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"LowerArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 }
+					}
+				}
+			]
 		}
 	]
 }

@@ -790,7 +790,7 @@ namespace ExpandedAiTasks
                 {
                     if (IsPositionInSolid(world, currentCheckPos) )
                     {
-                        return new Vec3d( previousCheckPos.X, previousCheckPos.Y, previousCheckPos.Z);
+                        return new Vec3d(startingPos.X, previousCheckPos.Y, startingPos.Z);
                     }
 
                 }
@@ -833,7 +833,7 @@ namespace ExpandedAiTasks
                 {
                     if (!IsPositionInSolid(world, currentCheckPos))
                     {
-                        return new Vec3d(currentCheckPos.X, currentCheckPos.Y, currentCheckPos.Z);
+                        return new Vec3d(startingPos.X, currentCheckPos.Y, startingPos.Z);
                     }
 
                 }

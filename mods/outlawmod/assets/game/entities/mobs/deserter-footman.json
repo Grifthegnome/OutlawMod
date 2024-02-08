@@ -79,10 +79,10 @@
 				code: "wander", 
 				animation: "walkspearshouldered",
 				blendMode: "Average",
-				weight: 10,
-				easeInSpeed: 0.05,
-				easeOutSpeed: 0.05,
-				SupressDefaultAnimation: true
+				//weight: 10,
+				easeInSpeed: 1.0,
+				easeOutSpeed: 1.0,
+				//SupressDefaultAnimation: true
 			},
 			{ 
 				code: "sprint",
@@ -91,12 +91,16 @@
 				mulWithWalkSpeed: true,
 				blendMode: "Average"  
 			},
+			
 			{ 
 				code: "melee", 
 				animation: "attack",
 				weight: 10,
-				blendMode: "AddAverage"
+				//easeInSpeed: 10.0,
+				//easeOutSpeed: 10.0,
+				blendMode: "Add",
 			},
+			
 			{
 				code: "look",
 				animation: "look",
@@ -108,20 +112,29 @@
 				code: "walk",
 				animation: "walk",
 				blendMode: "Average",
-				SupressDefaultAnimation: true
+				//SupressDefaultAnimation: true
+			},
+			{ 
+				code: "idleattackready", 
+				animation: "idleattackready",
+				blendMode: "Add",
+				//SupressDefaultAnimation: true
+				//triggeredBy: { defaultAnim: true }
 			},
 			{
 				code: "engageentity",
 				animation: "walkattackready",
 				blendMode: "Average",
-				easeInSpeed: 1,
-				easeOutSpeed: 1,
-				SupressDefaultAnimation: true
+				//easeInSpeed: 1,
+				//easeOutSpeed: 1,
+				//SupressDefaultAnimation: true
 			},
 			{ 
 				code: "idle", 
 				animation: "idle",
-				blendMode: "Average",
+				blendMode: "AddAverage",
+				easeInSpeed: 1.0,
+				easeOutSpeed: 1.0,
 				triggeredBy: { defaultAnim: true }
 			}
 		]
@@ -186,8 +199,7 @@
 							{ code: "outlawhead-*", fearWeight: 0.2},
 							{ code: "headonspear-*", fearWeight: 0.2},
 						],
-						poiSourcesOfFear: [
-							{ poiType: "outlawSpawnBlocker", fearWeight: 0.2}
+						poiSourcesOfFear: [							{ poiType: "outlawSpawnBlocker", fearWeight: 0.2}
 						],
 
 						animation: "sprint",
@@ -195,7 +207,7 @@
 					},
 					{
 						code: "melee",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "bandit-*", "yeoman-*", "hound-feral", "humanoid-villager-*"],
+						entityCodes: ["test-dummy", "player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "bandit-*", "yeoman-*", "hound-feral", "humanoid-villager-*"],
 						priority: 4.0,
 						damage: 8.0,
 						damageTier: 2,
@@ -210,10 +222,26 @@
 						animation: "attack",
 						animationSpeed: 1.0,
 					},
+
+					{
+						code: "playanimationatrange",
+						entityCodes: ["test-dummy", "player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "bandit-*", "yeoman-*", "hound-feral", "humanoid-villager-*"],
+						priority: 3.0,
+						priorityForCancel: 3.5,
+						minDist: 6, 	//Just under engage range.
+						minVerDist: 6,	//Just engage range.
+						cancelAnimation: ["attack", "sprint", "swim", "WalkSpearShouldered"], //Cancel while other anims are playing.
+						slot: 1,
+						animation: "idleattackready",
+						animationSpeed: 1.0,
+						easeIn: 0.0,
+						easeOut: 0.0
+					},
+
 					//Agro When Damaged
 					{
 						code: "engageentity",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "yeoman-*", "hound-feral", "humanoid-villager-*" ],
+						entityCodes: ["test-dummy", "player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "yeoman-*", "hound-feral", "humanoid-villager-*" ],
 						priority: 2.5,
 						mincooldown: 0, 
 						maxcooldown: 0, 
@@ -226,6 +254,7 @@
 
 						arriveRange: 2.5,
 						arriveVerticalRange: 1.0,
+						//arriveAnimation: "idleattackready",
 
 						withdrawIfNoPath: true,
 						withdrawDist: 15.0,
@@ -242,7 +271,7 @@
 					//Close the distance to enemy target.
 					{
 						code: "engageentity",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "bandit-*", "yeoman-*", "humanoid-villager-*" ],
+						entityCodes: ["test-dummy", "player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "bandit-*", "yeoman-*", "humanoid-villager-*" ],
 						priority: 2.25,
 						priorityForCancel: 2.5,
 						mincooldown: 0, 
@@ -256,6 +285,7 @@
 
 						arriveRange: 2.5,
 						arriveVerticalRange: 1.0,
+						//arriveAnimation: "idleattackready",
 
 						withdrawIfNoPath: true,
 						withdrawDist: 15.0,
@@ -305,20 +335,6 @@
 						animation: "look",
 						whenNotInEmotionState: "aggressiveondamage",
 						stopOnNearbyEntityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "bandit-*", "yeoman-*", "hound-feral", "humanoid-villager-*"],
-						stopRange: 5
-					},
-
-					{
-						code: "idle",
-						priority: 0.7,
-						minduration: 5000,
-						maxduration: 30000,
-						mincooldown: 2000,
-						maxcooldown: 120000,
-						priorityForCancel: 1.33,
-						animation: "idle",
-						whenNotInEmotionState: "aggressiveondamage",
-						stopOnNearbyEntityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "bandit-*", "yeoman-*", "humanoid-villager-*"],
 						stopRange: 5
 					},
 				
