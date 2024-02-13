@@ -71,6 +71,7 @@ namespace ExpandedAiTasks
         protected float currentWithdrawTime = 0;
         protected float lastTimeSawTarget = 0;
         protected float withdrawTargetMoveDistBeforeEncroaching = 0.0f;
+        protected float lastPathUpdateTime = 0;
 
         protected float pursueSpeedVariance = -1;
         protected float engageSpeedVariance = -1;
@@ -442,6 +443,7 @@ namespace ExpandedAiTasks
 
         bool reachedWithdrawPosition = false;
         Entity targetLastUpdate = null;
+        Vec3f withdrawFacePosVec = new Vec3f();
         public override bool ContinueExecute(float dt)
         {
             AiUtility.UpdateLastTimeEntityInCombatMs(entity);
@@ -463,12 +465,12 @@ namespace ExpandedAiTasks
             if (pursueLastKnownPosition)
                 canSeeTarget = AwarenessManager.IsAwareOfTarget(entity,targetEntity, pursueRange, pursueRange);
 
-            Vec3d pathToPos = !pursueLastKnownPosition || canSeeTarget ? targetPos : lastKnownPos;
-            Vec3d clampedPathPos = AiUtility.ClampPositionToGround(world, pathToPos, 15);
-
             //Note: When we do our movement state update we need to use an unclamed value, as a clamped value can cause the ai to arrive early and not reach the target.
+            Vec3d pathToPos = !pursueLastKnownPosition || canSeeTarget ? targetPos : lastKnownPos;
             eInternalMovementState lastMovementState = internalMovementState;
             UpdateMovementState(pathToPos);
+
+            lastPathUpdateTime += dt;
 
             //Depending on whether we are pursuing or engaging, determine the distance our target has to move for us to recompute our path.
             //When we are engaging (close range follow) we need to recompute more often so we can say on our target.
@@ -477,6 +479,7 @@ namespace ExpandedAiTasks
 
             if ( activelyMoving )
             {
+                //TO DO: projecting the position like this can easily put the position inside a tree or wall and cause pathing to fail, try either clamping or walking back the position in a direction.
                 targetPos.Set(targetEntity.ServerPos.X + (targetEntity.ServerPos.Motion.X * 10), targetEntity.ServerPos.Y, targetEntity.ServerPos.Z + (targetEntity.ServerPos.Motion.Z * 10));
 
                 if (canSeeTarget)
@@ -505,7 +508,12 @@ namespace ExpandedAiTasks
                     TryAlarmHerd();
                 }
             }
-            
+
+            //clamp the path to the ground after all positional updates have been executed.
+            //We have to update our path position, as it may have changed in the logic above.
+            pathToPos = !pursueLastKnownPosition || canSeeTarget ? targetPos : lastKnownPos;
+            Vec3d clampedPathPos = AiUtility.ClampPositionToGround(world, pathToPos, 15);
+
             if (activelyMoving || internalMovementState != lastMovementState || internalMovementState == eInternalMovementState.Arrived || targetEntity != targetLastUpdate || updatedByTeammateLastFrame)
             {
                 lastPathUpdatePos.Set(targetEntity.ServerPos.X, targetEntity.ServerPos.Y, targetEntity.ServerPos.Z);
@@ -515,6 +523,7 @@ namespace ExpandedAiTasks
                 {
                     Vec3d steeringPosition = UpdateSteeringToPosition(clampedPathPos.Clone());
                     hasPath = pathTraverser.WalkTowards(steeringPosition, GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck);
+                    lastPathUpdateTime = 0;
                 }   
                 else
                 {
@@ -526,6 +535,7 @@ namespace ExpandedAiTasks
                     }
 
                     hasPath = pathTraverser.NavigateTo_Async(clampedPathPos.Clone(), GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck, OnPathFailed, searchDepth);
+                    lastPathUpdateTime = 0;
                 }
 
                 updatedByTeammateLastFrame = false;           
@@ -540,10 +550,21 @@ namespace ExpandedAiTasks
             {
                 currentWithdrawTime = 0.0f;
                 reachedWithdrawPosition = false;
-                
-                pathTraverser.CurrentTarget.X = clampedPathPos.X;
-                pathTraverser.CurrentTarget.Y = clampedPathPos.Y;
-                pathTraverser.CurrentTarget.Z = clampedPathPos.Z;
+
+                //Note: We should update this on an interval less than 2 seconds.
+                //HACKY HACK HACK: We seem to have found a pathing bug with OnStuck in Vintage Story's native code, where OnStuck will be called roughly every 4 seconds if the path is not restarted.
+                //Basically, when an AI is moving towards its target, OnStuck is firing even when the target is not stuck, the native AI behaviors are side-stepping this issue by recalculating their path every 0.75 seconds.
+                if (lastPathUpdateTime <= 0.75)
+                {
+                    pathTraverser.CurrentTarget.X = clampedPathPos.X;
+                    pathTraverser.CurrentTarget.Y = clampedPathPos.Y;
+                    pathTraverser.CurrentTarget.Z = clampedPathPos.Z;
+                }
+                else
+                {
+                    pathTraverser.NavigateTo(clampedPathPos, GetMovementSpeedForState(internalMovementState), MinDistanceToTarget(), OnGoalReached, OnStuck, false, 5000, 1);
+                    lastPathUpdateTime = 0;
+                }
 
                 //If we magically always know where our target is.
                 if ( !pursueLastKnownPosition)
@@ -612,22 +633,21 @@ namespace ExpandedAiTasks
 
                     pathTraverser.Stop();
 
+                    //Hack: We are passing in a hardcoded withdraw state to force withdraw animations.
                     UpdateMovementAnims(eInternalMovementState.Withdrawn);
 
                     //Turn to face target.
-                    Vec3f targetVec = new Vec3f();
-
                     Vec3d facePosition = pursueLastKnownPosition ? lastKnownPos : targetPos;
 
-                    targetVec.Set(
+                    withdrawFacePosVec.Set(
                         (float)(facePosition.X - entity.ServerPos.X),
                         (float)(facePosition.Y - entity.ServerPos.Y),
                         (float)(facePosition.Z - entity.ServerPos.Z)
                     );
 
-                    targetVec.Normalize();
+                    withdrawFacePosVec.Normalize();
 
-                    float desiredYaw = (float)Math.Atan2(targetVec.X, targetVec.Z);
+                    float desiredYaw = (float)Math.Atan2(withdrawFacePosVec.X, withdrawFacePosVec.Z);
 
                     float yawDist = GameMath.AngleRadDistance(entity.ServerPos.Yaw, desiredYaw);
                     entity.ServerPos.Yaw += GameMath.Clamp(yawDist, -curTurnRadPerSec * dt, curTurnRadPerSec * dt);
@@ -638,7 +658,7 @@ namespace ExpandedAiTasks
                 }
             }
 
-            //DebugUtility.DebugTargetPositionAndLaskKnownPositionandCurrentNavPositionBlockLocation(world, targetPos, lastKnownPos, pathTraverser);
+            DebugUtility.DebugTargetPositionAndLaskKnownPositionandCurrentNavPositionBlockLocation(world, targetPos, lastKnownPos, pathTraverser);
 
             //if we have reached our target for the time being.
             if (internalMovementState == eInternalMovementState.Arrived)
