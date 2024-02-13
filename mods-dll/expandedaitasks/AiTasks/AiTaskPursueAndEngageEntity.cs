@@ -658,7 +658,7 @@ namespace ExpandedAiTasks
                 }
             }
 
-            DebugUtility.DebugTargetPositionAndLaskKnownPositionandCurrentNavPositionBlockLocation(world, targetPos, lastKnownPos, pathTraverser);
+            //DebugUtility.DebugTargetPositionAndLaskKnownPositionandCurrentNavPositionBlockLocation(world, targetPos, lastKnownPos, pathTraverser);
 
             //if we have reached our target for the time being.
             if (internalMovementState == eInternalMovementState.Arrived)
