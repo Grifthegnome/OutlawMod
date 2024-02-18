@@ -61,6 +61,10 @@ namespace ExpandedAiTasks
 
             ITreeAttribute tree = entity.WatchedAttributes.GetTreeAttribute("extraInfoText");
             tree.SetString("dmgTier", Lang.Get("Damage tier: {0}", damageTier));
+
+            animMeta.EaseOutSpeed = 0.35f;
+            animMeta.EaseInSpeed = 0.0f;
+            animMeta.Weight = 100.0f;
         }
 
         public override bool ShouldExecute()

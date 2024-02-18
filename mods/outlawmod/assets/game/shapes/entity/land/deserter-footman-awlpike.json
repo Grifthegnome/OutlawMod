@@ -1588,7 +1588,7 @@
 			"code": "attack",
 			"quantityframes": 22,
 			"onActivityStopped": "PlayTillEnd",
-			"onAnimationEnd": "Stop",
+			"onAnimationEnd": "EaseOut",
 			"keyframes": [
 				{
 					"frame": 0,

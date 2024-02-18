@@ -44,6 +44,8 @@ namespace ExpandedAiTasks
 
             animMeta.EaseInSpeed = this.easeIn;
             animMeta.EaseOutSpeed = this.easeOut;
+            animMeta.BlendMode = EnumAnimationBlendMode.Average;
+            animMeta.Weight = 0.1f;
         }
 
         public override bool ShouldExecute()
@@ -58,15 +60,6 @@ namespace ExpandedAiTasks
             
             if (whenNotInEmotionState != null && bhEmo?.IsInEmotionState(whenNotInEmotionState) == true) 
                 return false;
-
-            if (cancelAnimations != null)
-            {
-                foreach ( string animation in cancelAnimations )
-                {
-                    if (entity.AnimManager.IsAnimationActive(animation))
-                        return false;
-                }
-            }
 
             Vec3d pos = entity.ServerPos.XYZ.Add(0, entity.SelectionBox.Y2 / 2, 0).Ahead(entity.SelectionBox.XSize / 2, 0, entity.ServerPos.Yaw);
             targetEntity = null;
@@ -99,7 +92,10 @@ namespace ExpandedAiTasks
             }
 
             if (targetEntity != null)
+            {
                 return IsInRange(targetEntity);
+            }
+                
 
             return false;
         }
@@ -143,7 +139,7 @@ namespace ExpandedAiTasks
             stopNow = false;
 
             //Play Anim, Etc.
-            base.StartExecute();
+            //base.StartExecute();
         }
 
         public override bool ContinueExecute(float dt)
@@ -154,13 +150,39 @@ namespace ExpandedAiTasks
             if (!targetEntity.Alive)
                 return false;
 
+            bool animPaused = false;
+
             if (cancelAnimations != null)
             {
                 foreach (string animation in cancelAnimations)
                 {
                     if (entity.AnimManager.IsAnimationActive(animation))
-                        return false;
+                    {
+                        for (int i = 0; i < entity.AnimManager.Animator.RunningAnimations.Length; i++)
+                        {
+                            if (entity.AnimManager.Animator.RunningAnimations[i].Animation.Code == animation)
+                            {
+                                float currentFrame = entity.AnimManager.Animator.RunningAnimations[i].CurrentFrame;
+                                int totalFrames = entity.AnimManager.Animator.RunningAnimations[i].Animation.QuantityFrames;
+
+                                //Check to see if we are more than five frames from ending the animation.
+                                //This is to avoid a single frame pop to the default idle animation.
+                                if (totalFrames - currentFrame > 5.0)
+                                {
+                                    entity.AnimManager.StopAnimation(animMeta.Code);
+                                    animPaused = true;
+                                    break;
+                                }
+                                    
+                            }
+                        }
+                    }
                 }
+            }
+            
+            if (animPaused == false)
+            {
+                entity.AnimManager.StartAnimation(animMeta);
             }
 
             return IsInRange(targetEntity) && stopNow != true;

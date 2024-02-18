@@ -96,8 +96,8 @@
 				code: "melee", 
 				animation: "attack",
 				weight: 10,
-				//easeInSpeed: 10.0,
-				//easeOutSpeed: 10.0,
+				//easeInSpeed: 0.0,
+				//easeOutSpeed: 0.5,
 				blendMode: "Add",
 			},
 			
@@ -230,11 +230,11 @@
 						priorityForCancel: 3.5,
 						minDist: 6, 	//Just under engage range.
 						minVerDist: 6,	//Just engage range.
-						cancelAnimation: ["attack", "sprint", "swim", "WalkSpearShouldered"], //Cancel while other anims are playing.
+						cancelAnimations: ["attack", "sprint", "swim", "WalkSpearShouldered"], //Cancel while other anims are playing.
 						slot: 1,
 						animation: "idleattackready",
 						animationSpeed: 1.0,
-						easeIn: 0.0,
+						easeIn: 0.25,
 						easeOut: 0.0
 					},
 
