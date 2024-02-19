@@ -1,0 +1,61 @@
+{	
+	//BLOCKS
+	"block-soil-verylow-pretrail": "Barren soil (trampled)",
+	"block-trail-verylow-new": "Wilderness trail (Barren soil)",
+	"block-trail-verylow-established": "Established trail (Barren soil)",
+	"block-trail-verylow-veryestablished": "Dirt road (Barren soil)",
+	"block-trail-verylow-old": "Highway (Barren soil)",
+	
+	"block-soil-low-pretrail": "Low fertility soil (trampled)",
+	"block-trail-low-new": "Wilderness trail (Low fertility soil)",
+	"block-trail-low-established": "Established trail (Low fertility soil)",
+	"block-trail-low-veryestablished": "Dirt road (Low fertility soil)",
+	"block-trail-low-old": "Highway (Low fertility soil)",
+
+	"block-soil-medium-pretrail": "Medium fertility soil (trampled)",
+	"block-trail-medium-new": "Wilderness trail (Medium fertility soil)",
+	"block-trail-medium-established": "Established trail (Medium fertility soil)",
+	"block-trail-medium-veryestablished": "Dirt road (Medium fertility soil)",
+	"block-trail-medium-old": "Highway (Medium fertility soil)",
+
+	"block-soil-compost-pretrail": "High fertility soil (trampled)",
+	"block-trail-compost-new": "Wilderness trail (High fertility soil)",
+	"block-trail-compost-established": "Established trail (High fertility soil)",
+	"block-trail-compost-veryestablished": "Dirt road (High fertility soil)",
+	"block-trail-compost-old": "Highway (High fertility soil)",
+
+	"block-soil-high-pretrail": "Terra preta (trampled)",
+	"block-trail-high-new": "Wilderness trail (terra preta)",
+	"block-trail-high-established": "Established trail (terra preta)",
+	"block-trail-high-veryestablished": "Dirt road (terra preta)",
+	"block-trail-high-old": "Highway (terra preta)",
+   
+	"block-cairn-andesite-*": "Andesite cairn",
+	"block-cairn-chalk-*": "Chalk cairn",
+	"block-cairn-chert-*": "Chert cairn",
+	"block-cairn-conglomerate-*": "Conglomerate cairn",
+	"block-cairn-limestone-*": "Limestone cairn",
+	"block-cairn-claystone-*": "Claystone cairn",
+	"block-cairn-granite-*": "Granite cairn",
+	"block-cairn-sandstone-*": "Sandstone cairn",
+	"block-cairn-shale-*": "Shale cairn",
+	"block-cairn-basalt-*": "Basalt cairn",
+	"block-cairn-peridotite-*": "Peridotite cairn",
+	"block-cairn-phyllite-*": "Phyllite cairn",
+	"block-cairn-slate-*": "Slate cairn",
+	"block-cairn-bauxite-*": "Bauxite cairn",
+	"block-cairn-kimberlite-*": "Kimberlite cairn",
+	"block-cairn-suevite-*": "Suevite cairn",
+	"block-cairn-whitemarble-*": "Whitemarble cairn",
+	"block-cairn-redmarble-*": "Redmarble cairn",
+	"block-cairn-greenmarble-*": "Greenmarble cairn",
+	"block-cairn-obsidian-*": "Obsidian cairn",
+	"block-cairn-scoria-*": "Scoria cairn",
+	"block-cairn-tuff-*": "Tuff cairn",
+	"block-cairn-halite-*": "Halite cairn",
+
+	//HANDBOOK
+	"gamemechanicinfo-trails-title": "Game Mechanic: Natural Trails & Roads" ,
+	"gamemechanicinfo-trails-text": "<strong>Overview</strong><br>Trails are created naturally by the people and animals moving through the environment. These organic routes alter the landscape, cutting trails, paths, and roads through once pristine wilderness. The more traffic a route experiences the faster and more established the trail will become."
+
+}

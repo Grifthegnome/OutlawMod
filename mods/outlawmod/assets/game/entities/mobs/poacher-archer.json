@@ -1,11 +1,18 @@
 {
 	code: "poacher-archer",
-	class: "EntityOutlawPoacher",
+	class: "EntityOutlaw",
 	canClimb: true,
 	hitboxSize: { x: 0.6, y: 1.75 },
 	deadHitboxSize: { x: 0.75, y: 0.5 },
 	eyeHeight: 1.7,
-	attributes: { reckless: false, classicVoice: "sounds/voice/oboe" },
+	attributes: { 
+		reckless: false, 
+		classicVoice: "sounds/voice/oboe",
+		killedByInfoText: "deadcreature-eaten-poacherarcher",
+		companions: [
+			{ code: "hound-hunting", countMin: 1.0, countMax: 3.0 },
+		]
+	},
 
 	drops: [
 			{
@@ -208,7 +215,7 @@
 					{
 						code: "shootatentity",
 						entityCodes: ["wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "chicken-rooster", "chicken-hen", "chicken-baby", "hare-male", "hare-female", 
-							"fox-male", "fox-female", "fox-arctic-male", "fox-arctic-female", "pig-wild-male", "pig-wild-female", "raccoon-male", "raccoon-female", "sheep-bighorn-male", "sheep-bighorn-female",
+							"fox-male-red", "fox-female-red", "fox-male-arctic", "fox-female-arctic", "pig-wild-male", "pig-wild-female", "raccoon-male", "raccoon-female", "sheep-bighorn-male", "sheep-bighorn-female",
 							"deer-*", "goat-*"],
 						priority: 3.75,
 						priorityForCancel: 9,
@@ -349,10 +356,10 @@
 							{ code: "chicken-hen", fearWeight: 1.0},
 							{ code: "hare-male", fearWeight: 1.0},
 							{ code: "hare-female", fearWeight: 1.0},
-							{ code: "fox-male", fearWeight: 1.0},
-							{ code: "fox-female", fearWeight: 1.0},
-							{ code: "fox-arctic-male", fearWeight: 1.0},
-							{ code: "fox-arctic-female", fearWeight: 1.0},
+							{ code: "fox-male-red", fearWeight: 1.0},
+							{ code: "fox-female-red", fearWeight: 1.0},
+							{ code: "fox-male-arctic", fearWeight: 1.0},
+							{ code: "fox-female-arctic", fearWeight: 1.0},
 							{ code: "pig-wild-male", fearWeight: 1.0},
 							{ code: "pig-wild-female", fearWeight: 1.0},
 							{ code: "raccoon-male", fearWeight: 1.0},
@@ -375,7 +382,7 @@
 					{
 						code: "engageentity",
 						entityCodes: [ "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "chicken-rooster", "chicken-hen", "chicken-baby", "hare-male", "hare-female", 
-							"fox-male", "fox-female", "fox-arctic-male", "fox-arctic-female", "pig-wild-male", "pig-wild-female", "raccoon-male", "raccoon-female", "sheep-bighorn-male", "sheep-bighorn-female",
+							"fox-male-red", "fox-female-red", "fox-male-arctic", "fox-female-arctic", "pig-wild-male", "pig-wild-female", "raccoon-male", "raccoon-female", "sheep-bighorn-male", "sheep-bighorn-female",
 							"deer-*", "goat-*"],
 						priority: 2.0,
 						priorityForCancel: 3.0,

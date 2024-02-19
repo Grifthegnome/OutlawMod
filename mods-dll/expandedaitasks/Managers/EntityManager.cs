@@ -55,7 +55,14 @@ namespace ExpandedAiTasks.Managers
 
         public void AddEntityToLedger( Entity entity )
         {
-            Debug.Assert(entity.EntityId != lastEntIDAdded);
+            //We can run into situations where an object saved in a chunk has the same entity ID as a loaded entity in the world.
+            //In these cases, the loaded object is deleted on load. We need to handle the case where the entity IDs match, but the entities are diffrent.
+            //This is a native Vintage Story issue.
+            if (entity.EntityId == lastEntIDAdded)
+            {
+                Entity dupeEnt = entity.World.GetEntityById(lastEntIDAdded);
+                Debug.Assert(dupeEnt != entity, "We are trying to add Entity " + entity.Code.ToString() + " to Entity Ledger, but It Already Exists in the Ledger.");
+            }
 
             string codeStart = entity.FirstCodePart();
             AssetLocation searchCode = entity.Code;
@@ -74,11 +81,38 @@ namespace ExpandedAiTasks.Managers
 
         public void AddEntityItemToLedger( Entity entity )
         {
+            if (entity == null)
+                return;
+            
             Debug.Assert(entity is EntityItem);
-            Debug.Assert(entity.EntityId != lastEntItemIDAdded);
 
             EntityItem item = (EntityItem)entity;
-            Debug.Assert(item.Itemstack != null);
+            Debug.Assert(item.Itemstack != null, "Cannot add item to ledger, Itemstack is null!");
+
+            //We can run into situations where an object saved in a chunk has the same entity ID as a loaded entity in the world.
+            //In these cases, the loaded object is deleted on load. We need to handle the case where the entity IDs match, but the entities are diffrent.
+            //This is a native Vintage Story issue.
+            if ( entity.EntityId == lastEntItemIDAdded )
+            {
+                Entity dupeEnt = entity.World.GetEntityById( lastEntItemIDAdded );
+                Debug.Assert(dupeEnt != entity, "We are trying to add EntityItem with Item Stack " + item.Itemstack + " to Entity Ledger, but It Already Exists in the Ledger.");
+            }
+            
+            if ( item.Itemstack.Block == null )
+            {
+                Debug.Assert(item.Itemstack.Item != null);
+
+                //If we loaded an item that has a garbage code, early out, we won't be able to search it anyways.
+                if (item.Itemstack.Item.Code == null)
+                    return;
+
+            }
+            else 
+            {
+                //If we loaded an item that has a garbage code, early out, we won't be able to search it anyways.
+                if (item.Itemstack.Block.Code == null)
+                    return;
+            }
 
             string codeStart = item.Itemstack.Block != null ? item.Itemstack.Block.Code.FirstCodePart() : item.Itemstack.Item.Code.FirstCodePart();
             AssetLocation searchCode = item.Itemstack.Block != null ? item.Itemstack.Block.Code : item.Itemstack.Item.Code;
@@ -671,7 +705,15 @@ namespace ExpandedAiTasks.Managers
         public static void RegisterEntityProjectile( Entity entity )
         {
             Debug.Assert(entity is EntityProjectile);
-            Debug.Assert(entity.EntityId != lastProjectileEntIDAdded);
+
+            //We can run into situations where an object saved in a chunk has the same entity ID as a loaded entity in the world.
+            //In these cases, the loaded object is deleted on load. We need to handle the case where the entity IDs match, but the entities are diffrent.
+            //This is a native Vintage Story issue.
+            if (entity.EntityId == lastProjectileEntIDAdded)
+            {
+                Entity dupeEnt = entity.World.GetEntityById(lastProjectileEntIDAdded);
+                Debug.Assert(dupeEnt != entity, "We are trying to add EntityProjectile " + entity.Code.ToString() + " to Entity Manager Projectile Tracking, but It Already Exists in the system.");
+            }
 
             _meaEntityProjectiles.AddEntity(entity);
             _meaEntityProjectilesInFlight.AddEntity(entity);

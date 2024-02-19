@@ -8073,9 +8073,6 @@
         <member name="F:Vintagestory.API.Common.DecorFlags.Removable">
             <summary>If true, this decor is removable using the players hands, without breaking the parent block</summary>
         </member>
-        <member name="F:Vintagestory.API.Common.DecorFlags.HasSidedVariants">
-            <summary>If true, this decor is removable using the players hands, without breaking the parent block</summary>
-        </member>
         <member name="F:Vintagestory.API.Common.DecorSelectionBox.PosAdjust">
             <summary>
             The offset to the BlockPos, to find the block which produced this selection box.  Normally null.  Used by Decor system
@@ -13589,14 +13586,6 @@
             The animations code identifier that we want to play
             </summary>
         </member>
-        <member name="F:Vintagestory.API.Common.AnimationMetaData.WeightCapFactor">
-            <summary>
-            This property can be used in cases where a animation with high weight is played alongside another animation with low element weight. In these cases, the easeIn become unaturally fast. Setting a value of 0.8f or similar here addresses this issue
-            0f = uncapped weight
-            0.5f = weight cannot exceed 2
-            1f = weight cannot exceed 1
-            </summary>
-        </member>
         <member name="F:Vintagestory.API.Common.AnimationMetaData.EaseInSpeed">
             <summary>
             A multiplier applied to the weight value to "ease in" the animation. Choose a high value for looping animations or it will be glitchy
@@ -15316,11 +15305,6 @@
         <member name="E:Vintagestory.API.Client.IClientEventAPI.BlockChanged">
             <summary>
             When a player block has been modified. OldBlock param may be null!
-            </summary>
-        </member>
-        <member name="E:Vintagestory.API.Client.IClientEventAPI.TestBlockAccess">
-            <summary>
-            When player tries to modify a block
             </summary>
         </member>
         <member name="E:Vintagestory.API.Client.IClientEventAPI.BeforeActiveSlotChanged">
@@ -26527,13 +26511,6 @@
             Merges trees (it will overwrite existing values)
             </summary>
             <param name="tree"></param>
-        </member>
-        <member name="M:Vintagestory.API.Datastructures.ITreeAttribute.SortedCopy(System.Boolean)">
-            <summary>
-            Returns a ITreeAttribute sorted alphabetically by key. Does not modify the existing ITreeAttribute
-            </summary>
-            <param name="recursive"></param>
-            <returns></returns>
         </member>
         <member name="T:Vintagestory.API.Datastructures.IAttribute">
             <summary>

@@ -72,11 +72,13 @@ namespace ExpandedAiTasks
         {
             if (__instance.Alive)
             {
+                Entity prevAttacker = AiUtility.GetLastAttacker(__instance);
                 AiUtility.SetLastAttacker(__instance, damageSource);
-            }
+                Entity newAttacker = AiUtility.GetLastAttacker(__instance);
 
-            if ( AiUtility.GetLastAttacker( __instance) != null )
-                AiUtility.TryNotifyHerdMembersToAttack( __instance, AiUtility.GetLastAttacker(__instance), AiUtility.GetHerdAlertRangeForEntity(__instance), true );
+                if (newAttacker != null && newAttacker != prevAttacker)
+                    AiUtility.TryNotifyHerdMembersToAttack( __instance, AiUtility.GetLastAttacker(__instance), null, null, null, AiUtility.GetHerdAlertRangeForEntity(__instance), true );
+            }
         }
     }
 }

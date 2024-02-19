@@ -70,9 +70,9 @@ namespace ExpandedAiTasks
             blockPositions.Add(lkpBlockPos);
             blockPositions.Add(currentNavBlockPos);
 
-            int colorTarget = ColorUtil.ColorFromRgba(255, 0, 0, 150);
-            int colorLKP = ColorUtil.ColorFromRgba(0, 255, 0, 150);
-            int colorNav = ColorUtil.ColorFromRgba(0, 0, 255, 150);
+            int colorTarget = ColorUtil.ColorFromRgba(255, 0, 0, 150);  //TARGET POS RED
+            int colorLKP = ColorUtil.ColorFromRgba(0, 255, 0, 150);     //LKP GREEN
+            int colorNav = ColorUtil.ColorFromRgba(0, 0, 255, 150);     //NAV BLUE
             List<int> colors = new List<int>();
             colors.Add(colorTarget);
             colors.Add(colorLKP);

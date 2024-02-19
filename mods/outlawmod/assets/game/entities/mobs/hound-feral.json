@@ -8,6 +8,7 @@
 	attributes:{ 
 		hasNightVision: true,
 		smellRange: 20.0,
+		killedByInfoText: "deadcreature-eaten-houndferal",
 	},
 	client: {
 		renderer: "Shape",
@@ -82,11 +83,6 @@
 					type: "item", 
 					code: "fat", 
 					quantity: { avg: 1.25, var: 0 } 
-				},
-				{
-					type: "item", 
-					code: "bone", 
-					quantity: { avg: 2, var: 0.5 } 
 				}
 				],
 			},
@@ -109,7 +105,7 @@
 				aitasks: [
 					{
 						code: "reacttoprojectiles",
-						entityCodes: ["player", "yeoman-*", "poacher-*"],
+						entityCodes: ["player", "yeoman-*", "poacher-*", "deserter-*"],
 						priority: 5.1,
 					},
 					{
@@ -132,6 +128,7 @@
 							{ code: "hound-feral", fearWeight: -0.1},
 							{ code: "bandit-*", fearWeight: 0.1},
 							{ code: "yeoman-*", fearWeight: 0.1},
+							{ code: "deserter-*", fearWeight: 0.1},
 						],
 
 						animation: "Run",
@@ -161,7 +158,7 @@
 					},
 					{
 						code: "melee",
-						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "deer-*", "goat-*", "bandit-*", "poacher-*", "yeoman-*", "looter", 
+						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "deer-*", "goat-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "deserter-*", 
 						"hound-hunting", "humanoid-villager-*"],
 						priority: 2,
 						damage: 2,
@@ -178,7 +175,7 @@
 					},
 					{
 						code: "engageentity",
-						entityCodes: ["player", "bandit-*", "poacher-*", "yeoman-*", "looter", "hound-hunting", "humanoid-villager-*"],
+						entityCodes: ["player", "bandit-*", "poacher-*", "yeoman-*", "looter", "deserter-*", "hound-hunting", "humanoid-villager-*"],
 						priority: 1.53,		
 						maxTargetHealth: 5.0,
 						packHunting: "false",			
@@ -203,7 +200,7 @@
 					//Don't hunt things when we can eat dead stuff nearby.
 					{
 						code: "eatdead",
-						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "bear-*", "deer-*", "goat-*", "bandit-*", "poacher-*", "yeoman-*", "looter", 
+						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "bear-*", "deer-*", "goat-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "deserter-*", 
 						"hound-hunting", "humanoid-villager-*"],
 						priority: 1.52,
 
@@ -226,7 +223,7 @@
 					},
 					{
 						code: "engageentity",
-						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "deer-*", "goat-*", "bandit-*", "poacher-*", "yeoman-*", "looter", 
+						entityCodes: ["player", "chicken-*", "hare-*", "fox-*", "pig-*", "raccoon-*", "sheep-*", "deer-*", "goat-*", "bandit-*", "poacher-*", "yeoman-*", "looter", "deserter-*", 
 						"hound-hunting", "humanoid-villager-*"],
 						priority: 1.5,
 						maxTargetHealth: 5.0,
@@ -278,7 +275,7 @@
 						animation: "Sleep",
 						whenNotInEmotionState: "aggressiveondamage",
 						duringDayTimeFrames: [ { fromHour: 22, toHour: 4 }, { fromHour: 1, toHour: 3 } ],
-						stopOnNearbyEntityCodes: ["player","bandit-*", "poacher-*", "yeoman-*", "looter", "humanoid-villager-*"],
+						stopOnNearbyEntityCodes: ["player","bandit-*", "poacher-*", "yeoman-*", "looter", "deserter-*", "humanoid-villager-*"],
 						stopRange: 10,
 						stopOnHurt: true
 					},

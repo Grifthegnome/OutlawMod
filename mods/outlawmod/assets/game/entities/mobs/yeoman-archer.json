@@ -5,7 +5,11 @@
 	hitboxSize: { x: 0.6, y: 1.75 },
 	deadHitboxSize: { x: 0.75, y: 0.5 },
 	eyeHeight: 1.7,
-	attributes: { reckless: false, classicVoice: "sounds/voice/accordion" },
+	attributes: { 
+		reckless: false, 
+		classicVoice: "sounds/voice/accordion",
+		killedByInfoText: "deadcreature-eaten-yeomanarcher",
+	 },
 
 	drops: [
 			{
@@ -179,6 +183,7 @@
 						entitySourcesOfFear: [
 							{ code: "player", fearWeight: 0.1},
 							{ code: "looter", fearWeight: 0.05},
+							{ code: "deserter-*", fearWeight: 0.1},
 							{ code: "hound-feral", fearWeight: 0.05},
 							{ code: "yeoman-*", fearWeight: -0.1},
 						],
@@ -197,7 +202,7 @@
 					},
 					{
 						code: "melee",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "hound-feral", "humanoid-villager-*" ],
+						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "deserter-*", "hound-feral", "humanoid-villager-*" ],
 						priority: 4.0,
 						damage: 1.5,
 						damageTier: 1,
@@ -228,6 +233,7 @@
 						entitySourcesOfFear: [
 							{ code: "player", fearWeight: 1.0},
 							{ code: "looter", fearWeight: 1.0},
+							{ code: "deserter-*", fearWeight: 1.0},
 							{ code: "hound-feral", fearWeight: 1.0},
 							{ code: "drifter-*", fearWeight: 1.0},
 							{ code: "humanoid-villager-*", fearWeight: 1.0},
@@ -244,7 +250,7 @@
 					},
 					{
 						code: "shootatentity",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "hound-feral", "humanoid-villager-*"],
+						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "deserter-*", "hound-feral", "humanoid-villager-*"],
 						priority: 3.75,
 						priorityForCancel: 9,
 						mincooldown: 0, 
@@ -272,6 +278,8 @@
 						fireOnLastKnownPosition: true,
 						lastKnownPositionTimeoutMs: 5000,
 
+						advanceAfterShooting: true,
+
 						durationMs: 2000,
 						releaseAtMs: 1000,
 						animationSpeed: 1.0,
@@ -287,7 +295,7 @@
 					//Close the distance to enemy target.
 					{
 						code: "engageentity",
-						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "humanoid-villager-*" ],
+						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "deserter-*", "humanoid-villager-*" ],
 						priority: 1.5,
 						priorityForCancel: 3.0,
 						mincooldown: 0, 
@@ -368,13 +376,14 @@
 				TriesPerChunk: { avg: 0.014, var: 0 },
 				tryOnlySurface: true,
 				lightLevelType: "MaxTimeOfDayLight",					
-				groupSize: { dist: "stronginvexp", avg: 2, var: 4 },
+				groupSize: { dist: "stronginvexp", avg: 3, var: 3 },
 				insideBlockCodes: ["game:air", "game:tallgrass-*","game:snowlayer-1"],
 				minTemp: -15,
 				maxTemp: 28,
 				minRain: 0,
 				minForestOrShrubs: 0.25,
-				companions: ["bandit-knife"],
+				//For now, we can't enforce a maxium number of knife bandits per squad on world gen, so we are only going to spawn them at runtime.
+				//companions: ["bandit-knife"],
 			},
 			runtime: {
 				group: "hostile",
@@ -386,7 +395,7 @@
 				"__comment": "Make them spawn away from artifical light and only at night/as the sun sets",
 				maxLightLevel: 3,
 				lightLevelType: "MaxTimeOfDayLight",					
-				groupSize: { dist: "stronginvexp", avg: 2, var: 4 },
+				groupSize: { dist: "stronginvexp", avg: 3, var: 3 },
 				insideBlockCodes: ["game:air", "game:tallgrass-*","game:snowlayer-1"],
 				minTemp: -15,
 				maxTemp: 28,

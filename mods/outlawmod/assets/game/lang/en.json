@@ -6,6 +6,8 @@
 	"deathmsg-poacherspear-1": "{0} was killed aprehending a cornered poacher.",
 	"deathmsg-poacherarcher-1": "{0} was shot down aprehending a cornered poacher.",
 	"deathmsg-yeomanarcher-1": "{0} caught an arrow from a merry yeoman archer.",
+	"deathmsg-deserterarcher-1": "{0} recieved an arrow from a war-weary deserter archer.",
+	"deathmsg-deserterfootman-1": "{0} met a deserter footman's bill.",
 	"deathmsg-houndferal-1": "{0} was mauled by a mangy feral hound.",
 	"deathmsg-houndhunting-1": "{0} was run down by a loyal hunting hound.",
 
@@ -16,7 +18,7 @@
 	"item-dead-creature-bandit-knife": "Dead Footpad",
 	"deadcreature-eaten-banditknife": "Slain by human hands.\nThey were stabbed with a knife.\n",
 
-	"item-creature-bandit-axe": "Bandit with Axe",
+	"item-creature-bandit-axe": "Brigand with Axe",
 	"itemdesc-creature-bandit-axe": "<font color=\"#99c9f9\"><i>Brigands are outlawed men, desperate for coin. Beware as they waylay along the roads at night.</i></font><br>",
 	"item-dead-creature-bandit-axe": "Dead Brigand",
 	"deadcreature-eaten-banditaxe": "Slain by human hands.\nThey were hacked appart with an axe.\n",
@@ -39,12 +41,27 @@
 	"item-creature-poacher-archer": "Poacher with Bow",
 	"itemdesc-creature-poacher-archer": "<font color=\"#99c9f9\"><i>Poachers hunt the woodlands illegally. The punishment for their crimes are severe, so they don't tend to stick around unless they have no other choice.</i></font><br>",
 	"item-dead-creature-poacher-archer": "Dead Poacher",
-	"deadcreature-eaten-poacherarcher": "Slain by human hands.\nThey were shot with a poacher's arrow.\n",
+	"deadcreature-eaten-poacherarcher": "Slain by human hands.\nThey were shot with a hunting arrow.\n",
 
 	"item-creature-yeoman-archer": "Yeoman Archer",
 	"itemdesc-creature-yeoman-archer": "<font color=\"#99c9f9\"><i>Yeoman are free farmers. Sometimes, when the crops fail, they have to turn to other means to make ends-meet.</i></font><br>",
 	"item-dead-creature-yeoman-archer": "Dead Yeoman Archer",
-	"deadcreature-eaten-yeomanarcher": "Slain by human hands.\nThey were shot with an arrow.\n",
+	"deadcreature-eaten-yeomanarcher": "Slain by human hands.\nThey were shot with a broadhead arrow.\n",
+
+	"item-creature-deserter-archer": "Deserter Archer",
+	"itemdesc-creature-deserter-archer": "<font color=\"#99c9f9\"><i>Deserters once fought for their lord's army, now they fight for themselves. They are well equipped and versed in military matters.</i></font><br>",
+	"item-dead-creature-deserter-archer": "Dead Deserter Archer",
+	"deadcreature-eaten-deserterarcher": "Slain by human hands.\nThey were shot with a bodkin arrow.\n",
+
+	"item-creature-deserter-footman": "Deserter Footman",
+	"itemdesc-creature-deserter-footman": "<font color=\"#99c9f9\"><i>Deserters once fought for their lord's army, now they fight for themselves. They are well equipped and versed in military matters.</i></font><br>",
+	"item-dead-creature-deserter-footman": "Dead Deserter Footman",
+	"deadcreature-eaten-deserterfootman": "Slain by human hands.\nThey were run-through with a polearm.\n",
+
+	"item-creature-deserter-bannerman": "Deserter Bannerman",
+	"itemdesc-creature-deserter-bannerman": "<font color=\"#99c9f9\"><i>Deserters once fought for their lord's army, now they fight for themselves. They are well equipped and versed in military matters. Bannermen carry the colors of their renagade regiment and inspire other deserters to fight for glory and plunder.</i></font><br>",
+	"item-dead-creature-deserter-bannerman": "Dead Deserter Bannerman",
+	"deadcreature-eaten-deserterbannerman": "Slain by human hands.\nBeaten to death with a banner.\n",
 
 	//HOUNDS
 	"item-creature-hound-feral": "Feral Hound",
@@ -78,79 +95,129 @@
 	"block-headonspear-poacher-copper-*": "Poacher head on copper spear",
 	"block-headonspear-brigand-copper-*": "Brigand Head on Copper Spear",
 	"block-headonspear-yeoman-copper-*": "Yeoman head on copper spear",
+	"block-headonspear-deserter-archer-copper-*": "Deserter archer head on copper spear",
+	"block-headonspear-deserter-footman-copper-*": "Deserter footman head on copper spear",
+
 	"block-headonspear-looter-tinbronze-*": "Looter head on tin bronze spear",
 	"block-headonspear-poacher-tinbronze-*": "Poacher head on tin bronze spear",
 	"block-headonspear-brigand-tinbronze-*": "Brigand head on tin bronze spear",
 	"block-headonspear-yeoman-tinbronze-*": "Yeoman head on tin bronze spear",
+	"block-headonspear-deserter-archer-tinbronze-*": "Deserter archer head on tin bronze spear",
+	"block-headonspear-deserter-footman-tinbronze-*": "Deserter footman head on tin bronze spear",
+
 	"block-headonspear-looter-bismuthbronze-*": "Looter head on bismuth bronze spear",
 	"block-headonspear-poacher-bismuthbronze-*": "Poacher head on bismuth bronze spear",
 	"block-headonspear-brigand-bismuthbronze-*": "Brigand head on bismuth bronze spear",
 	"block-headonspear-yeoman-bismuthbronze-*": "Yeoman head on bismuth bronze spear",
+	"block-headonspear-deserter-archer-bismuthbronze-*": "Deserter archer head on bismuth bronze spear",
+	"block-headonspear-deserter-footman-bismuthbronze-*": "Deserter footman head on bismuth bronze spear",
+
 	"block-headonspear-looter-blackbronze-*": "Looter head on black bronze spear",
 	"block-headonspear-poacher-blackbronze-*": "Poacher head on black bronze spear",
 	"block-headonspear-brigand-blackbronze-*": "Brigand head on black bronze spear",
 	"block-headonspear-yeoman-blackbronze-*": "Yeoman head on black bronze spear",
+	"block-headonspear-deserter-archer-blackbronze-*": "Deserter archer head on black bronze spear",
+	"block-headonspear-deserter-footman-blackbronze-*": "Deserter footman head on black bronze spear",
+
 	"block-headonspear-looter-chert-*": "Looter head on chert spear",
 	"block-headonspear-poacher-chert-*": "Poacher head on chert spear",
 	"block-headonspear-brigand-chert-*": "Brigand head on chert spear",
 	"block-headonspear-yeoman-chert-*": "Yeoman head on chert spear",
+	"block-headonspear-deserter-archer-chert-*": "Deserter archer head on chert spear",
+	"block-headonspear-deserter-footman-chert-*": "Deserter footman head on chert spear",
+
 	"block-headonspear-looter-granite-*": "Looter head on granite spear",
 	"block-headonspear-poacher-granite-*": "Poacher head on granite spear",
 	"block-headonspear-brigand-granite-*": "Brigand head on granite spear",
 	"block-headonspear-yeoman-granite-*": "Yeoman head on granite spear",
+	"block-headonspear-deserter-archer-granite-*": "Deserter archer head on granite spear",
+	"block-headonspear-deserter-footman-granite-*": "Deserter footman head on granite spear",
+
 	"block-headonspear-looter-andesite-*": "Looter head on andesite spear",
 	"block-headonspear-poacher-andesite-*": "Poacher head on andesite spear",
 	"block-headonspear-brigand-andesite-*": "Brigand head on andesite spear",
 	"block-headonspear-yeoman-andesite-*": "Yeoman head on andesite spear",
+	"block-headonspear-deserter-archer-andesite-*": "Deserter archer head on andesite spear",
+	"block-headonspear-deserter-footman-andesite-*": "Deserter footman head on andesite spear",
+
 	"block-headonspear-looter-basalt-*": "Looter head on basalt spear",
 	"block-headonspear-poacher-basalt-*": "Poacher head on basalt spear",
 	"block-headonspear-brigand-basalt-*": "Brigand head on basalt spear",
 	"block-headonspear-yeoman-basalt-*": "Yeoman head on basalt spear",
+	"block-headonspear-deserter-archer-basalt-*": "Deserter archer head on basalt spear",
+	"block-headonspear-deserter-footman-basalt-*": "Deserter footman head on basalt spear",
+
 	"block-headonspear-looter-obsidian-*": "Looter head on obsidian spear",
 	"block-headonspear-poacher-obsidian-*": "Poacher head on obsidian spear",
 	"block-headonspear-brigand-obsidian-*": "Brigand head on obsidian spear",
 	"block-headonspear-yeoman-obsidian-*": "Yeoman head on obsidian spear",
+	"block-headonspear-deserter-archer-obsidian-*": "Deserter archer head on obsidian spear",
+	"block-headonspear-deserter-footman-obsidian-*": "Deserter footman head on obsidian spear",
+
 	"block-headonspear-looter-peridotite-*": "Looter head on peridotite spear",
 	"block-headonspear-poacher-peridotite-*": "Poacher head on peridotite spear",
 	"block-headonspear-brigand-peridotite-*": "Brigand head on peridotite spear",
 	"block-headonspear-yeoman-peridotite-*": "Yeoman head on peridotite spear",
+	"block-headonspear-deserter-archer-peridotite-*": "Deserter archer head on peridotite spear",
+	"block-headonspear-deserter-footman-peridotite-*": "Deserter footman head on peridotite spear",
+
 	"block-headonspear-looter-flint-*": "Looter head on flint spear",
 	"block-headonspear-poacher-flint-*": "Poacher head on flint spear",
 	"block-headonspear-brigand-flint-*": "Brigand head on flint spear",
 	"block-headonspear-yeoman-flint-*": "Yeoman head on flint spear",
+	"block-headonspear-deserter-archer-flint-*": "Deserter archer head on flint spear",
+	"block-headonspear-deserter-footman-flint-*": "Deserter footman head on flint spear",
+
 	"block-headonspear-looter-scrap-*": "Looter head on scrap spear",
 	"block-headonspear-poacher-scrap-*": "Poacher head on scrap spear",
 	"block-headonspear-brigand-scrap-*": "Brigand head on scrap spear",
 	"block-headonspear-yeoman-scrap-*": "Yeoman head on scrap spear",
+	"block-headonspear-deserter-archer-scrap-*": "Deserter archer head on scrap spear",
+	"block-headonspear-deserter-footman-scrap-*": "Deserter footman head on scrap spear",
+
 	"block-headonspear-looter-ornategold-*": "Looter head on ornate gold spear",
 	"block-headonspear-poacher-ornategold-*": "Poacher head on ornate gold spear",
 	"block-headonspear-brigand-ornategold-*": "Brigand head on ornate gold spear",
 	"block-headonspear-yeoman-ornategold-*": "Yeoman head on ornate gold spear",
+	"block-headonspear-deserter-archer-ornategold-*": "Deserter archer head on ornate gold spear",
+	"block-headonspear-deserter-footman-ornategold-*": "Deserter footman head on ornate gold spear",
+
 	"block-headonspear-looter-ornatesilver-*": "Looter head on ornate silver spear",
 	"block-headonspear-poacher-ornatesilver-*": "Poacher head on ornate silver spear",
 	"block-headonspear-brigand-ornatesilver-*": "Brigand head on ornate silver spear",
 	"block-headonspear-yeoman-ornatesilver-*": "Yeoman head on ornate silver spear",
+	"block-headonspear-deserter-archer-ornatesilver-*": "Deserter archer head on ornate silver spear",
+	"block-headonspear-deserter-footman-ornatesilver-*": "Deserter footman head on ornate silver spear",
+
 	"block-headonspear-looter-hacking-*": "Looter head on hacking spear",
 	"block-headonspear-poacher-hacking-*": "Poacher head on hacking spear",
 	"block-headonspear-brigand-hacking-*": "Brigand head on hacking spear",
 	"block-headonspear-yeoman-hacking-*": "Yeoman head on hacking spear",
+	"block-headonspear-deserter-archer-hacking-*": "Deserter archer head on hacking spear",
+	"block-headonspear-deserter-footman-hacking-*": "Deserter footman head on hacking spear",
 
 	"blockdesc-stocks-*": "<font color=\"#99c9f9\"><i>Let them rot in the pillory. Pelt them with stones, fruit, and filth. They'll have plenty of time to think about what they've done.<br><br>Outlaws won't dare appear within 35 blocks of this symbol of justice.<br><br>Outlaws fighting within 15 blocks of a pillory will suffer a morale pentalty for each pillory in range.</i></font>",
 	"blockdesc-headonspear-looter-*": "<font color=\"#99c9f9\"><i>What a grisly sight.<br><br>Outlaws won't dare appear within 15 blocks of this terrifying symbol of justice.<br><br>Outlaws fighting within 15 blocks of a spear will suffer a morale pentalty for each spear in range.</i></font>",
 	"blockdesc-headonspear-poacher-*": "<font color=\"#99c9f9\"><i>His hunting days are done.<br><br>Outlaws won't dare appear within 20 blocks of this terrifying symbol of justice.<br><br>Outlaws fighting within 15 blocks of a spear will suffer a morale pentalty for each spear in range.</i></font>",
 	"blockdesc-headonspear-brigand-*": "<font color=\"#99c9f9\"><i>He lived by the sword, so he died by the sword.<br><br>Outlaws won't dare appear within 25 blocks of this terrifying symbol of justice.<br><br>Outlaws fighting within 15 blocks of a spear will suffer a morale pentalty for each spear in range.</i></font>",
 	"blockdesc-headonspear-yeoman-*": "<font color=\"#99c9f9\"><i>His bow shall sing no more.<br><br>Outlaws won't dare appear within 25 blocks of this terrifying symbol of justice.<br><br>Outlaws fighting within 15 blocks of a spear will suffer a morale pentalty for each spear in range.</i></font>",
+	"blockdesc-headonspear-deserter-archer-*": "<font color=\"#99c9f9\"><i>He's drawn his last arrow and his last breath.<br><br>Outlaws won't dare appear within 30 blocks of this terrifying symbol of justice.<br><br>Outlaws fighting within 15 blocks of a spear will suffer a morale pentalty for each spear in range.</i></font>",
+	"blockdesc-headonspear-deserter-footman-*": "<font color=\"#99c9f9\"><i>He died a traitor's death.<br><br>Outlaws won't dare appear within 35 blocks of this terrifying symbol of justice.<br><br>Outlaws fighting within 15 blocks of a spear will suffer a morale pentalty for each spear in range.</i></font>",
 
 	//ITEMS
 	"item-outlawhead-looter": "Severed Head (Looter)",
 	"item-outlawhead-poacher": "Severed Head (Poacher)",
 	"item-outlawhead-brigand": "Severed Head (Brigand)",
 	"item-outlawhead-yeoman": "Severed Head (Yeoman)",
+	"item-outlawhead-deserter-archer": "Severed Head (Deserter Archer)",
+	"item-outlawhead-deserter-footman": "Severed Head (Deserter Footman)",
 
 	"itemdesc-outlawhead-looter": "<font color=\"#99c9f9\"><i>He thought looting would get him ahead in life...</i></font>",
 	"itemdesc-outlawhead-poacher": "<font color=\"#99c9f9\"><i>The hunter became the hunted...</i></font>",
 	"itemdesc-outlawhead-brigand": "<font color=\"#99c9f9\"><i>Alas, poor Yorick! I knew him, Horatio. A fellow of infinite jest...</i></font>",
 	"itemdesc-outlawhead-yeoman": "<font color=\"#99c9f9\"><i>Yeoman, where's your head?</i></font>",
+	"itemdesc-outlawhead-deserter-archer": "<font color=\"#99c9f9\"><i>When you said desert, this is not what I had in mind.</i></font>",
+	"itemdesc-outlawhead-deserter-footman": "<font color=\"#99c9f9\"><i>When you said desert, this is not what I had in mind.</i></font>",
 
 	//RECIPIES
 
@@ -165,6 +232,6 @@
 
 	//HANDBOOK
 	"gamemechanicinfo-outlaws-title": "Game Mechanic: Outlaws" ,
-	"gamemechanicinfo-outlaws-text": "<strong>Who are they?</strong><br>Outlaws are individuals who have commited crimes, and having refused to stand trial, have been branded as outside the protection of the law, or Outlawed. An Outlaw's life is forfit, anyone can kill them suffer no legal repercussions, in fact, it's considered a public service. So where do such desperate individuals go? Outlaws can be found throughout the world, in virtually all climates. However, they prefer rural and densely forested regions where they can easily hide. They perfer to travel and work at night, when they can easily ambush unsuspecting travelers.<br><br><strong>Detering Outlaws</strong><br>Outlaws can be detered from incuring into your territory by building and displaying instuments of justice such as the Pillory and Heads On Spears. These frigtening symbols of justice will keep all but the most bold Outlaws at bay."
+	"gamemechanicinfo-outlaws-text": "<strong>Who are they?</strong><br>Outlaws are individuals who have commited crimes, and having refused to stand trial, have been branded as outside the protection of the law, or Outlawed. An Outlaw's life is forfit, anyone can kill them suffer no legal repercussions, in fact, it's considered a public service. So where do such desperate individuals go? Outlaws can be found throughout the world, in virtually all climates. However, they prefer rural and densely forested regions where they can easily hide. They perfer to travel and work at night, when they can easily ambush unsuspecting travelers.<br><br><strong>Detering Outlaws</strong><br>Outlaws can be detered from incuring into your territory by building and displaying instuments of justice such as the Pillory and Heads On Spears. These frightening symbols of justice will keep all but the most bold Outlaws at bay."
 
 }

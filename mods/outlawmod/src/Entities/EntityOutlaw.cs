@@ -8,12 +8,18 @@ using Vintagestory.API.Util;
 using Vintagestory.API.Datastructures;
 using Vintagestory.GameContent;
 using ExpandedAiTasks;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace OutlawMod
 {
 
     public class EntityOutlaw: EntityHumanoid
     {
+
+        protected List<long> callbacks = new List<long>();
+        protected List<string> companionSpawnQueue = new List<string>();
+        protected int currentSpawnQueueIndex = 0;
 
         public static OrderedDictionary<string, TraderPersonality> Personalities = new OrderedDictionary<string, TraderPersonality>()
         {
@@ -58,12 +64,48 @@ namespace OutlawMod
             }
         }
 
+        private void BuildCompanionSpawnQueue()
+        {
+            if (this.Properties.Attributes.KeyExists("companions"))
+            {
+                IAttribute companionsAttribute = this.Properties.Attributes["companions"].ToAttribute();
+                TreeAttribute[] companionsAsTree = companionsAttribute?.GetValue() as TreeAttribute[];
+
+                for (int i = 0; i < companionsAsTree.Length; i++)
+                {
+                    Debug.Assert(companionsAsTree[i].HasAttribute("code"), "companions for " + this.Code.Path + " is missing code: at entry " + i);
+                    Debug.Assert(companionsAsTree[i].HasAttribute("countMin"), "companions for " + this.Code.Path + " is missing countMin: at entry " + i);
+                    Debug.Assert(companionsAsTree[i].HasAttribute("countMax"), "companions for " + this.Code.Path + " is missing countMax: at entry " + i);
+
+                    string code     = companionsAsTree[i].GetString("code");
+                    double countMin = companionsAsTree[i].GetDouble("countMin");
+                    double countMax = companionsAsTree[i].GetDouble("countMax");
+
+                    int count = (int)MathUtility.GraphClampedValue(0, 1, countMin, countMax, this.World.Rand.NextDouble());
+
+                    Debug.Assert(code != this.Code.ToShortString(), this.Code.Path + " has companion " + code + " cyclical spawning detected!");
+
+                    for( int j = 0; j < count; j++ )
+                    {
+                        companionSpawnQueue.Add(code);
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Called when after the got loaded from the savegame (not called during spawn)
         /// </summary>
         public override void OnEntityLoaded()
         {
             base.OnEntityLoaded();
+
+            //Build our list of companions if it exists.
+            BuildCompanionSpawnQueue();
+
+            if (companionSpawnQueue.Count > 0)
+                AttemptSpawnCompanion(0f);
+
         }
 
         /// <summary>
@@ -84,8 +126,88 @@ namespace OutlawMod
                     return;
                 }
             }
+
+            //Build our list of companions if it exists.
+            BuildCompanionSpawnQueue();
+
+            if ( companionSpawnQueue.Count > 0 )
+                AttemptSpawnCompanion(0f);
         }
 
+        protected void AttemptSpawnCompanion(float dt)
+        {
+            if (Api.Side == EnumAppSide.Server)
+            {
+                currentSpawnQueueIndex = this.Attributes.GetInt("currentSpawnQueueIndex", 0);
+
+                if ( currentSpawnQueueIndex >= companionSpawnQueue.Count )
+                {
+                    this.Attributes.SetBool("hasSpawnedCompanions", true);
+                    return;
+                }
+
+                if ( this.Attributes.HasAttribute("hasSpawnedCompanions") )
+                {
+                    if (this.Attributes.GetBool("hasSpawnedCompanions", false))
+                        return;
+                }                
+
+                string codeToSpawn = companionSpawnQueue[currentSpawnQueueIndex];
+
+                AssetLocation code = new AssetLocation(codeToSpawn);
+                if (code == null)
+                    return;
+
+                EntityProperties companionProperties = this.World.GetEntityType(code);
+
+                //Hande the case where the entry is invalid, or has been disabled by mod flags.
+                //Continue to advance the queue in case later companions have valid codes.
+                if (companionProperties == null)
+                {
+                    currentSpawnQueueIndex++;
+                    if (currentSpawnQueueIndex < companionSpawnQueue.Count)
+                        AttemptSpawnCompanion(0f);
+                    
+                    return;
+                }
+
+                Cuboidf collisionBox = companionProperties.SpawnCollisionBox;
+
+                // Delay companion spawning if we're colliding
+                if (this.World.CollisionTester.IsColliding(this.World.BlockAccessor, collisionBox, this.ServerPos.XYZ, false))
+                {
+                    long callbackId = this.World.RegisterCallback(AttemptSpawnCompanion, 3000);
+                    callbacks.Add(callbackId);
+                    return;
+                }
+
+                Entity companionEnt = this.World.ClassRegistry.CreateEntity(companionProperties);
+
+                if (companionEnt == null)
+                    return;
+
+                companionEnt.ServerPos.SetFrom(this.ServerPos);
+                companionEnt.Pos.SetFrom(companionEnt.ServerPos);
+
+                if (companionEnt is EntityAgent)
+                {
+                    EntityAgent companionAgent = (EntityAgent)companionEnt;
+                    companionAgent.HerdId = this.HerdId;
+
+                    AiUtility.SetGuardedEntity(companionAgent, this);
+                }
+
+                this.World.SpawnEntity(companionEnt);
+                currentSpawnQueueIndex++;
+                this.Attributes.SetInt("currentSpawnQueueIndex", currentSpawnQueueIndex);
+
+                //Keep spawning until we exaust the queue.
+                if (currentSpawnQueueIndex < companionSpawnQueue.Count)
+                    AttemptSpawnCompanion(0f);
+                else
+                    this.Attributes.SetBool("hasSpawnedCompanions", true);
+            }
+        }
 
         /// <summary>
         /// Called when the entity despawns
@@ -93,7 +215,12 @@ namespace OutlawMod
         /// <param name="despawn"></param>
         public override void OnEntityDespawn(EntityDespawnData despawnData )
         {
-            base.OnEntityDespawn( despawnData );
+            base.OnEntityDespawn(despawnData);
+
+            foreach (long callbackId in callbacks)
+            {
+                this.World.UnregisterCallback(callbackId);
+            }
         }
 
         public override void OnGameTick(float dt)

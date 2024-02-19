@@ -38,6 +38,26 @@
 		width: 1,
 		height: 2,
 		output: { type: "block", code: "headonspear-yeoman-{material}-north"  }
-	},	
+	},
+	{
+		ingredientPattern: "H,S",
+		ingredients: {
+			"H": { type: "item", code: "outlawhead-deserter-archer", quantity: 1 },
+			"S": { type: "item", code: "spear-generic-*", name: "material", quantity: 1 }
+		},
+		width: 1,
+		height: 2,
+		output: { type: "block", code: "headonspear-deserter-archer-{material}-north"  }
+	},
+	{
+		ingredientPattern: "H,S",
+		ingredients: {
+			"H": { type: "item", code: "outlawhead-deserter-footman", quantity: 1 },
+			"S": { type: "item", code: "spear-generic-*", name: "material", quantity: 1 }
+		},
+		width: 1,
+		height: 2,
+		output: { type: "block", code: "headonspear-deserter-footman-{material}-north"  }
+	},			
 ]
 

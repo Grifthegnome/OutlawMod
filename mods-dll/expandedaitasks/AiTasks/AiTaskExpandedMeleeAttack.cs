@@ -10,6 +10,8 @@ using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 using ExpandedAiTasks.Managers;
+using System.Text;
+using Vintagestory.API.Client;
 
 namespace ExpandedAiTasks
 {
@@ -21,7 +23,6 @@ namespace ExpandedAiTasks
         protected float knockbackStrength = 1f;
         protected float minDist = 1.5f;
         protected float minVerDist = 1f;
-
 
         protected bool damageInflicted = false;
 
@@ -60,6 +61,10 @@ namespace ExpandedAiTasks
 
             ITreeAttribute tree = entity.WatchedAttributes.GetTreeAttribute("extraInfoText");
             tree.SetString("dmgTier", Lang.Get("Damage tier: {0}", damageTier));
+
+            animMeta.EaseOutSpeed = 0.35f;
+            animMeta.EaseInSpeed = 0.0f;
+            animMeta.Weight = 100.0f;
         }
 
         public override bool ShouldExecute()
@@ -101,10 +106,10 @@ namespace ExpandedAiTasks
 
             if (targetEntity == null || !targetEntity.Alive )
             {
-                targetEntity = entity.World.GetNearestEntity(pos, minDist, minVerDist, (e) =>
-                {
-                    return IsTargetableEntity(e, minDist, false) && AwarenessManager.IsAwareOfTarget(entity, e, minDist, minVerDist);
-                });
+                bestMeleeTarget = null;
+                bestMeleeDist = -1;
+                partitionUtil.WalkEntityPartitions(entity.ServerPos.XYZ, minDist, (e) => GetBestMeleeTarget(e, minDist));
+                targetEntity = bestMeleeTarget;
             }
 
             lastCheckOrAttackMs = entity.World.ElapsedMilliseconds;
@@ -116,6 +121,39 @@ namespace ExpandedAiTasks
             return false;
         }
 
+        Entity bestMeleeTarget = null;
+        double bestMeleeDist = -1;
+
+        private bool GetBestMeleeTarget(Entity ent, float range)
+        {
+            double verticalDist = ent.ServerPos.Y - entity.ServerPos.Y;
+
+            if (verticalDist < 0)
+                verticalDist *= -1;
+
+            if (verticalDist > minVerDist)
+                return true;
+
+            bool isTargetable = IsTargetableEntity(ent, minDist, false);
+            bool isAware = AwarenessManager.IsAwareOfTarget(entity, ent, minDist, minVerDist);
+
+            if ( isTargetable && isAware )
+            {
+                double distSqr = ent.ServerPos.SquareDistanceTo(entity.ServerPos.XYZ);
+                if ( bestMeleeTarget == null )
+                {
+                    bestMeleeTarget = ent;
+                    bestMeleeDist = distSqr;
+                }
+                else if (distSqr < bestMeleeDist)
+                {
+                    bestMeleeTarget = ent;
+                    bestMeleeDist = distSqr;
+                }
+            }
+
+            return true;
+        }
 
         float curTurnRadPerSec;
         bool didStartAnim;
@@ -207,6 +245,8 @@ namespace ExpandedAiTasks
 
         public override bool Notify(string key, object data)
         {
+            if (!AiUtility.CanRespondToNotify(entity))
+                return false;
 
             if (key == "entityAttackedGuardedEntity")
             {

@@ -9,7 +9,7 @@
 		"seraph": [64,64]
 	},
 	"textures": {
-		"head": "entity/bandit/poacher1"
+		"head": "entity/bandit/deserter_footman3"
 	},
 	"elements": [
 		{

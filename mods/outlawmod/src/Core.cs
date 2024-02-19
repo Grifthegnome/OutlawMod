@@ -29,36 +29,42 @@ namespace OutlawMod
         public bool EnableYeomen = true;
 
         [ProtoMember(5)]
-        public bool EnableFeralHounds = true;
+        public bool EnableDeserters = true;
 
         [ProtoMember(6)]
-        public bool EnableHuntingHounds = true;
+        public bool EnableBannermen = true;
 
         [ProtoMember(7)]
-        public float StartingSpawnSafeZoneRadius = 500f;
+        public bool EnableFeralHounds = true;
 
         [ProtoMember(8)]
-        public bool StartingSafeZoneHasLifetime = true;
+        public bool EnableHuntingHounds = true;
 
         [ProtoMember(9)]
-        public bool StartingSafeZoneShrinksOverLifetime = true;
+        public float StartingSpawnSafeZoneRadius = 500f;
 
         [ProtoMember(10)]
-        public float StartingSpawnSafeZoneLifetimeInDays = 45f;
+        public bool StartingSafeZoneHasLifetime = true;
 
         [ProtoMember(11)]
-        public bool ClaimedLandBlocksOutlawSpawns = true;
+        public bool StartingSafeZoneShrinksOverLifetime = true;
 
         [ProtoMember(12)]
-        public bool OutlawsUseClassicVintageStoryVoices = false;
+        public float StartingSpawnSafeZoneLifetimeInDays = 45f;
 
         [ProtoMember(13)]
-        public float SneakAttackDamageMultRanged = 3f;
+        public bool ClaimedLandBlocksOutlawSpawns = true;
 
         [ProtoMember(14)]
-        public float SneakAttackDamageMultMelee = 5f;
+        public bool OutlawsUseClassicVintageStoryVoices = false;
 
         [ProtoMember(15)]
+        public float SneakAttackDamageMultRanged = 3f;
+
+        [ProtoMember(16)]
+        public float SneakAttackDamageMultMelee = 5f;
+
+        [ProtoMember(17)]
         public bool DevMode = false;
     }
 
@@ -142,7 +148,6 @@ namespace OutlawMod
         private void RegisterEntitiesShared()
         {
             api.RegisterEntity("EntityOutlaw", typeof(EntityOutlaw));
-            api.RegisterEntity("EntityOutlawPoacher", typeof(EntityOutlawPoacher));
         }
 
         private void RegisterBlocksShared()
@@ -194,6 +199,8 @@ namespace OutlawMod
             api.World.Config.SetBool("enablePoachers", config.EnablePoachers);
             api.World.Config.SetBool("enableBrigands", config.EnableBrigands);
             api.World.Config.SetBool("enableYeoman", config.EnableYeomen);
+            api.World.Config.SetBool("enableDeserters", config.EnableDeserters);
+            api.World.Config.SetBool("enableBannermen", config.EnableDeserters && config.EnableBannermen);
             api.World.Config.SetBool("enableFeralHounds", config.EnableFeralHounds);
             api.World.Config.SetBool("enableHuntingHounds", config.EnableHuntingHounds);
         }

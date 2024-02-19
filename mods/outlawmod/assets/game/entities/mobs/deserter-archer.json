@@ -1,0 +1,377 @@
+{
+	code: "deserter-archer",
+	class: "EntityOutlaw",
+	canClimb: true,
+	hitboxSize: { x: 0.6, y: 1.75 },
+	deadHitboxSize: { x: 0.75, y: 0.5 },
+	eyeHeight: 1.7,
+	attributes: { 
+		reckless: false, 
+		classicVoice: "sounds/voice/accordion",
+		killedByInfoText: "deadcreature-eaten-deserterarcher",
+	 },
+
+	drops: [
+			{
+				type: "item",
+				code: "game:poultice-reed-horsetail",
+				quantity: { avg: 0.4, var: 0 }
+			},
+			{
+				type: "item",
+				code: "game:gear-rusty",
+				quantity: { avg: 0.33, var: 0 }
+			},
+			{
+				type: "item",
+				code: "game:nugget-nativecopper",
+				quantity: { avg: 0.125, var: 0.0 }
+			},
+			{
+				type: "item",
+				code: "game:nugget-nativesilver",
+				quantity: { avg: 0.025, var: 0.0 }
+			},
+			{
+				type: "item",
+				code: "game:nugget-nativegold",
+				quantity: { avg: 0.005, var: 0 }
+			},
+			{
+				type: "item",
+				code: "game:arrow-copper",
+				quantity: { avg: 1, var: 2 }
+			},
+			{
+				type: "item",
+				code: "game:bow-long",
+				quantity: { avg: 0.05, var: 0.0 }
+			}
+	],
+	client: {
+		renderer: "Shape",
+		shape: { base: "entity/land/deserter-archer" },
+		textures: {
+			"deserter": { base: "entity/bandit/deserter_archer1", alternates: [ { base: "entity/bandit/deserter_archer2" }, { base: "entity/bandit/deserter_archer3" }, { base: "entity/bandit/deserter_archer4" } ] },
+			"brim": { base: "entity/bandit/transparent", alternates: [ {base: "entity/bandit/blade"}, {base: "entity/bandit/transparent"}, {base: "entity/bandit/transparent"} ] },
+		},
+		behaviors: [
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
+			{ code: "floatupwhenstuck", onlyWhenDead: true },
+			{ code: "controlledphysics", stepHeight: 1.1251 }, 
+			{ code: "harvestable"},
+			{ code: "interpolateposition" }
+		],
+		animations: [
+			{
+				code: "die",
+				animation: "die", 
+				animationSpeed: 1.75,
+				weight: 10,
+				blendMode: "Average",
+				triggeredBy: { onControls: ["dead"] }
+			},
+			{
+				code: "hurt",
+				animation: "hurt", 
+				animationSpeed: 2,
+				weight: 8,
+				blendMode: "AddAverage" 
+			},
+			{ 
+				code: "wander", 
+				animation: "walk",
+				blendMode: "Average",
+				easeOutSpeed: 1
+			},
+			{ 
+				code: "sprint",
+				animation: "sprint",
+				animationSpeed: 0.6,
+				mulWithWalkSpeed: true,
+				blendMode: "Average"  
+			},
+			{ 
+				code: "melee", 
+				animation: "attack",
+				weight: 5,
+				blendMode: "AddAverage"
+			},
+			{ 
+				code: "shootatentity", 
+				animation: "bowattack",
+				weight: 10,
+				blendMode: "Add"
+			},
+			{
+				code: "look",
+				animation: "look",
+				easeOutSpeed: 1,
+				blendMode: "Add",
+				SupressDefaultAnimation: true
+			},
+			{
+				code: "walk",
+				animation: "walk",
+				SupressDefaultAnimation: true
+			},
+			{
+				code: "walkbowready",
+				animation: "walkbowready",
+				SupressDefaultAnimation: true
+			},
+			{ 
+				code: "idle", 
+				animation: "idle",
+				blendMode: "AddAverage",
+				triggeredBy: { defaultAnim: true }
+			},
+		]
+	},
+	server: {
+		attributes: {
+			pathfinder: {
+				minTurnAnglePerSec: 960,
+				maxTurnAnglePerSec: 1920
+			}
+		},
+		behaviors: [
+			{ code: "lodrepulseagents" }, //Our custom repulse agents behavior with tick LODing based on player distance.
+			{ code: "despawn", minPlayerDistance: 8, belowLightLevel: 8, minSeconds: 300 },
+			{ code: "controlledphysics", stepHeight: 1.1251 }, 
+			{ code: "deaddecay", hoursToDecay: 96, decayedBlock: "carcass-human" },
+			{ code: "floatupwhenstuck", onlyWhenDead: true },
+			{ code: "health", currenthealth: 14, maxhealth: 14 },
+			{ code: "harvestable", drops: [
+				{
+					type: "item",
+					code: "outlawhead-deserter-archer",
+					quantity: { avg: 1, var: 0 }
+				},
+
+				]
+			},
+			{ code: "breathe" },
+			{ 
+				code: "emotionstates",
+				states: [
+					{ code: "aggressiveondamage", duration: 4, chance: 0.2, slot: 0, priority: 2, accumType: "noaccum" },
+					{ code: "fleeondamage", duration: 14, chance: 0.50, slot: 2, priority: 4, accumType: "max", whenHealthRelBelow: 0.50 }
+				],
+			},
+			{ 
+				code: "taskai",
+				aitasks: [
+					{
+						code: "reacttoprojectiles",
+						entityCodes: ["player", "yeoman-*"],
+						priority: 5.1,
+					},
+					{
+						code: "morale",
+						priority: 5.0,
+						movespeed: 0.040,
+						cancelOnHurt: false,
+						routDistance: 60,
+						rallyTimeAfterRoutMs: 10000,
+						minMorale: 0.7,
+						maxMorale: 0.9,
+						moraleRange: 15,
+						useGroupMorale: true,
+						deathsImpactMorale: true,
+						canRoutFromAnyEnemy: true,
+
+						entitySourcesOfFear: [
+							{ code: "player", fearWeight: 0.1},
+							{ code: "looter", fearWeight: 0.05},
+							{ code: "bandit-*", fearWeight: 0.75},
+							{ code: "yeoman-*", fearWeight: 0.75},
+							{ code: "hound-feral", fearWeight: 0.05},
+							{ code: "deserter-*", fearWeight: -0.1},
+							{ code: "deserter-bannerman", fearWeight: -10.0},
+						],
+
+						itemStackSourcesOfFear: [
+							{ code: "outlawhead-*", fearWeight: 0.2},
+							{ code: "headonspear-*", fearWeight: 0.2},
+						],
+
+						poiSourcesOfFear: [
+							{ poiType: "outlawSpawnBlocker", fearWeight: 0.2}
+						],
+
+						animation: "sprint",
+						animationSpeed: 1,
+					},
+					{
+						code: "melee",
+						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter","bandit-*","yeoman-*", "hound-feral", "humanoid-villager-*" ],
+						priority: 4.0,
+						damage: 1.5,
+						damageTier: 3,
+						damageType: "BluntAttack",
+						slot: 1,
+						mincooldown: 500, 
+						maxcooldown: 1500, 
+						attackDurationMs: 450,
+						damagePlayerAtMs: 300,
+						animation: "attack",
+						animationSpeed: 1,
+					},
+					{
+						code: "shootatentity",
+						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "bandit-*", "yeoman-*", "hound-feral", "humanoid-villager-*"],
+						priority: 3.75,
+						priorityForCancel: 9,
+						mincooldown: 0, 
+						maxcooldown: 0, 
+						minDist: 4,
+						maxDist: 40,
+						maxVertDist: 30,
+						minRangeDistOffTarget: 0.35,
+						maxRangeDistOffTarget: 0.75,
+						maxVelocity: 0.9,
+						newTargetDistOffTarget: 0.75,
+						newTargetZeroingTime: 5.0,
+						damage: 6.0,
+						damageFalloffPercent: 0.66,
+						damageFalloffStartDist: 18,
+						damageFalloffEndDist: 28,
+						projectileItem: "arrow-copper",
+						dummyProjectile: "dummyarrow-copper",
+						projectileRemainsInWorld: true,
+						projectileBreakOnImpactChance: 0.95,
+						stopIfPredictFriendlyFire: true,
+
+						leadTarget: true,
+            			arcShots: true,
+						fireOnLastKnownPosition: true,
+						lastKnownPositionTimeoutMs: 5000,
+
+						advanceAfterShooting: true,
+
+						durationMs: 2000,
+						releaseAtMs: 1000,
+						animationSpeed: 1.0,
+						animation: "bowattack"
+					},
+					{
+						code: "getoutofwater",
+						priority: 2,
+						movespeed: 0.040,
+						animation: "swim",
+						animationSpeed: 0.3
+					},
+					//Close the distance to enemy target.
+					{
+						code: "engageentity",
+						entityCodes: ["player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter","bandit-*","yeoman-*", "humanoid-villager-*" ],
+						priority: 1.5,
+						priorityForCancel: 3.0,
+						mincooldown: 0, 
+						maxcooldown: 0, 
+						pursueSpeed: 0.040,
+						pursueRange: 45,
+						pursueAnimation: "sprint",
+						engageSpeed: 0.026,
+						engageRange: 4,
+						engageAnimation: "walkbowready",
+						swimAnimation: "swim",
+						arriveRange: 4,
+						arriveVerticalRange: 4,
+
+						withdrawIfNoPath: true,
+       					withdrawDist: 20.0,
+        				withdrawDistDamaged: 30.0,
+						withdrawAnimation: "idle",
+
+						animationSpeed: 1.0,
+						maxFollowTime: 60,
+						alarmHerd: true,
+						//whenInEmotionState: "aggressiveondamage"
+					},
+					{
+						code: "stayclosetoherd",
+						priority: 1.1,
+						
+						movespeed:0.006,
+						moveSpeedFarAway: 0.04,
+						moveNearAnimation: "walk",
+						moveFarAnimation: "sprint",
+
+						animationSpeed: 1.0,
+						maxDistance: 15,
+						arriveDistance: 8,
+						searchRange: 25,
+						allowStrayFromHerdInCombat: false,
+						allowHerdConsolidation: true,
+						consolidationRange: 40,
+						consolidationEntityCodes: ["deserter-*"],
+						animation: "sprint"
+					},
+
+					{
+						code: "wander", 
+						priority: 0.5, 
+						priorityForCancel: 1.35,
+						movespeed: 0.006,
+						minduration: 2500,
+						maxduration: 5000,
+						mincooldown: 5000,
+						maxcooldown: 10000,
+						animation: "walkbowready",
+						preferredLightLevel: 20,
+						whenNotInEmotionState: "fleeondamage",
+						whenNotInEmotionState: "aggressiveondamage"
+					}
+				]
+			}
+		],
+		spawnconditions: {
+			worldgen: {
+				TriesPerChunk: { avg: 0.010, var: 0 },
+				tryOnlySurface: true,
+				lightLevelType: "MaxTimeOfDayLight",					
+				groupSize: { dist: "stronginvexp", avg: 4, var: 4 },
+				insideBlockCodes: ["game:air", "game:tallgrass-*","game:snowlayer-1"],
+				minTemp: -15,
+				maxTemp: 28,
+				minRain: 0,
+				minForestOrShrubs: 0.25,
+				//For now, we can't enforce a maxium number of bannermen per squad on world gen, so we are only going to spawn them at runtime.
+				companions: ["deserter-footman"],
+			},
+			runtime: {
+				group: "hostile",
+				tryOnlySurface: true,
+				chance: 0.0006,
+				maxQuantity: 8,
+				maxQuantityByGroup: { code: "deserter-archer", maxQuantity: 6, code: "deserter-footman", maxQuantity: 6, code: "deserter-bannerman", maxQuantity: 1 },
+				spawnCapPlayerScaling: 0.05,
+				"__comment": "Make them spawn away from artifical light and only at night/as the sun sets",
+				maxLightLevel: 3,
+				lightLevelType: "MaxTimeOfDayLight",					
+				groupSize: { dist: "stronginvexp", avg: 4, var: 4 },
+				insideBlockCodes: ["game:air", "game:tallgrass-*","game:snowlayer-1"],
+				minTemp: -15,
+				maxTemp: 28,
+				minRain: 0,
+				minForestOrShrubs: 0.25,
+				MinDistanceToPlayer: 50,
+				companions: ["deserter-footman", "deserter-bannerman"],
+			}
+		}
+	},
+	sounds: {
+		idle: "creature/bandit/idle1",
+		hurt: "creature/bandit/hurt",
+		death: "creature/bandit/die2",
+		melee: "creature/bandit/attack",
+		fleeentity: "creature/bandit/flee",
+		morale: "creature/bandit/flee",
+		seekentity: "creature/bandit/youdead",
+		drawSound: "bow-draw",
+		shootSound: "bow-release",
+	},
+	idleSoundChance: 0.08
+}

@@ -72,6 +72,9 @@ namespace ExpandedAiTasks
 
             if (!AiTaskRegistry.TaskTypes.ContainsKey("reacttoprojectiles"))
                 AiTaskRegistry.Register<AiTaskReactToProjectiles>("reacttoprojectiles");
+
+            if (!AiTaskRegistry.TaskTypes.ContainsKey("playanimationatrange"))
+                AiTaskRegistry.Register<AiTaskPlayAnimationAtRangeFromTarget>("playanimationatrange");
         }
 
         private static void RegisterAiTasksShared()
@@ -100,6 +103,9 @@ namespace ExpandedAiTasks
 
             if (!AiTaskRegistry.TaskTypes.ContainsKey("reacttoprojectiles"))
                 AiTaskRegistry.Register("reacttoprojectiles", typeof(AiTaskReactToProjectiles));
+
+            if (!AiTaskRegistry.TaskTypes.ContainsKey("playanimationatrange"))
+                AiTaskRegistry.Register("playanimationatrange", typeof(AiTaskPlayAnimationAtRangeFromTarget));
         }
 
         private static void RegisterEntityBehaviors( ICoreAPI api )

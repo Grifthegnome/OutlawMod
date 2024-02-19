@@ -451,7 +451,9 @@ namespace ExpandedAiTasks
 
         public override bool Notify(string key, object data)
         {
-            
+            if (!AiUtility.CanRespondToNotify(entity))
+                return false;
+
             if (key == "haltMovement")
             {
                 //If another task has requested we halt, stop moving to herd leader.

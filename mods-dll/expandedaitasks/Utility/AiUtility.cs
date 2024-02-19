@@ -18,6 +18,9 @@ namespace ExpandedAiTasks
         Entity _entityTargeting;
         Entity _targetEntity;
 
+        Vec3d _lastPathUpdatePos = null;
+        Vec3d _lastKnownPos = null;
+        Vec3d _lastKnownMotion = null;
         public Entity entityTargeting
         {
             get { return _entityTargeting; }
@@ -30,10 +33,31 @@ namespace ExpandedAiTasks
             set { _targetEntity = value; }
         }
 
-        public EntityTargetPairing( Entity entityTargeting, Entity targetEntity)
+        public Vec3d lastPathUpdatePos
+        {
+            get { return _lastPathUpdatePos; }
+            private set { _lastPathUpdatePos = value; }
+        }
+
+        public Vec3d lastKnownPos
+        {
+            get { return _lastKnownPos; }
+            set { _lastKnownPos = value; }
+        }
+
+        public Vec3d lastKnownMotion
+        {
+            get { return _lastKnownMotion; }
+            set { _lastKnownMotion = value; }
+        }
+
+        public EntityTargetPairing( Entity entityTargeting, Entity targetEntity, Vec3d lastPathUpdatePos, Vec3d lastKnownPos, Vec3d lastKnownMotion )
         {
             _entityTargeting = entityTargeting;
             _targetEntity = targetEntity;
+            _lastPathUpdatePos = lastPathUpdatePos;
+            _lastKnownPos = lastKnownPos;
+            _lastKnownMotion = lastKnownMotion == null ? null : lastKnownMotion.Clone();
         }
     }
 
@@ -82,14 +106,25 @@ namespace ExpandedAiTasks
 
             if (attacker is EntityPlayer)
             {
-                ent.Attributes.SetString("lastPlayerAttackerUid", (attacker as EntityPlayer).PlayerUID);
-                ent.Attributes.SetDouble("lastTimeAttackedMs", ent.World.ElapsedMilliseconds);
 
-                if (ent.Attributes.HasAttribute("lastEntAttackerEntityId"))
-                    ent.Attributes.RemoveAttribute("lastEntAttackerEntityId");
+                if (CanTargetPlayer(attacker as EntityPlayer))
+                {
+                    ent.Attributes.SetString("lastPlayerAttackerUid", (attacker as EntityPlayer).PlayerUID);
+                    ent.Attributes.SetDouble("lastTimeAttackedMs", ent.World.ElapsedMilliseconds);
+
+                    if (ent.Attributes.HasAttribute("lastEntAttackerEntityId"))
+                        ent.Attributes.RemoveAttribute("lastEntAttackerEntityId");
+                }
             }
             else if (attacker != null)
             {
+                if ( attacker is EntityAgent )
+                {
+                    EntityAgent attackerAgent = attacker as EntityAgent;
+                    if ( AiUtility.AreMembersOfSameHerd(attackerAgent, ent) );
+                        return;
+                }
+
                 ent.Attributes.SetLong("lastEntAttackerEntityId", attacker.EntityId);
                 ent.Attributes.SetDouble("lastTimeAttackedMs", ent.World.ElapsedMilliseconds);
 
@@ -148,6 +183,10 @@ namespace ExpandedAiTasks
 
             if (ent is EntityAgent)
             {
+                //If we don't have AI Tasks, we cannot be in combat.
+                if ( !ent.HasBehavior<EntityBehaviorTaskAI>() )
+                    return false;
+
                 AiTaskManager taskManager = ent.GetBehavior<EntityBehaviorTaskAI>().TaskManager;
 
                 if (taskManager != null)
@@ -350,7 +389,7 @@ namespace ExpandedAiTasks
             
         }
 
-        public static void TryNotifyHerdMembersToAttack(EntityAgent alertEntity, Entity targetEntity, float alertRange, bool requireAwarenessToNotify )
+        public static void TryNotifyHerdMembersToAttack(EntityAgent alertEntity, Entity targetEntity, Vec3d lastPathUpdatePos, Vec3d lastKnownPos, Vec3d lastKnownMotion, float alertRange, bool requireAwarenessToNotify )
         {
             if ( alertEntity.HerdId > 0 )
             {
@@ -361,7 +400,7 @@ namespace ExpandedAiTasks
                     {
                         if ( !requireAwarenessToNotify || AwarenessManager.IsAwareOfTarget(herdMember, alertEntity, alertRange, alertRange) )
                         {
-                            EntityTargetPairing targetPairing = new EntityTargetPairing(alertEntity, targetEntity);
+                            EntityTargetPairing targetPairing = new EntityTargetPairing(alertEntity, targetEntity, lastPathUpdatePos, lastKnownPos, lastKnownMotion);
                             herdMember.Notify("attackEntity", targetPairing);
                         } 
                     }
@@ -423,7 +462,7 @@ namespace ExpandedAiTasks
             EntityAgent agent1 = ent1 as EntityAgent;
             EntityAgent agent2 = ent2 as EntityAgent;
 
-            return agent1.HerdId == agent2.HerdId;
+            return agent1.HerdId == agent2.HerdId && agent1.HerdId != 0;
         }
 
         public static List<Entity> GetHerdMembersInRangeOfPos(List<Entity> herdMembers, Vec3d pos, float range)
@@ -439,6 +478,15 @@ namespace ExpandedAiTasks
             return herdMembersInRange;
         }
 
+        public static bool CanRespondToNotify( Entity entity )
+        {
+
+            if (!entity.Alive)
+                return false;
+
+            return true;
+        }
+
         /*
           ____  _                         _   _ _   _ _ _ _         
          |  _ \| | __ _ _   _  ___ _ __  | | | | |_(_) (_) |_ _   _ 
@@ -447,6 +495,18 @@ namespace ExpandedAiTasks
          |_|   |_|\__,_|\__, |\___|_|     \___/ \__|_|_|_|\__|\__, |
                         |___/                                 |___/ 
          */
+
+        public static bool CanTargetPlayer( EntityPlayer player )
+        {
+            EnumGameMode currentGamemode = player.Player.WorldData.CurrentGameMode;
+            if (currentGamemode == EnumGameMode.Creative || currentGamemode == EnumGameMode.Spectator)
+                return false;
+
+            if (!player.Alive)
+                return false;
+
+            return true;
+        }
 
         public static bool IsPlayerWithinRangeOfPos(EntityPlayer player, Vec3d pos, float range)
         {
@@ -754,7 +814,7 @@ namespace ExpandedAiTasks
                 {
                     if (IsPositionInSolid(world, currentCheckPos) )
                     {
-                        return new Vec3d( previousCheckPos.X, previousCheckPos.Y, previousCheckPos.Z);
+                        return new Vec3d(startingPos.X, previousCheckPos.Y, startingPos.Z);
                     }
 
                 }
@@ -797,7 +857,7 @@ namespace ExpandedAiTasks
                 {
                     if (!IsPositionInSolid(world, currentCheckPos))
                     {
-                        return new Vec3d(currentCheckPos.X, currentCheckPos.Y, currentCheckPos.Z);
+                        return new Vec3d(startingPos.X, currentCheckPos.Y, startingPos.Z);
                     }
 
                 }
