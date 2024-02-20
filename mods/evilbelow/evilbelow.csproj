@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>..\..\</OutputPath>
+    <IntermediateOutputPath>..\..\obj\Debug\outlawmod\</IntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>..\..\</OutputPath>
+    <IntermediateOutputPath>..\..\obj\Release\outlawmod\</IntermediateOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>..\..\..\..\..\..\AppData\Roaming\Vintagestory\Lib\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="protobuf-net">
+      <HintPath>..\..\..\..\..\..\AppData\Roaming\Vintagestory\Lib\protobuf-net.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="modinfo.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="assets\" />
+    <Folder Include="src\Blocks\" />
+    <Folder Include="src\Item\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\anegostudios\vsapi\VintagestoryAPI.csproj" />
+    <ProjectReference Include="..\..\..\..\anegostudios\vscreativemod\VSCreativeMod.csproj" />
+    <ProjectReference Include="..\..\..\..\anegostudios\vsessentialsmod\VSEssentialsMod.csproj" />
+    <ProjectReference Include="..\..\..\..\anegostudios\vssurvivalmod\VSSurvivalMod.csproj" />
+    <ProjectReference Include="..\..\mods-dll\expandedaitasks\expandedaitasks.csproj" />
+  </ItemGroup>
+  <PropertyGroup>
+    <BaseOutputPath></BaseOutputPath>
+  </PropertyGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy &quot;$(OutputPath)evilbelow.dll&quot; &quot;$(SolutionDir)mods\evilbelow&quot;&#xD;&#xA;    " />
+  </Target>
+</Project>

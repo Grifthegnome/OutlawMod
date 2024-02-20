@@ -38,6 +38,6 @@
     <BaseOutputPath></BaseOutputPath>
   </PropertyGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy &quot;$(OutputPath)expandedaitasks.dll&quot; &quot;$(SolutionDir)mods\outlawmod&quot;&#xD;&#xA;copy &quot;$(OutputPath)expandedaitasks.dll&quot; &quot;$(SolutionDir)mods\expandedaitasksloader&quot;" />
+    <Exec Command="copy &quot;$(OutputPath)expandedaitasks.dll&quot; &quot;$(SolutionDir)mods\outlawmod&quot;&#xD;&#xA;copy &quot;$(OutputPath)expandedaitasks.dll&quot; &quot;$(SolutionDir)mods\expandedaitasksloader&quot;&#xD;&#xA;copy &quot;$(OutputPath)expandedaitasks.dll&quot; &quot;$(SolutionDir)mods\evilbelow&quot;" />
   </Target>
 </Project>
