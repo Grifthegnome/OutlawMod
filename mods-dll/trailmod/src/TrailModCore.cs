@@ -28,49 +28,58 @@ namespace TrailMod
         public bool flowerTrampling = true;
 
         [ProtoMember(5)]
-        public bool onlyTrampleFoliageOnTrailCreation = false;
+        public bool fernTrampling = true;
 
         [ProtoMember(6)]
-        public float trampledSoilDevolveDays = 7.0f;
+        public bool onlyTrampleFoliageOnTrailCreation = false;
 
         [ProtoMember(7)]
-        public float trailDevolveDays = 60.0f;
+        public float trampledSoilDevolveDays = 7.0f;
 
         [ProtoMember(8)]
-        public int normalToSparseGrassTouchCount = 1;
+        public float trailDevolveDays = 60.0f;
 
         [ProtoMember(9)]
-        public int sparseToVerySparseGrassTouchCount = 1;
+        public int normalToSparseGrassTouchCount = 1;
 
         [ProtoMember(10)]
-        public int verySparseToSoilTouchCount = 1;
+        public int sparseToVerySparseGrassTouchCount = 1;
 
         [ProtoMember(11)]
-        public int soilToTrampledSoilTouchCount = 1;
+        public int verySparseToSoilTouchCount = 1;
 
         [ProtoMember(12)]
-        public int trampledSoilToNewTrailTouchCount = 3;
+        public int soilToTrampledSoilTouchCount = 1;
 
         [ProtoMember(13)]
-        public int newToEstablishedTrailTouchCount = 25;
+        public int trampledSoilToNewTrailTouchCount = 3;
 
         [ProtoMember(14)]
-        public int establishedToDirtRoadTouchCount = 50;
+        public int newToEstablishedTrailTouchCount = 25;
 
         [ProtoMember(15)]
-        public int dirtRoadToHighwayTouchCount = 75;
+        public int establishedToDirtRoadTouchCount = 50;
 
         [ProtoMember(16)]
-        public int forestFloorToSoilTouchCount = 2;
+        public int dirtRoadToHighwayTouchCount = 75;
 
         [ProtoMember(17)]
-        public int cobLoseGrassTouchCount = 1;
+        public int forestFloorToSoilTouchCount = 2;
 
         [ProtoMember(18)]
-        public int peatLoseGrassTouchCount = 1;
+        public int cobLoseGrassTouchCount = 1;
 
         [ProtoMember(19)]
+        public int peatLoseGrassTouchCount = 1;
+
+        [ProtoMember(20)]
         public int clayLoseGrassTouchCount = 1;
+
+        [ProtoMember(21)]
+        public float minEntityHullSizeToTrampleX = 0;
+
+        [ProtoMember(22)]
+        public float minEntityHullSizeToTrampleY = 0;
     }
     public class TrailModCore : ModSystem
     {
@@ -175,6 +184,7 @@ namespace TrailMod
             TMGlobalConstants.foliageTrampleSounds              = config.foliageTrampleSounds;
             TMGlobalConstants.onlyPlayersCreateTrails           = config.onlyPlayersCreateTrails;
             TMGlobalConstants.flowerTrampling                   = config.flowerTrampling;
+            TMGlobalConstants.fernTrampling                     = config.fernTrampling;
             TMGlobalConstants.onlyTrampleFoliageOnTrailCreation = config.onlyTrampleFoliageOnTrailCreation;
 
             //TRAIL DEVOLVE TIMES
@@ -198,6 +208,10 @@ namespace TrailMod
             TMGlobalConstants.cobLoseGrassTouchCount  = config.cobLoseGrassTouchCount;
             TMGlobalConstants.peatLoseGrassTouchCount = config.peatLoseGrassTouchCount;
             TMGlobalConstants.clayLoseGrassTouchCount = config.clayLoseGrassTouchCount;
+
+            //ENTITY MIN HULL SIZE TO TRAMPLE
+            TMGlobalConstants.minEntityHullSizeToTrampleX = config.minEntityHullSizeToTrampleX;
+            TMGlobalConstants.minEntityHullSizeToTrampleY = config.minEntityHullSizeToTrampleY;
     }
 
         public override void Dispose()

@@ -63,7 +63,8 @@ namespace TrailMod
 
             if (shouldTrackTrailData)
             {
-                if (facing == BlockFacing.UP)
+                //We only touch blocks we collide with the top of.
+                if (facing == BlockFacing.UP && pos.Y < entity.ServerPos.Y )
                     trailChunkManager.AddOrUpdateBlockPosTrailData(world, __instance, pos, entity);
             
                 //Check if the center of the block overlaps the entity bounding box.

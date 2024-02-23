@@ -813,6 +813,11 @@ namespace TrailMod
             if (TMGlobalConstants.onlyPlayersCreateTrails && !touchIsPlayer)
                 return;
 
+            Debug.Assert(touchEnt is EntityAgent);
+
+            if ( !CanEntityTouchBlocks( (EntityAgent)touchEnt ) )
+                return;
+
             //If the block is only trasformable by players do not count touches or transform when touched by a non-player.
             if (trailBlockTouchTransforms.ContainsKey(block.BlockId))
             {
@@ -1080,8 +1085,11 @@ namespace TrailMod
 
             if (plantBlock.BlockMaterial == EnumBlockMaterial.Plant)
             {
-                if (plantBlock is BlockFern)
-                    return ETrailTrampleType.DEFAULT;
+                if (TMGlobalConstants.fernTrampling)
+                {
+                    if (plantBlock is BlockFern)
+                        return ETrailTrampleType.DEFAULT;
+                }
 
                 if (plantBlock is BlockTallGrass)
                 {
@@ -1201,6 +1209,22 @@ namespace TrailMod
                     break;
 
             }
+        }
+
+        private bool CanEntityTouchBlocks( EntityAgent touchEnt )
+        {
+            Vec2f selBox = touchEnt.Properties.SelectionBoxSize;
+
+            if ( selBox == null )
+                return false;
+
+            if (selBox.X < TMGlobalConstants.minEntityHullSizeToTrampleX)
+                return false;
+
+            if (selBox.Y < TMGlobalConstants.minEntityHullSizeToTrampleY)
+                return false;
+
+            return true;
         }
 
     }

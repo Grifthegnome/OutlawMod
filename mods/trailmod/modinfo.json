@@ -6,8 +6,8 @@
   "requiredOnClient": true,
   "authors": [ "Grifthegnome" ],
   "description": "Adds dynamic evolving trail and roads. Backup your world before using!",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "dependencies": {
-    "game": "1.19.1"
+    "game": "1.19.3"
   }
 }

@@ -18,6 +18,7 @@ dirtRoadsOnly                      true/false 	//Enables/Disables stone and cobb
 foliageTrampleSounds               true/false 	//Enables/Disables foliage making a noise when it breaks from trampeling.
 onlyPlayersCreateTrails            true/false 	//Enables/Disables creatures other than players trampling foliage and trampled grass.
 flowerTrampling                    true/false	//Enables/Disables flowers breaking when trails are created underneath them.
+fernTrampling			   true/false   //Enables/Disables ferns breaking when trails are created underneath them.
 onlyTrampleFoliageOnTrailCreation  true/false	//Enables/Disables grass and plants getting trampled before a trail is created.
 
 TRAIL DEVOLUTION (RETURNING TO NATURE)
@@ -45,3 +46,7 @@ forestFloorToSoilTouchCount	   Example: 2    //The number of touches it takes to
 cobLoseGrassTouchCount		   Example: 1    //The number of touches it takes for cob to lose one level of grass. (It never evolves into anything, but foot traffic will wear the grass off the block)
 peatLoseGrassTouchCount		   Example: 1    //The number of touches it takes for grassy peat to become bare peat. (It never evolves into anything, but foot traffic will wear the grass off the block)
 clayLoseGrassTouchCount		   Example: 1    //The number of touches it takes for grassy clay to become bare clay. (It never evolves into anything, but foot traffic will wear the grass off the block)
+
+MINIMUM CREATURE HULL SIZE REQUIRED FOR TRAMPLING
+minEntityHullSizeToTrampleX        Example: 0.5  //The minimum size of a creature's X (Horizontal) collision hull size required for a creature to trample grass and foliage.
+minEntityHullSizeToTrampleY        Example: 0.75 //The minimum size of a creature's Y (Vertical) collision hull size required for a creature to trample grass and foliage.
