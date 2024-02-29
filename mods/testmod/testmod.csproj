@@ -41,9 +41,6 @@
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\anegostudios\Tavis.JsonPatch\JsonPatch\JsonPatch.csproj" />
-  </ItemGroup>
   <PropertyGroup>
     <PostBuildEvent>
 
