@@ -34,7 +34,12 @@ namespace TrailMod
 
             if (entity == null)
                 return;
-            
+
+            //Skip any block with trample protection
+            ModSystemTrampleProtection modTramplePro = entity.Api.ModLoader.GetModSystem<ModSystemTrampleProtection>();
+            if (modTramplePro.IsTrampleProtected(pos))
+                return;
+
             if ( !entity.Alive )
                 return;
 

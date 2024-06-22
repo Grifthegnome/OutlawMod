@@ -256,6 +256,10 @@ namespace TrailMod
         {
             IWorldChunk chunk = worldAccessor.BlockAccessor.GetChunk(chunkCoord.X, chunkCoord.Y, chunkCoord.Z);
 
+            //Handle the case where the world is pruned of chunks a runtime.
+            if (chunk == null)
+                return;
+
             if (trailChunkEntries.ContainsKey(chunk))
             {
                 WriteTrailSaveStateForChunk(chunk);
@@ -412,9 +416,26 @@ namespace TrailMod
                 foreach ( long blockTrailID in trailChunkEntries[chunk].Keys )
                 {
                     TrailBlockPosEntry blockPosEntry = trailChunkEntries[chunk].GetValueSafe( blockTrailID );
-                    
+
+                    BlockPos posToCheck = blockPosEntry.GetBlockPos();
+
+                    //Handle case where block position is invalid.
+                    if (posToCheck == null)
+                    {
+                        timedOutBlocks.Add(blockTrailID);
+                        continue;
+                    }
+                        
+                    //Handle case where this is an invalid or air block.
+                    Block blockToCheck = worldAccessor.BlockAccessor.GetBlock(posToCheck);
+                    if ( blockToCheck.Id == 0 )
+                    {
+                        timedOutBlocks.Add(blockTrailID);
+                        continue;
+                    }
+
                     //We never time out trail blocks.
-                    if (worldAccessor.BlockAccessor.GetBlock(blockPosEntry.GetBlockPos()) is BlockTrail)
+                    if (blockToCheck is BlockTrail)
                         continue;
 
                     //If the block hasn't been touched in the timeout time, clean it up.
@@ -971,7 +992,7 @@ namespace TrailMod
                     Block groundBlock = world.BlockAccessor.GetBlock(blockPos);
                     if (upBlock != null)
                     {
-                        ETrailTrampleType trampleType = CanTramplePlant(upBlock, groundBlock);
+                        ETrailTrampleType trampleType = CanTramplePlant(upBlock, upPos, groundBlock, blockPos, touchEnt);
                         if (trampleType != ETrailTrampleType.NO_TRAMPLE)
                         {
                             ResolveTrampleType(world, trampleType, upPos, upBlock, groundBlock);
@@ -1048,9 +1069,8 @@ namespace TrailMod
             long XYZ = AppendDigits(XY, blockPos.Z);
 
             //Remove this when we are confindent this function returns good values consistently.
-            long concatTest = (blockPos.X.ToString() + blockPos.Y.ToString() + blockPos.Z.ToString()).ToLong();
-           
-            Debug.Assert(XYZ == concatTest);
+            //long concatTest = (blockPos.X.ToString() + blockPos.Y.ToString() + blockPos.Z.ToString()).ToLong();
+            //Debug.Assert(XYZ == concatTest);
 
             return XYZ;
         }
@@ -1075,7 +1095,7 @@ namespace TrailMod
             return digits;
         }
 
-        private static ETrailTrampleType CanTramplePlant( Block plantBlock, Block groundBlock)
+        private static ETrailTrampleType CanTramplePlant( Block plantBlock, BlockPos plantPos, Block groundBlock, BlockPos groundPos, Entity touchEnt )
         {
             bool groundIsTrail = groundBlock is BlockTrail;
 
@@ -1083,20 +1103,21 @@ namespace TrailMod
             if (TMGlobalConstants.onlyTrampleFoliageOnTrailCreation && !groundIsTrail)
                 return ETrailTrampleType.NO_TRAMPLE;
 
+            ModSystemTrampleProtection modTramplePro = touchEnt.Api.ModLoader.GetModSystem<ModSystemTrampleProtection>();
+
+            if (modTramplePro.IsTrampleProtected(groundPos))
+                return ETrailTrampleType.NO_TRAMPLE;
+
+            if (modTramplePro.IsTrampleProtected(plantPos))
+                return ETrailTrampleType.NO_TRAMPLE;
+
             if (plantBlock.BlockMaterial == EnumBlockMaterial.Plant)
             {
-                if (TMGlobalConstants.fernTrampling)
-                {
-                    if (plantBlock is BlockFern)
-                        return ETrailTrampleType.DEFAULT;
-                }
-
                 if (plantBlock is BlockTallGrass)
                 {
                     return ETrailTrampleType.TALLGRASS;
                 }
                     
-
                 if (TMGlobalConstants.flowerTrampling)
                 {
                     if (plantBlock is BlockLupine && groundIsTrail)
@@ -1111,8 +1132,14 @@ namespace TrailMod
                         return ETrailTrampleType.DEFAULT;
                 }
 
-                if (code == "tallfern")
-                    return ETrailTrampleType.DEFAULT;
+                if (TMGlobalConstants.fernTrampling)
+                {
+                    if (plantBlock is BlockFern && groundIsTrail)
+                        return ETrailTrampleType.DEFAULT;
+
+                    if (code == "tallfern" && groundIsTrail)
+                        return ETrailTrampleType.DEFAULT;
+                }
             }
 
             return ETrailTrampleType.NO_TRAMPLE;

@@ -38,7 +38,7 @@
 		}
 	},
 	snowCoverage: true,
-	frostable: false,
+	frostable: true,
 	replaceable: 400,
 	fertility: 100,
 	resistance: 1.5,
