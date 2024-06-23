@@ -184,6 +184,8 @@ namespace TrailMod
         public IWorldAccessor worldAccessor;
         private ICoreServerAPI serverApi;
 
+        object trailModificationLock = new object();
+
         //Callbacks based on number of block touches, stored by block ID;
         private static Dictionary<int, TrailBlockTouchTransformData> trailBlockTouchTransforms = new Dictionary<int, TrailBlockTouchTransformData>();
 
@@ -822,108 +824,117 @@ namespace TrailMod
 
         public void AddOrUpdateBlockPosTrailData( IWorldAccessor world, Block block, BlockPos blockPos, Entity touchEnt )
         {
-            IWorldChunk chunk = touchEnt.World.BlockAccessor.GetChunkAtBlockPos( blockPos );
-            Debug.Assert( chunk != null );
-
-            //If this block position doesn't contain a block we should monitor, remove it from tracking.
-            if ( !ShouldTrackBlockTrailData(block) )
-                RemoveBlockPosTrailData(world, blockPos);
-
-            bool touchIsPlayer = (touchEnt is EntityPlayer);
-
-            if (TMGlobalConstants.onlyPlayersCreateTrails && !touchIsPlayer)
-                return;
-
-            Debug.Assert(touchEnt is EntityAgent);
-
-            if ( !CanEntityTouchBlocks( (EntityAgent)touchEnt ) )
-                return;
-
-            //If the block is only trasformable by players do not count touches or transform when touched by a non-player.
-            if (trailBlockTouchTransforms.ContainsKey(block.BlockId))
+            lock (trailModificationLock)
             {
-                if (trailBlockTouchTransforms[block.BlockId].transformByPlayerOnly && !touchIsPlayer)
+                IWorldChunk chunk = touchEnt.World.BlockAccessor.GetChunkAtBlockPos(blockPos);
+                Debug.Assert(chunk != null);
+
+                //If this block position doesn't contain a block we should monitor, remove it from tracking.
+                if (!ShouldTrackBlockTrailData(block))
+                    RemoveBlockPosTrailData(world, blockPos);
+
+                bool touchIsPlayer = (touchEnt is EntityPlayer);
+
+                if (TMGlobalConstants.onlyPlayersCreateTrails && !touchIsPlayer)
                     return;
-            }
 
-            long blockTrailID = ConvertBlockPositionToTrailPosID(blockPos);
+                Debug.Assert(touchEnt is EntityAgent);
 
-            if ( block is BlockTrail )
-            {
-                BlockTrail blockTrail = (BlockTrail)block;
-                blockTrail.TrailBlockTouched(world);
-            }
+                if (!CanEntityTouchBlocks((EntityAgent)touchEnt))
+                    return;
 
-            if ( trailChunkEntries.ContainsKey( chunk ) ) 
-            {
-                if ( trailChunkEntries[ chunk ].ContainsKey(blockTrailID) )
+                //If the block is only trasformable by players do not count touches or transform when touched by a non-player.
+                if (trailBlockTouchTransforms.ContainsKey(block.BlockId))
                 {
-                    TrailBlockPosEntry entryToUpdate = trailChunkEntries[chunk].GetValueSafe(blockTrailID);
-                    bool shouldTryTransform = entryToUpdate.BlockTouched( touchEnt.EntityId, touchEnt.ServerPos, touchEnt.World.ElapsedMilliseconds );
+                    if (trailBlockTouchTransforms[block.BlockId].transformByPlayerOnly && !touchIsPlayer)
+                        return;
+                }
 
-                    if (shouldTryTransform)
+                long blockTrailID = ConvertBlockPositionToTrailPosID(blockPos);
+
+                if (block is BlockTrail)
+                {
+                    BlockTrail blockTrail = (BlockTrail)block;
+                    blockTrail.TrailBlockTouched(world);
+                }
+
+                if (trailChunkEntries.ContainsKey(chunk))
+                {
+                    if (trailChunkEntries[chunk].ContainsKey(blockTrailID))
                     {
-                        if (TryToTransformTrailBlock(world, blockPos, block.BlockId, touchEnt, entryToUpdate.GetTouchCount() ) )
-                            entryToUpdate.BlockTransformed();
-                    }
+                        TrailBlockPosEntry entryToUpdate = trailChunkEntries[chunk].GetValueSafe(blockTrailID);
+                        bool shouldTryTransform = entryToUpdate.BlockTouched(touchEnt.EntityId, touchEnt.ServerPos, touchEnt.World.ElapsedMilliseconds);
 
-                    trailChunkEntries[chunk][blockTrailID] = entryToUpdate;
+                        if (shouldTryTransform)
+                        {
+                            if (TryToTransformTrailBlock(world, blockPos, block.BlockId, touchEnt, entryToUpdate.GetTouchCount()))
+                                entryToUpdate.BlockTransformed();
+                        }
+
+                        trailChunkEntries[chunk][blockTrailID] = entryToUpdate;
+                    }
+                    else
+                    {
+                        TrailBlockPosEntry trailBlockEntry = new TrailBlockPosEntry(blockPos, touchEnt.EntityId, touchEnt.ServerPos, touchEnt.World.ElapsedMilliseconds, 1);
+                        trailChunkEntries[chunk].Add(blockTrailID, trailBlockEntry);
+
+                        if (TryToTransformTrailBlock(world, blockPos, block.BlockId, touchEnt, trailBlockEntry.GetTouchCount()))
+                        {
+                            trailBlockEntry.BlockTransformed();
+                            trailChunkEntries[chunk][blockTrailID] = trailBlockEntry;
+                        }
+
+                    }
                 }
                 else
                 {
                     TrailBlockPosEntry trailBlockEntry = new TrailBlockPosEntry(blockPos, touchEnt.EntityId, touchEnt.ServerPos, touchEnt.World.ElapsedMilliseconds, 1);
-                    trailChunkEntries[chunk].Add(blockTrailID, trailBlockEntry);
+                    Dictionary<long, TrailBlockPosEntry> trailChunkEntry = new Dictionary<long, TrailBlockPosEntry>();
+                    trailChunkEntry.Add(blockTrailID, trailBlockEntry);
+                    trailChunkEntries.Add(chunk, trailChunkEntry);
 
-                    if( TryToTransformTrailBlock(world, blockPos, block.BlockId, touchEnt, trailBlockEntry.GetTouchCount() ) )
+                    if (TryToTransformTrailBlock(world, blockPos, block.BlockId, touchEnt, trailBlockEntry.GetTouchCount()))
                     {
                         trailBlockEntry.BlockTransformed();
                         trailChunkEntries[chunk][blockTrailID] = trailBlockEntry;
                     }
-                        
-                }
-            }
-            else
-            {
-                TrailBlockPosEntry trailBlockEntry = new TrailBlockPosEntry(blockPos, touchEnt.EntityId, touchEnt.ServerPos, touchEnt.World.ElapsedMilliseconds, 1);
-                Dictionary<long, TrailBlockPosEntry> trailChunkEntry = new Dictionary<long, TrailBlockPosEntry>();
-                trailChunkEntry.Add(blockTrailID, trailBlockEntry);
-                trailChunkEntries.Add(chunk, trailChunkEntry);
-
-                if ( TryToTransformTrailBlock(world, blockPos, block.BlockId, touchEnt, trailBlockEntry.GetTouchCount() ) )
-                {
-                    trailBlockEntry.BlockTransformed();
-                    trailChunkEntries[chunk][blockTrailID] = trailBlockEntry;
                 }
             }
         }
 
         private void RemoveBlockPosTrailData( IWorldAccessor world, BlockPos blockPos )
         {
-            IWorldChunk chunk = world.BlockAccessor.GetChunkAtBlockPos(blockPos);
-            Debug.Assert(chunk != null);
+            lock (trailModificationLock)
+            {
+                IWorldChunk chunk = world.BlockAccessor.GetChunkAtBlockPos(blockPos);
+                Debug.Assert(chunk != null);
 
-            long blockTrailID = ConvertBlockPositionToTrailPosID(blockPos);
+                long blockTrailID = ConvertBlockPositionToTrailPosID(blockPos);
 
-            Debug.Assert(trailChunkEntries.ContainsKey( chunk ) );
-            Debug.Assert(trailChunkEntries[chunk].ContainsKey(blockTrailID) );
+                Debug.Assert(trailChunkEntries.ContainsKey( chunk ) );
+                Debug.Assert(trailChunkEntries[chunk].ContainsKey(blockTrailID) );
 
-            trailChunkEntries[chunk].Remove(blockTrailID);
+                trailChunkEntries[chunk].Remove(blockTrailID);
 
-            if ( trailChunkEntries[chunk].Count() ==0 )
-                trailChunkEntries.Remove(chunk);
+                if ( trailChunkEntries[chunk].Count() ==0 )
+                    trailChunkEntries.Remove(chunk);
+            }
         }
 
         public void ClearBlockTouchCount( BlockPos blockPos )
         {
-            IWorldChunk chunk = worldAccessor.BlockAccessor.GetChunkAtBlockPos(blockPos);
-            Debug.Assert(chunk != null);
+            lock (trailModificationLock)
+            {
+                IWorldChunk chunk = worldAccessor.BlockAccessor.GetChunkAtBlockPos(blockPos);
+                Debug.Assert(chunk != null);
 
-            long blockTrailID = ConvertBlockPositionToTrailPosID(blockPos);
+                long blockTrailID = ConvertBlockPositionToTrailPosID(blockPos);
 
-            Debug.Assert(trailChunkEntries.ContainsKey(chunk));
-            Debug.Assert(trailChunkEntries[chunk].ContainsKey(blockTrailID));
+                Debug.Assert(trailChunkEntries.ContainsKey(chunk));
+                Debug.Assert(trailChunkEntries[chunk].ContainsKey(blockTrailID));
 
-            trailChunkEntries[chunk][blockTrailID].ClearTouchCount();
+                trailChunkEntries[chunk][blockTrailID].ClearTouchCount();
+            }
         }
 
         public bool BlockPosHasTrailData( BlockPos blockPos)
@@ -967,51 +978,53 @@ namespace TrailMod
         //Utility
         private bool TryToTransformTrailBlock( IWorldAccessor world, BlockPos blockPos, int blockID, Entity touchEnt, int touchCount )
         {
-
-            if ( trailBlockTouchTransforms.ContainsKey( blockID ) )
+            lock (trailModificationLock)
             {
-                TrailBlockTouchTransformData trailBlockTransformData = trailBlockTouchTransforms[blockID];
-
-                bool touchIsPlayer = false;
-                bool touchIsSneaking = false;
-
-                if (touchEnt is EntityPlayer)
+                if (trailBlockTouchTransforms.ContainsKey(blockID))
                 {
-                    touchIsPlayer = true;
+                    TrailBlockTouchTransformData trailBlockTransformData = trailBlockTouchTransforms[blockID];
 
-                    EntityPlayer touchPlayer = (EntityPlayer)touchEnt;
+                    bool touchIsPlayer = false;
+                    bool touchIsSneaking = false;
 
-                    if (touchPlayer.Controls.Sneak)
-                        touchIsSneaking = true;
-                }
-
-                if (!touchIsSneaking)
-                {
-                    BlockPos upPos = blockPos.UpCopy();
-                    Block upBlock = world.BlockAccessor.GetBlock(upPos);
-                    Block groundBlock = world.BlockAccessor.GetBlock(blockPos);
-                    if (upBlock != null)
+                    if (touchEnt is EntityPlayer)
                     {
-                        ETrailTrampleType trampleType = CanTramplePlant(upBlock, upPos, groundBlock, blockPos, touchEnt);
-                        if (trampleType != ETrailTrampleType.NO_TRAMPLE)
+                        touchIsPlayer = true;
+
+                        EntityPlayer touchPlayer = (EntityPlayer)touchEnt;
+
+                        if (touchPlayer.Controls.Sneak)
+                            touchIsSneaking = true;
+                    }
+
+                    if (!touchIsSneaking)
+                    {
+                        BlockPos upPos = blockPos.UpCopy();
+                        Block upBlock = world.BlockAccessor.GetBlock(upPos);
+                        Block groundBlock = world.BlockAccessor.GetBlock(blockPos);
+                        if (upBlock != null)
                         {
-                            ResolveTrampleType(world, trampleType, upPos, upBlock, groundBlock);
+                            ETrailTrampleType trampleType = CanTramplePlant(upBlock, upPos, groundBlock, blockPos, touchEnt);
+                            if (trampleType != ETrailTrampleType.NO_TRAMPLE)
+                            {
+                                ResolveTrampleType(world, trampleType, upPos, upBlock, groundBlock);
+                            }
                         }
+                    }
+
+                    if (trailBlockTransformData.transformByPlayerOnly && !touchIsPlayer)
+                        return false;
+
+                    if (touchCount >= trailBlockTransformData.transformOnTouchCount)
+                    {
+                        world.BlockAccessor.SetBlock(trailBlockTransformData.transformBlockID, blockPos);
+
+                        return true;
                     }
                 }
 
-                if (trailBlockTransformData.transformByPlayerOnly && !touchIsPlayer)
-                    return false;
-
-                if (touchCount >= trailBlockTransformData.transformOnTouchCount)
-                {
-                    world.BlockAccessor.SetBlock(trailBlockTransformData.transformBlockID, blockPos);
-
-                    return true;
-                }
+                return false;
             }
-
-            return false;
         }
 
         public bool BlockCenterHorizontalInEntityBoundingBox(Entity ent, BlockPos blockPos ) 
