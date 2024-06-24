@@ -474,7 +474,7 @@ AI Tasks Documentation:
 ========================================================================================================================
 	AiTaskReactToProjectiles (registered as "reacttoprojectiles")
 		
-		This AiTask assigns allows Ai to aggro when someone shoots a projectile near them.
+		This AiTask allows Ai to aggro when someone shoots a projectile near them.
 	
 	json Settings
 		None
@@ -484,6 +484,34 @@ AI Tasks Documentation:
 		code: "reacttoprojectiles",
 		entityCodes: ["player"],
 		priority: 5.1,
+	},
+========================================================================================================================
+	AiTaskPlayAnimationAtRangeFromTarget (registered as "playanimationatrange")
+		
+		This AiTask makes the Ai play an animation when they are a certain distance from their target.
+	
+	json Settings
+		float minDist: the minimum horizontal distance to begin playing the animation.	
+		float minVerDist: the minimum vertical distance to begin playing the animation.		
+		string[] cancelAnimations: list of animation codes that will cancel this ai task's animation.
+		string animation: animation to play when in range of target.
+		float easeIn: speed to ease in animation
+		float easeOut: speed to ease out animation
+
+	Use Example from OutlawMod, yeoman-archer.json
+	{
+		code: "playanimationatrange",
+		entityCodes: ["test-dummy", "player", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "bandit-*", "yeoman-*", "hound-feral", "humanoid-villager-*"],
+		priority: 3.0,
+		priorityForCancel: 3.5,
+		minDist: 6, 	//Just under engage range.
+		minVerDist: 6,	//Just engage range.
+		cancelAnimations: ["attack", "sprint", "swim", "WalkSpearShouldered"], //Cancel while other anims are playing.
+		slot: 1,
+		animation: "idleattackready",
+		animationSpeed: 1.0,
+		easeIn: 0.25,
+		easeOut: 0.0
 	},
 ========================================================================================================================
 	EntityBehaviorLODRepulseAgents (registered as "lodrepulseagents")

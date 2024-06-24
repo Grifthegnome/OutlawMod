@@ -221,7 +221,7 @@
 
 					{
 						code: "shootatentity",
-						entityCodes: ["player","test-dummy", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "looter", "deserter-*", "hound-feral", "humanoid-villager-*"],
+						entityCodes: ["player","test-dummy", "drifter-*", "wolf-male", "wolf-female", "hyena-male", "hyena-female", "locust-*", "bear-*", "bandit-*", "yeoman-*", "deserter-*", "hound-feral", "humanoid-villager-*"],
 						priority: 3.5,
 						priorityForCancel: 4,
 						mincooldown: 5000, 

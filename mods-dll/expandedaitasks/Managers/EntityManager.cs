@@ -83,7 +83,10 @@ namespace ExpandedAiTasks.Managers
         {
             if (entity == null)
                 return;
-            
+
+            if (entity.State == EnumEntityState.Despawned)
+                return;
+
             Debug.Assert(entity is EntityItem);
 
             EntityItem item = (EntityItem)entity;

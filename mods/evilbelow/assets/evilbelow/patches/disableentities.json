@@ -1,0 +1,86 @@
+[
+{
+    "file": "entities/mobs/looter.json",
+    "op": "add",
+    "path": "/enabled",
+    "value": false,
+    "condition": {"when": "enableLooters", "isValue": "false"}
+},
+{
+    "file": "entities/mobs/poacher-archer.json",
+    "op": "add",
+    "path": "/enabled",
+    "value": false,
+    "condition": {"when": "enablePoachers", "isValue": "false"}
+},
+{
+    "file": "entities/mobs/poacher-spear.json",
+    "op": "add",
+    "path": "/enabled",
+    "value": false,
+    "condition": {"when": "enablePoachers", "isValue": "false"}
+},
+{
+    "file": "entities/mobs/bandit-axe.json",
+    "op": "add",
+    "path": "/enabled",
+    "value": false,
+    "condition": {"when": "enableBrigands", "isValue": "false"}
+},
+{
+    "file": "entities/mobs/bandit-knife.json",
+    "op": "add",
+    "path": "/enabled",
+    "value": false,
+    "condition": {"when": "enableBrigands", "isValue": "false"}
+},
+{
+    "file": "entities/mobs/bandit-spear.json",
+    "op": "add",
+    "path": "/enabled",
+    "value": false,
+    "condition": {"when": "enableBrigands", "isValue": "false"}
+},
+{
+    "file": "entities/mobs/yeoman-archer.json",
+    "op": "add",
+    "path": "/enabled",
+    "value": false,
+    "condition": {"when": "enableYeoman", "isValue": "false"}
+},
+{
+    "file": "entities/mobs/deserter-archer.json",
+    "op": "add",
+    "path": "/enabled",
+    "value": false,
+    "condition": {"when": "enableDeserters", "isValue": "false"}
+},
+{
+    "file": "entities/mobs/deserter-footman.json",
+    "op": "add",
+    "path": "/enabled",
+    "value": false,
+    "condition": {"when": "enableDeserters", "isValue": "false"}
+},
+{
+    "file": "entities/mobs/deserter-bannerman.json",
+    "op": "add",
+    "path": "/enabled",
+    "value": false,
+    "condition": {"when": "enableBannermen", "isValue": "false"}
+},
+{
+    "file": "entities/mobs/hound-feral.json",
+    "op": "add",
+    "path": "/enabled",
+    "value": false,
+    "condition": {"when": "enableFeralHounds", "isValue": "false"}
+},
+{
+    "file": "entities/mobs/hound-hunting.json",
+    "op": "add",
+    "path": "/enabled",
+    "value": false,
+    "condition": {"when": "enableHuntingHounds", "isValue": "false"}
+}
+]

@@ -5,6 +5,7 @@
         public static bool foliageTrampleSounds                 = true;
         public static bool onlyPlayersCreateTrails              = false;
         public static bool flowerTrampling                      = true;
+        public static bool fernTrampling                        = true;
         public static bool onlyTrampleFoliageOnTrailCreation    = false;
         public static float trampledSoilDevolveDays = 7.0f;
         public static float trailDevolveDays = 60.0f;
@@ -20,5 +21,7 @@
         public static int cobLoseGrassTouchCount            = 1;
         public static int peatLoseGrassTouchCount           = 1;
         public static int clayLoseGrassTouchCount           = 1;
+        public static float minEntityHullSizeToTrampleX     = 0;
+        public static float minEntityHullSizeToTrampleY     = 0;
     }
 }

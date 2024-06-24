@@ -1,0 +1,11 @@
+{
+  "type": "code",
+  "modid": "evilbelow",
+  "name": "The Evil Below",
+  "authors": ["Grifthegnome"],
+  "description": "Adds evil creatures to the caves and mines, replacement for drifters.",
+  "version": "1.0.0",
+  "dependencies": {
+    "game": "1.19.3"
+  }
+}
