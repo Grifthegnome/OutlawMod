@@ -15,7 +15,7 @@ So what's in the config?
 
 GENERAL SETTINGS
 dirtRoadsOnly                      true/false 	//Enables/Disables stone and cobble road visuals.
-foliageTrampleSounds               true/false 	//Enables/Disables foliage making a noise when it breaks from trampeling.
+foliageTrampleSounds               true/false 	//Enables/Disables foliage making a noise when it breaks from trampling.
 onlyPlayersCreateTrails            true/false 	//Enables/Disables creatures other than players trampling foliage and trampled grass.
 flowerTrampling                    true/false	//Enables/Disables flowers breaking when trails are created underneath them.
 fernTrampling			   true/false   //Enables/Disables ferns breaking when trails are created underneath them.
@@ -23,7 +23,7 @@ onlyTrampleFoliageOnTrailCreation  true/false	//Enables/Disables grass and plant
 
 TRAIL DEVOLUTION (RETURNING TO NATURE)
 trampledSoilDevolveDays		   Example: 7.0  //The number of days before an undisturbed trampled soil block will devolve back to native game soil.
-trailDevolveDays 	           Example: 60.0 //The number of days before an undistured trail block will devolve one trail level.
+trailDevolveDays 	           Example: 60.0 //The number of days before an undisturbed trail block will devolve one trail level.
 
 GRASS BLOCK EVOLUTION (VALUES IN NUMBER OF BLOCK TOUCHES)
 normalToSparseGrassTouchCount      Example: 1 	 //The number of touches it takes to evolve a normal grass block to a sparse grass block.

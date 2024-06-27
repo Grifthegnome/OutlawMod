@@ -380,7 +380,7 @@
 				group: "hostile",
 				tryOnlySurface: true,
 				chance: 0.0004,
-				maxQuantity: 2,
+				maxQuantity: 1,
 				maxQuantityByGroup: { code: "deserter-bannerman", maxQuantity: 1 },
 				spawnCapPlayerScaling: 0.05,
 				"__comment": "Make them spawn away from artifical light and only at night/as the sun sets",

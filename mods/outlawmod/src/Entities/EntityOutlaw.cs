@@ -16,10 +16,13 @@ namespace OutlawMod
 
     public class EntityOutlaw: EntityHumanoid
     {
+        protected const int COMPANION_SPAWN_INTERVAL_MS = 125;
+        protected const int COMPANION_SPAWN_FAIL_LIMIT = 5;
 
         protected List<long> callbacks = new List<long>();
         protected List<string> companionSpawnQueue = new List<string>();
         protected int currentSpawnQueueIndex = 0;
+        protected int companionSpawnFailCount = 0;
 
         public static OrderedDictionary<string, TraderPersonality> Personalities = new OrderedDictionary<string, TraderPersonality>()
         {
@@ -160,13 +163,16 @@ namespace OutlawMod
 
                 EntityProperties companionProperties = this.World.GetEntityType(code);
 
-                //Hande the case where the entry is invalid, or has been disabled by mod flags.
+                //Handle the case where the entry is invalid, or has been disabled by mod flags.
                 //Continue to advance the queue in case later companions have valid codes.
                 if (companionProperties == null)
                 {
                     currentSpawnQueueIndex++;
                     if (currentSpawnQueueIndex < companionSpawnQueue.Count)
-                        AttemptSpawnCompanion(0f);
+                    {
+                        long callbackId = this.World.RegisterCallback(AttemptSpawnCompanion, COMPANION_SPAWN_INTERVAL_MS);
+                        callbacks.Add(callbackId);
+                    }
                     
                     return;
                 }
@@ -176,8 +182,19 @@ namespace OutlawMod
                 // Delay companion spawning if we're colliding
                 if (this.World.CollisionTester.IsColliding(this.World.BlockAccessor, collisionBox, this.ServerPos.XYZ, false))
                 {
-                    long callbackId = this.World.RegisterCallback(AttemptSpawnCompanion, 3000);
-                    callbacks.Add(callbackId);
+                    if (companionSpawnFailCount <= COMPANION_SPAWN_FAIL_LIMIT)
+                    {
+                        long callbackId = this.World.RegisterCallback(AttemptSpawnCompanion, 3000);
+                        callbacks.Add(callbackId);
+                    }
+                    else
+                    {
+                        //If we fail to spawn our companions after a certain number of tries, this is a bad spawn spot and we should clean up our group so we don't lag the server looking for a spawn location forever.
+                        CompanionSpawnFailCleanup();
+                    }
+
+                    companionSpawnFailCount++;
+
                     return;
                 }
 
@@ -199,14 +216,35 @@ namespace OutlawMod
 
                 this.World.SpawnEntity(companionEnt);
                 currentSpawnQueueIndex++;
+                companionSpawnFailCount = 0;
                 this.Attributes.SetInt("currentSpawnQueueIndex", currentSpawnQueueIndex);
 
                 //Keep spawning until we exaust the queue.
                 if (currentSpawnQueueIndex < companionSpawnQueue.Count)
-                    AttemptSpawnCompanion(0f);
+                {
+                    long callbackId = this.World.RegisterCallback(AttemptSpawnCompanion, COMPANION_SPAWN_INTERVAL_MS);
+                    callbacks.Add(callbackId);
+                    return;
+                }
                 else
+                {
                     this.Attributes.SetBool("hasSpawnedCompanions", true);
+                }
+                    
             }
+        }
+
+        protected void CompanionSpawnFailCleanup()
+        {
+            //If we fail to spawn our companions after a certain number of reps, we should fail and clean ourselves up.
+            List<Entity> herdMembers = AiUtility.GetMasterHerdList(this);
+
+            foreach (Entity member in herdMembers) 
+            {
+                member.Die(EnumDespawnReason.Expire, null);
+            }
+
+            this.Die(EnumDespawnReason.Expire, null);
         }
 
         /// <summary>
